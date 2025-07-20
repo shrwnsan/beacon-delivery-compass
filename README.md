@@ -15,8 +15,26 @@ A comprehensive toolkit for analyzing git repository statistics and development 
 
 ## Installation
 
+We strongly recommend using a virtual environment to avoid conflicts with other Python packages:
+
 ```bash
+# Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install beacon
 pip install beacon
+```
+
+For development or testing the latest version:
+
+```bash
+# Clone and install in development mode
+git clone https://github.com/shrwnsan/beacon-delivery-compass.git
+cd beacon-delivery-compass
+python -m venv venv
+source venv/bin/activate
+pip install -e ".[dev]"
 ```
 
 ## Quick Start
