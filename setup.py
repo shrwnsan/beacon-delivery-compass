@@ -4,14 +4,14 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="git-analytics-toolkit",
+    name="beacon",
     version="0.1.0",
     author="Your Name",
     author_email="your.email@example.com",
-    description="A comprehensive toolkit for analyzing git repository statistics",
+    description="Your delivery compass for empowered product builders",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/git-analytics-toolkit",
+    url="https://github.com/yourusername/beacon",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     classifiers=[
@@ -40,7 +40,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "git-analytics=git_analytics.cli:main",
+            "beacon=git_analytics.cli:main",
         ],
     },
 )

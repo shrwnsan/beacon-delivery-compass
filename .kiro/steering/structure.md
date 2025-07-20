@@ -22,7 +22,7 @@ src/git_analytics/           # Main package (src layout)
 - **Dependency Injection**: Analyzer accepts repository path, formatters are pluggable
 
 ## Key Conventions
-- **Entry Point**: `git-analytics` command maps to `git_analytics.cli:main`
+- **Entry Point**: `beacon` command maps to `git_analytics.cli:main`
 - **Error Handling**: CLI catches exceptions and exits with status code 1
 - **Git Integration**: Uses subprocess to call git commands directly
 - **Type Hints**: Full type annotations required (enforced by mypy)
