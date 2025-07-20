@@ -40,7 +40,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "beacon=git_analytics.cli:main",
+            "beacon=beacon.cli:main",
         ],
     },
 )

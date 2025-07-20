@@ -22,7 +22,7 @@ extend-exclude = '''
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "-ra -q --strict-markers --cov=git_analytics --cov-report=term-missing"
+addopts = "-ra -q --strict-markers --cov=beacon --cov-report=term-missing"
 testpaths = [
     "tests",
 ]

@@ -32,7 +32,7 @@ mypy src              # Type checking
 ### Testing
 ```bash
 pytest                # Run all tests
-pytest --cov=git_analytics --cov-report=term-missing  # Run with coverage
+pytest --cov=beacon --cov-report=term-missing  # Run with coverage
 ```
 
 ### Build & Distribution

@@ -2,7 +2,7 @@
 
 ## Source Layout
 ```
-src/git_analytics/           # Main package (src layout)
+src/beacon/                 # Main package (src layout)
 ├── __init__.py             # Package initialization
 ├── cli.py                  # Command-line interface entry point
 ├── core/                   # Core business logic
@@ -22,7 +22,7 @@ src/git_analytics/           # Main package (src layout)
 - **Dependency Injection**: Analyzer accepts repository path, formatters are pluggable
 
 ## Key Conventions
-- **Entry Point**: `beacon` command maps to `git_analytics.cli:main`
+- **Entry Point**: `beacon` command maps to `beacon.cli:main`
 - **Error Handling**: CLI catches exceptions and exits with status code 1
 - **Git Integration**: Uses subprocess to call git commands directly
 - **Type Hints**: Full type annotations required (enforced by mypy)
