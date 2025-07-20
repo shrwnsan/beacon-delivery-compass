@@ -7,13 +7,13 @@ from ..core.models import CommitStats, RangeStats
 
 class JSONFormatter:
     """JSON formatter for Beacon delivery analytics output."""
-    
+
     def _serialize_datetime(self, obj):
         """JSON serializer for datetime objects."""
         if isinstance(obj, datetime):
             return obj.isoformat()
         raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
-    
+
     def format_commit_stats(self, stats: CommitStats) -> str:
         """Format commit statistics as JSON."""
         data = {
@@ -30,13 +30,13 @@ class JSONFormatter:
                     "path": f.path,
                     "lines_added": f.lines_added,
                     "lines_deleted": f.lines_deleted,
-                    "lines_changed": f.lines_changed
+                    "lines_changed": f.lines_changed,
                 }
                 for f in stats.files
-            ]
+            ],
         }
         return json.dumps(data, indent=2, default=self._serialize_datetime)
-    
+
     def format_range_stats(self, stats: RangeStats) -> str:
         """Format range statistics as JSON."""
         data = {
@@ -56,9 +56,9 @@ class JSONFormatter:
                     "message": c.message,
                     "files_changed": c.files_changed,
                     "lines_added": c.lines_added,
-                    "lines_deleted": c.lines_deleted
+                    "lines_deleted": c.lines_deleted,
                 }
                 for c in stats.commits
-            ]
+            ],
         }
         return json.dumps(data, indent=2, default=self._serialize_datetime)

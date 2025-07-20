@@ -8,6 +8,7 @@ from datetime import datetime
 @dataclass
 class FileStats:
     """Statistics for a single file."""
+
     path: str
     lines_added: int
     lines_deleted: int
@@ -17,6 +18,7 @@ class FileStats:
 @dataclass
 class CommitStats:
     """Statistics for a single commit."""
+
     hash: str
     author: str
     date: datetime
@@ -30,6 +32,7 @@ class CommitStats:
 @dataclass
 class RangeStats:
     """Statistics for a range of commits."""
+
     start_date: datetime
     end_date: datetime
     total_commits: int
