@@ -1,4 +1,4 @@
-"""Git Analytics Toolkit - A comprehensive toolkit for git repository analysis."""
+"""Beacon - Your delivery compass for empowered product builders."""
 
 __version__ = "0.1.0"
 __author__ = "Your Name"

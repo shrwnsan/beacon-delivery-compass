@@ -6,7 +6,7 @@ from ..core.models import CommitStats, RangeStats
 
 
 class JSONFormatter:
-    """JSON formatter for git analytics output."""
+    """JSON formatter for Beacon delivery analytics output."""
     
     def _serialize_datetime(self, obj):
         """JSON serializer for datetime objects."""

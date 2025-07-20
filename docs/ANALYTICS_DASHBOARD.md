@@ -1,7 +1,7 @@
 # Analytics Dashboard
 
 ## Overview
-The Analytics Dashboard provides comprehensive insights into development activity, team productivity, and code quality metrics for the Crypto Analysis Dashboard project.
+The Analytics Dashboard provides comprehensive insights into development activity, team productivity, and code quality metrics for Beacon - your delivery compass for empowered product builders.
 
 ## Quick Start
 

@@ -1,4 +1,4 @@
-"""Data models for git analytics."""
+"""Data models for Beacon delivery analytics."""
 
 from dataclasses import dataclass
 from typing import Dict, List, Optional

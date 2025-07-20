@@ -4,7 +4,7 @@ from ..core.models import CommitStats, RangeStats
 
 
 class StandardFormatter:
-    """Standard text formatter for git analytics output."""
+    """Standard text formatter for Beacon delivery analytics output."""
     
     def format_commit_stats(self, stats: CommitStats) -> str:
         """Format commit statistics as standard text."""

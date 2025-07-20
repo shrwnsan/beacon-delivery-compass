@@ -1,6 +1,6 @@
 # Development Analytics Scripts
 
-This directory contains scripts for generating development analytics and commit statistics for the Crypto Analysis Dashboard project.
+This directory contains scripts for generating development analytics and commit statistics for Beacon - your delivery compass for empowered product builders.
 
 ## Scripts Overview
 
