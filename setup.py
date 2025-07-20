@@ -11,7 +11,7 @@ setup(
     description="Your delivery compass for empowered product builders",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/beacon",
+    url="https://github.com/shrwnsan/beacon-delivery-compass",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     classifiers=[
