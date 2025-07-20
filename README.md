@@ -1,4 +1,6 @@
-# Git Analytics Toolkit
+# Beacon
+
+Your delivery compass for empowered product builders.
 
 A comprehensive toolkit for analyzing git repository statistics and development metrics.
 
@@ -14,20 +16,20 @@ A comprehensive toolkit for analyzing git repository statistics and development 
 ## Installation
 
 ```bash
-pip install git-analytics-toolkit
+pip install beacon
 ```
 
 ## Quick Start
 
 ```bash
 # Analyze latest commit
-git-analytics
+beacon
 
 # Weekly team report
-git-analytics --range --since "1 week ago"
+beacon --range --since "1 week ago"
 
 # JSON output for automation
-git-analytics --format json
+beacon --format json
 ```
 
 ## Documentation

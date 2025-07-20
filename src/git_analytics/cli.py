@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Command-line interface for Git Analytics Toolkit."""
+"""Command-line interface for Beacon."""
 
 import argparse
 import sys
@@ -14,7 +14,7 @@ from .formatters.json_format import JSONFormatter
 def main() -> None:
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
-        description="Git Analytics Toolkit - Analyze git repository statistics"
+        description="Beacon - Your delivery compass for empowered product builders"
     )
     parser.add_argument(
         "commit", 

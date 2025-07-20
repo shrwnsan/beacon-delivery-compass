@@ -38,7 +38,7 @@ pytest --cov=git_analytics --cov-report=term-missing  # Run with coverage
 ### Build & Distribution
 ```bash
 python -m build       # Build distribution packages
-pip install git-analytics-toolkit  # Install from PyPI
+pip install beacon    # Install from PyPI
 ```
 
 ## CI/CD
