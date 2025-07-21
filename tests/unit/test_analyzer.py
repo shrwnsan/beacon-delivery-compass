@@ -3,8 +3,8 @@ import subprocess
 import unittest
 from unittest.mock import MagicMock, patch
 
-from beacon.core.analyzer import GitAnalyzer
-from beacon.core.models import CommitStats
+from beaconled.core.analyzer import GitAnalyzer
+from beaconled.core.models import CommitStats
 
 
 class TestGitAnalyzer(unittest.TestCase):

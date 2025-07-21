@@ -12,7 +12,7 @@ Thank you for your interest in contributing to Beacon - your delivery compass fo
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/shrwnsan/beacon-delivery-compass.git
+   git clone https://github.com/shrwnsan/beaconled-delivery-compass.git
    cd beacon-delivery-compass
    ```
 

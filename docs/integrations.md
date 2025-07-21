@@ -11,7 +11,7 @@ Automatically display commit statistics after each commit:
 #!/bin/bash
 # .git/hooks/post-commit
 source venv/bin/activate  # Adjust path as needed
-beacon --format standard
+beaconled --format standard
 ```
 
 Make the hook executable:
@@ -27,7 +27,7 @@ Review your changes before pushing:
 # .git/hooks/pre-push
 source venv/bin/activate
 echo "📊 Changes since last push:"
-beacon --range --since "1 day ago" --format extended
+beaconled --range --since "1 day ago" --format extended
 ```
 
 ### Pre-Commit Hook (for team standards)
@@ -39,7 +39,7 @@ Check commit size and impact:
 source venv/bin/activate
 
 # Check if commit is too large
-stats=$(beacon --format json)
+stats=$(beaconled --format json)
 files_changed=$(echo $stats | jq '.files_changed')
 
 if [ "$files_changed" -gt 20 ]; then
@@ -55,7 +55,7 @@ fi
 
 #### Basic Integration
 ```yaml
-# .github/workflows/beacon-analytics.yml
+# .github/workflows/beaconled-analytics.yml
 name: Beacon Analytics
 
 on:
@@ -79,16 +79,16 @@ jobs:
         python-version: '3.8'
     
     - name: Install Beacon
-      run: pip install beacon
+      run: pip install beaconled
     
     - name: Generate Commit Analytics
       run: |
-        beacon --format json > commit-stats.json
+        beaconled --format json > commit-stats.json
     
     - name: Upload Analytics
       uses: actions/upload-artifact@v3
       with:
-        name: beacon-analytics
+        name: beaconled-analytics
         path: commit-stats.json
 ```
 
@@ -116,11 +116,11 @@ jobs:
         python-version: '3.8'
     
     - name: Install Beacon
-      run: pip install beacon
+      run: pip install beaconled
     
     - name: Generate Weekly Report
       run: |
-        beacon --range --since "1 week ago" --format extended > weekly-report.txt
+        beaconled --range --since "1 week ago" --format extended > weekly-report.txt
     
     - name: Send to Slack
       uses: 8398a7/action-slack@v3
@@ -142,15 +142,15 @@ jobs:
 stages:
   - analytics
 
-beacon_analytics:
+beaconled_analytics:
   stage: analytics
   image: python:3.8
   script:
-    - pip install beacon
-    - beacon --format json > beacon-report.json
+    - pip install beaconled
+    - beaconled --format json > beaconled-report.json
   artifacts:
     paths:
-      - beacon-report.json
+      - beaconled-report.json
     expire_in: 1 week
 
 weekly_report:
@@ -159,8 +159,8 @@ weekly_report:
   only:
     - schedules
   script:
-    - pip install beacon
-    - beacon --range --since "1 week ago" --format extended > weekly-report.txt
+    - pip install beaconled
+    - beaconled --range --since "1 week ago" --format extended > weekly-report.txt
     - echo "Weekly report generated"
   artifacts:
     paths:
@@ -180,15 +180,15 @@ pipeline {
                 sh '''
                     python -m venv venv
                     source venv/bin/activate
-                    pip install beacon
-                    beacon --format json > beacon-report.json
+                    pip install beaconled
+                    beaconled --format json > beaconled-report.json
                 '''
             }
         }
         
         stage('Archive Results') {
             steps {
-                archiveArtifacts artifacts: 'beacon-report.json'
+                archiveArtifacts artifacts: 'beaconled-report.json'
             }
         }
     }
@@ -200,7 +200,7 @@ pipeline {
                 alwaysLinkToLastBuild: true,
                 keepAll: true,
                 reportDir: '.',
-                reportFiles: 'beacon-report.json',
+                reportFiles: 'beaconled-report.json',
                 reportName: 'Beacon Analytics'
             ])
         }
@@ -221,10 +221,10 @@ source venv/bin/activate
 
 echo "🚀 Daily Development Summary"
 echo "=========================="
-beacon --range --since "1 day ago" --format extended
+beaconled --range --since "1 day ago" --format extended
 
 # Save to file for sharing
-beacon --range --since "1 day ago" --format json > daily-report.json
+beaconled --range --since "1 day ago" --format json > daily-report.json
 ```
 
 ### Sprint Planning Integration
@@ -236,10 +236,10 @@ source venv/bin/activate
 
 echo "📈 Sprint Analytics"
 echo "=================="
-beacon --range --since "2 weeks ago" --format extended
+beaconled --range --since "2 weeks ago" --format extended
 
 # Generate team velocity metrics
-beacon --range --since "2 weeks ago" --format json | jq '.summary'
+beaconled --range --since "2 weeks ago" --format json | jq '.summary'
 ```
 
 ### Code Review Process
@@ -250,10 +250,10 @@ beacon --range --since "2 weeks ago" --format json | jq '.summary'
 source venv/bin/activate
 
 # Analyze the PR branch
-beacon --range --since "main" --format extended
+beaconled --range --since "main" --format extended
 
 # Check for large changes
-stats=$(beacon --range --since "main" --format json)
+stats=$(beaconled --range --since "main" --format json)
 files_changed=$(echo $stats | jq '.total_files_changed')
 
 if [ "$files_changed" -gt 50 ]; then
@@ -271,8 +271,8 @@ fi
 # slack-reporter.py
 import json
 import requests
-from beacon.core.analyzer import GitAnalyzer
-from beacon.formatters.json_format import JSONFormatter
+from beaconled.core.analyzer import GitAnalyzer
+from beaconled.formatters.json_format import JSONFormatter
 
 def send_to_slack(webhook_url, channel="#dev-updates"):
     analyzer = GitAnalyzer()
@@ -307,12 +307,12 @@ if __name__ == "__main__":
 ```python
 # slack-bot.py
 from slack_bolt import App
-from beacon.core.analyzer import GitAnalyzer
+from beaconled.core.analyzer import GitAnalyzer
 
 app = App(token=os.environ["SLACK_BOT_TOKEN"])
 
-@app.command("/beacon")
-def handle_beacon_command(ack, say, command):
+@app.command("/beaconled")
+def handle_beaconled_command(ack, say, command):
     ack()
     
     text = command["text"]
@@ -337,13 +337,13 @@ Create `.vscode/tasks.json`:
         {
             "label": "Beacon: Current Commit",
             "type": "shell",
-            "command": "source venv/bin/activate && beacon",
+            "command": "source venv/bin/activate && beaconled",
             "group": "build"
         },
         {
             "label": "Beacon: Weekly Report",
             "type": "shell",
-            "command": "source venv/bin/activate && beacon --range --since '1 week ago' --format extended",
+            "command": "source venv/bin/activate && beaconled --range --since '1 week ago' --format extended",
             "group": "build"
         }
     ]
@@ -352,12 +352,12 @@ Create `.vscode/tasks.json`:
 
 ### JetBrains IDEs (PyCharm, IntelliJ)
 
-Create `.idea/beacon.xml`:
+Create `.idea/beaconled.xml`:
 
 ```xml
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Beacon Weekly" type="PythonConfigurationType">
-    <option name="SCRIPT_NAME" value="beacon" />
+    <option name="SCRIPT_NAME" value="beaconled" />
     <option name="PARAMETERS" value="--range --since '1 week ago' --format extended" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
   </configuration>
@@ -378,7 +378,7 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-ENTRYPOINT ["beacon"]
+ENTRYPOINT ["beaconled"]
 ```
 
 ### Docker Compose
@@ -387,7 +387,7 @@ ENTRYPOINT ["beacon"]
 # docker-compose.yml
 version: '3.8'
 services:
-  beacon:
+  beaconled:
     build: .
     volumes:
       - ./:/workspace
@@ -402,11 +402,11 @@ services:
 ```python
 # prometheus-exporter.py
 from prometheus_client import Counter, Gauge, start_http_server
-from beacon.core.analyzer import GitAnalyzer
+from beaconled.core.analyzer import GitAnalyzer
 
-commits_total = Counter('beacon_commits_total', 'Total commits analyzed')
-files_changed = Gauge('beacon_files_changed', 'Files changed in last commit')
-lines_added = Gauge('beacon_lines_added', 'Lines added in last commit')
+commits_total = Counter('beaconled_commits_total', 'Total commits analyzed')
+files_changed = Gauge('beaconled_files_changed', 'Files changed in last commit')
+lines_added = Gauge('beaconled_lines_added', 'Lines added in last commit')
 
 def collect_metrics():
     analyzer = GitAnalyzer()

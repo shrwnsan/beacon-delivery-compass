@@ -1,6 +1,6 @@
 """Extended output formatter."""
 
-from .core.models import CommitStats, RangeStats
+from ..core.models import CommitStats, RangeStats
 from .standard import StandardFormatter
 
 

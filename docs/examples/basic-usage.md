@@ -7,52 +7,52 @@ This document provides practical examples for getting started with Beacon.
 ### 1. Analyze Latest Commit
 ```bash
 # Simple analysis
-beacon
+beaconled
 
 # Save to file
-beacon > latest-commit.txt
+beaconled > latest-commit.txt
 
 # JSON output for processing
-beacon --format json > commit-data.json
+beaconled --format json > commit-data.json
 ```
 
 ### 2. Analyze Specific Commit
 ```bash
 # By hash
-beacon abc123def456
+beaconled abc123def456
 
 # By short hash
-beacon abc123
+beaconled abc123
 
 # By relative reference
-beacon HEAD~3
+beaconled HEAD~3
 ```
 
 ### 3. Range Analysis Examples
 ```bash
 # Last week
-beacon --range --since "1 week ago"
+beaconled --range --since "1 week ago"
 
 # Last month
-beacon --range --since "1 month ago"
+beaconled --range --since "1 month ago"
 
 # Custom date range
-beacon --range --since "2025-07-01" --until "2025-07-31"
+beaconled --range --since "2025-07-01" --until "2025-07-31"
 
 # Since last tag
-beacon --range --since "v1.0.0"
+beaconled --range --since "v1.0.0"
 ```
 
 ### 4. Different Output Formats
 ```bash
 # Standard format (default)
-beacon --format standard
+beaconled --format standard
 
 # Extended format with details
-beacon --format extended
+beaconled --format extended
 
 # JSON for automation
-beacon --format json | jq '.files_changed'
+beaconled --format json | jq '.files_changed'
 ```
 
 ## Team Workflow Examples
@@ -63,10 +63,10 @@ beacon --format json | jq '.files_changed'
 # daily-summary.sh
 echo "📊 Yesterday's Development Summary"
 echo "================================="
-beacon --range --since "1 day ago" --format extended
+beaconled --range --since "1 day ago" --format extended
 
 # Save for team sharing
-beacon --range --since "1 day ago" --format json > daily-report.json
+beaconled --range --since "1 day ago" --format json > daily-report.json
 ```
 
 ### Weekly Report Generation
@@ -78,10 +78,10 @@ WEEK_END=$(date -d "last Sunday" +%Y-%m-%d)
 
 echo "📈 Weekly Development Report ($WEEK_START to $WEEK_END)"
 echo "======================================================"
-beacon --range --since "$WEEK_START" --until "$WEEK_END" --format extended
+beaconled --range --since "$WEEK_START" --until "$WEEK_END" --format extended
 
 # Generate JSON for dashboard
-beacon --range --since "$WEEK_START" --until "$WEEK_END" --format json > weekly-dashboard.json
+beaconled --range --since "$WEEK_START" --until "$WEEK_END" --format json > weekly-dashboard.json
 ```
 
 ### Sprint Retrospective
@@ -92,10 +92,10 @@ SPRINT_LENGTH=14  # days
 
 echo "🎯 Sprint Retrospective Analysis"
 echo "==============================="
-beacon --range --since "${SPRINT_LENGTH} days ago" --format extended
+beaconled --range --since "${SPRINT_LENGTH} days ago" --format extended
 
 # Team member contributions
-beacon --range --since "${SPRINT_LENGTH} days ago" --format json | jq '.authors'
+beaconled --range --since "${SPRINT_LENGTH} days ago" --format json | jq '.authors'
 ```
 
 ## Repository Analysis Examples
@@ -112,7 +112,7 @@ REPOS=(
 
 for repo in "${REPOS[@]}"; do
     echo "=== Analyzing $(basename $repo) ==="
-    beacon --repo "$repo" --range --since "1 week ago" --format json
+    beaconled --repo "$repo" --range --since "1 week ago" --format json
 done
 ```
 
@@ -123,20 +123,20 @@ done
 # Analyze specific directories
 
 # Backend changes
-beacon --range --since "1 week ago" --format json | jq '.files[] | select(.path | startswith("src/backend"))'
+beaconled --range --since "1 week ago" --format json | jq '.files[] | select(.path | startswith("src/backend"))'
 
 # Frontend changes
-beacon --range --since "1 week ago" --format json | jq '.files[] | select(.path | endswith(".tsx") or endswith(".ts"))'
+beaconled --range --since "1 week ago" --format json | jq '.files[] | select(.path | endswith(".tsx") or endswith(".ts"))'
 
 # Documentation changes
-beacon --range --since "1 week ago" --format json | jq '.files[] | select(.path | endswith(".md"))'
+beaconled --range --since "1 week ago" --format json | jq '.files[] | select(.path | endswith(".md"))'
 ```
 
 ## Integration Examples
 
 ### GitHub Actions Integration
 ```yaml
-# .github/workflows/daily-beacon.yml
+# .github/workflows/daily-beaconled.yml
 name: Daily Beacon Analysis
 
 on:
@@ -157,16 +157,16 @@ jobs:
           python-version: '3.8'
       
       - name: Install Beacon
-        run: pip install beacon
+        run: pip install beaconled
       
       - name: Generate Daily Report
         run: |
-          beacon --range --since "1 day ago" --format json > daily-report.json
+          beaconled --range --since "1 day ago" --format json > daily-report.json
       
       - name: Upload Report
         uses: actions/upload-artifact@v3
         with:
-          name: daily-beacon-report
+          name: daily-beaconled-report
           path: daily-report.json
 ```
 
@@ -177,8 +177,8 @@ jobs:
 import json
 import requests
 from datetime import datetime, timedelta
-from beacon.core.analyzer import GitAnalyzer
-from beacon.formatters.json_format import JSONFormatter
+from beaconled.core.analyzer import GitAnalyzer
+from beaconled.formatters.json_format import JSONFormatter
 
 def send_daily_report(webhook_url):
     analyzer = GitAnalyzer()
@@ -215,13 +215,13 @@ if __name__ == "__main__":
 ### Custom Filtering
 ```bash
 # Filter by author
-beacon --range --since "1 week ago" --format json | jq 'select(.author == "John Doe")'
+beaconled --range --since "1 week ago" --format json | jq 'select(.author == "John Doe")'
 
 # Filter by file type
-beacon --range --since "1 week ago" --format json | jq '.files[] | select(.path | endswith(".py"))'
+beaconled --range --since "1 week ago" --format json | jq '.files[] | select(.path | endswith(".py"))'
 
 # Filter by impact
-beacon --range --since "1 week ago" --format json | jq 'select(.total_insertions > 100)'
+beaconled --range --since "1 week ago" --format json | jq 'select(.total_insertions > 100)'
 ```
 
 ### Batch Processing
@@ -234,7 +234,7 @@ PERIODS=("1 day ago" "1 week ago" "1 month ago" "3 months ago")
 
 for period in "${PERIODS[@]}"; do
     echo "=== Analysis since $period ==="
-    beacon --range --since "$period" --format json > "report-${period// /-}.json"
+    beaconled --range --since "$period" --format json > "report-${period// /-}.json"
 done
 ```
 
@@ -248,7 +248,7 @@ LOG_FILE="development-velocity.log"
 DATE=$(date +%Y-%m-%d)
 
 # Get weekly stats
-stats=$(beacon --range --since "1 week ago" --format json)
+stats=$(beaconled --range --since "1 week ago" --format json)
 commits=$(echo $stats | jq '.total_commits')
 files=$(echo $stats | jq '.total_files_changed')
 insertions=$(echo $stats | jq '.total_insertions')
@@ -261,11 +261,11 @@ echo "$DATE,$commits,$files,$insertions,$deletions" >> $LOG_FILE
 
 | Task | Command |
 |------|---------|
-| Latest commit | `beacon` |
-| Specific commit | `beacon abc123` |
-| Last week | `beacon --range --since "1 week ago"` |
-| Last month | `beacon --range --since "1 month ago"` |
-| JSON output | `beacon --format json` |
-| Extended details | `beacon --format extended` |
-| Custom repo | `beacon --repo /path/to/repo` |
-| Date range | `beacon --range --since "2025-07-01" --until "2025-07-31"` |
+| Latest commit | `beaconled` |
+| Specific commit | `beaconled abc123` |
+| Last week | `beaconled --range --since "1 week ago"` |
+| Last month | `beaconled --range --since "1 month ago"` |
+| JSON output | `beaconled --format json` |
+| Extended details | `beaconled --format extended` |
+| Custom repo | `beaconled --repo /path/to/repo` |
+| Date range | `beaconled --range --since "2025-07-01" --until "2025-07-31"` |

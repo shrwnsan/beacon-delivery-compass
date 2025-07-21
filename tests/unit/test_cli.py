@@ -3,21 +3,21 @@ import unittest
 from io import StringIO
 from unittest.mock import MagicMock, patch
 
-from beacon.cli import main
+from beaconled.cli import main
 
 
 class TestCLI(unittest.TestCase):
     """Test cases for CLI functionality."""
 
-    @patch('beacon.cli.GitAnalyzer')
-    @patch('sys.argv', ['beacon', '--help'])
+    @patch('beaconled.cli.GitAnalyzer')
+    @patch('sys.argv', ['beaconled', '--help'])
     def test_help_output(self, mock_analyzer):
         """Test that help output is displayed."""
         with self.assertRaises(SystemExit) as cm:
             main()
         self.assertEqual(cm.exception.code, 0)
 
-    @patch('beacon.cli.GitAnalyzer')
+    @patch('beaconled.cli.GitAnalyzer')
     def test_analyze_single_commit(self, mock_analyzer_class):
         """Test analyzing a single commit."""
         # Mock the analyzer and its methods
@@ -25,7 +25,7 @@ class TestCLI(unittest.TestCase):
         mock_analyzer_class.return_value = mock_analyzer
 
         # Mock commit stats
-        from beacon.core.models import CommitStats, FileStats
+        from beaconled.core.models import CommitStats, FileStats
         from datetime import datetime
         mock_stats = CommitStats(
             hash="abc123",
@@ -42,7 +42,7 @@ class TestCLI(unittest.TestCase):
         # Capture stdout
         captured_output = StringIO()
         with patch('sys.stdout', captured_output):
-            with patch('sys.argv', ['beacon', 'abc123']):
+            with patch('sys.argv', ['beaconled', 'abc123']):
                 main()
 
         output = captured_output.getvalue()

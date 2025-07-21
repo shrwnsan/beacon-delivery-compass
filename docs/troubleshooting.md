@@ -8,7 +8,7 @@ This guide helps you resolve common issues when using Beacon.
 
 **Problem**: "Python 3.8+ required" error
 ```bash
-$ beacon
+$ beaconled
 Error: Python 3.8 or higher is required
 ```
 
@@ -26,15 +26,15 @@ python3 --version
 # Use specific Python version
 python3.8 -m venv venv
 source venv/bin/activate
-pip install beacon
+pip install beaconled
 ```
 
 ### Virtual Environment Issues
 
-**Problem**: "command not found: beacon"
+**Problem**: "command not found: beaconled"
 ```bash
-$ beacon
-beacon: command not found
+$ beaconled
+beaconled: command not found
 ```
 
 **Solution**:
@@ -44,11 +44,11 @@ source venv/bin/activate  # macOS/Linux
 # or
 venv\Scripts\activate     # Windows
 
-# Check if beacon is installed
-pip list | grep beacon
+# Check if beaconled is installed
+pip list | grep beaconled
 
 # Reinstall if needed
-pip install beacon
+pip install beaconled
 ```
 
 ### Permission Errors
@@ -63,10 +63,10 @@ ERROR: Could not install packages due to an EnvironmentError: [Errno 13] Permiss
 # Use virtual environment (recommended)
 python -m venv venv
 source venv/bin/activate
-pip install beacon
+pip install beaconled
 
 # Or use --user flag (not recommended)
-pip install --user beacon
+pip install --user beaconled
 ```
 
 ## Git Repository Issues
@@ -75,7 +75,7 @@ pip install --user beacon
 
 **Problem**: "Not a git repository" error
 ```bash
-$ beacon
+$ beaconled
 Error: Not a git repository (or any of the parent directories)
 ```
 
@@ -88,14 +88,14 @@ git status
 git init
 
 # Or specify repository path
-beacon --repo /path/to/git/repo
+beaconled --repo /path/to/git/repo
 ```
 
 ### Empty Repository
 
 **Problem**: "No commits found" error
 ```bash
-$ beacon
+$ beaconled
 Error: No commits found in repository
 ```
 
@@ -113,7 +113,7 @@ git commit -m "Initial commit"
 
 **Problem**: Limited history in shallow clones
 ```bash
-$ beacon --range --since "1 month ago"
+$ beaconled --range --since "1 month ago"
 Error: Requested range exceeds available history
 ```
 
@@ -132,43 +132,43 @@ git clone --no-single-branch --no-tags https://github.com/user/repo.git
 
 **Problem**: "Invalid argument" errors
 ```bash
-$ beacon --format invalid
+$ beaconled --format invalid
 Error: Invalid format: 'invalid'
 ```
 
 **Solution**:
 ```bash
 # Check available formats
-beacon --help
+beaconled --help
 
 # Use valid formats: standard, extended, json
-beacon --format standard
-beacon --format extended
-beacon --format json
+beaconled --format standard
+beaconled --format extended
+beaconled --format json
 ```
 
 ### Date Format Issues
 
 **Problem**: "Invalid date format" error
 ```bash
-$ beacon --range --since "next week"
+$ beaconled --range --since "next week"
 Error: Invalid date format: 'next week'
 ```
 
 **Solution**:
 ```bash
 # Use valid date formats
-beacon --range --since "1 week ago"
-beacon --range --since "2025-07-01"
-beacon --range --since "yesterday"
-beacon --range --since "2 days ago"
+beaconled --range --since "1 week ago"
+beaconled --range --since "2025-07-01"
+beaconled --range --since "yesterday"
+beaconled --range --since "2 days ago"
 ```
 
 ### Commit Hash Issues
 
 **Problem**: "Commit not found" error
 ```bash
-$ beacon abc123
+$ beaconled abc123
 Error: Commit 'abc123' not found
 ```
 
@@ -178,8 +178,8 @@ Error: Commit 'abc123' not found
 git log --oneline -10
 
 # Use full hash or longer prefix
-beacon abc123def456789
-beacon HEAD~5
+beaconled abc123def456789
+beaconled HEAD~5
 ```
 
 ## Output and Formatting Issues
@@ -188,17 +188,17 @@ beacon HEAD~5
 
 **Problem**: Malformed JSON output
 ```bash
-$ beacon --format json | jq .
+$ beaconled --format json | jq .
 parse error: Invalid numeric literal
 ```
 
 **Solution**:
 ```bash
 # Check for error messages in output
-beacon --format json 2>&1 | head -20
+beaconled --format json 2>&1 | head -20
 
 # Ensure clean JSON output
-beacon --format json > output.json
+beaconled --format json > output.json
 cat output.json | jq .
 ```
 
@@ -206,7 +206,7 @@ cat output.json | jq .
 
 **Problem**: Garbled characters in output
 ```bash
-$ beacon
+$ beaconled
 Commit: abc123
 Author: JÃ¶hn DÃ¶e
 ```
@@ -219,7 +219,7 @@ export LC_ALL=en_US.UTF-8
 
 # On Windows, use PowerShell or WSL
 # Or use JSON format for programmatic processing
-beacon --format json
+beaconled --format json
 ```
 
 ## Performance Issues
@@ -228,39 +228,39 @@ beacon --format json
 
 **Problem**: Slow analysis on large repositories
 ```bash
-$ beacon --range --since "1 year ago"
+$ beaconled --range --since "1 year ago"
 [...hangs for minutes...]
 ```
 
 **Solution**:
 ```bash
 # Use shorter time ranges
-beacon --range --since "1 week ago"
-beacon --range --since "1 month ago"
+beaconled --range --since "1 week ago"
+beaconled --range --since "1 month ago"
 
 # Use specific date ranges
-beacon --range --since "2025-07-01" --until "2025-07-31"
+beaconled --range --since "2025-07-01" --until "2025-07-31"
 
 # Analyze specific commits instead
-beacon abc123
-beacon HEAD~10..HEAD
+beaconled abc123
+beaconled HEAD~10..HEAD
 ```
 
 ### Memory Issues
 
 **Problem**: Out of memory errors on large repos
 ```bash
-$ beacon --range --since "1 year ago"
+$ beaconled --range --since "1 year ago"
 MemoryError
 ```
 
 **Solution**:
 ```bash
 # Use shorter ranges
-beacon --range --since "1 week ago"
+beaconled --range --since "1 week ago"
 
 # Use sampling approach
-beacon --range --since "1 month ago" --until "2 weeks ago"
+beaconled --range --since "1 month ago" --until "2 weeks ago"
 ```
 
 ## Integration Issues
@@ -289,7 +289,7 @@ head -1 .git/hooks/post-commit
 
 **Problem**: Beacon not found in CI/CD
 ```bash
-/bin/sh: 1: beacon: not found
+/bin/sh: 1: beaconled: not found
 ```
 
 **Solution**:
@@ -298,15 +298,15 @@ head -1 .git/hooks/post-commit
 - name: Install Beacon
   run: |
     python -m pip install --upgrade pip
-    pip install beacon
+    pip install beaconled
 
 # Or use full path
 - name: Run Beacon
   run: |
     python -m venv venv
     source venv/bin/activate
-    pip install beacon
-    beacon --format json
+    pip install beaconled
+    beaconled --format json
 ```
 
 ### Docker Issues
@@ -327,8 +327,8 @@ RUN apt-get update && apt-get install -y git
 # Set working directory
 WORKDIR /workspace
 
-# Install beacon
-RUN pip install beacon
+# Install beaconled
+RUN pip install beaconled
 
 # Ensure git repository is available
 COPY . .
@@ -340,15 +340,15 @@ COPY . .
 
 **Problem**: Path separator issues
 ```bash
-beacon --repo C:\Users\name\repo
+beaconled --repo C:\Users\name\repo
 Error: Invalid path format
 ```
 
 **Solution**:
 ```bash
 # Use forward slashes or quotes
-beacon --repo "C:/Users/name/repo"
-beacon --repo "C:\\Users\\name\\repo"
+beaconled --repo "C:/Users/name/repo"
+beaconled --repo "C:\\Users\\name\\repo"
 ```
 
 ### macOS Issues
@@ -394,12 +394,12 @@ WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status
 **Solution**:
 ```bash
 # Configure pip for proxy
-pip install --proxy http://proxy.company.com:8080 beacon
+pip install --proxy http://proxy.company.com:8080 beaconled
 
 # Or set environment variables
 export HTTP_PROXY=http://proxy.company.com:8080
 export HTTPS_PROXY=http://proxy.company.com:8080
-pip install beacon
+pip install beaconled
 ```
 
 ## Debugging Steps
@@ -408,13 +408,13 @@ pip install beacon
 
 ```bash
 # Run with debug information
-python -m beacon --debug
+python -m beaconled --debug
 
 # Check Python path
 python -c "import sys; print(sys.path)"
 
-# Check beacon installation
-python -c "import beacon; print(beacon.__file__)"
+# Check beaconled installation
+python -c "import beaconled; print(beaconled.__file__)"
 ```
 
 ### Check Git Configuration
@@ -435,8 +435,8 @@ git log --oneline -5
 # Test git log directly
 git log --numstat --format="%H|%an|%ad|%s" -1
 
-# Test beacon components
-python -c "from beacon.core.analyzer import GitAnalyzer; print('OK')"
+# Test beaconled components
+python -c "from beaconled.core.analyzer import GitAnalyzer; print('OK')"
 ```
 
 ## Getting Help
@@ -445,14 +445,14 @@ python -c "from beacon.core.analyzer import GitAnalyzer; print('OK')"
 
 ```bash
 # Create diagnostic report
-echo "=== System Information ===" > beacon-debug.txt
-python --version >> beacon-debug.txt
-git --version >> beacon-debug.txt
-pip list | grep beacon >> beacon-debug.txt
-echo "=== Git Status ===" >> beacon-debug.txt
-git status >> beacon-debug.txt
-echo "=== Beacon Test ===" >> beacon-debug.txt
-beacon --format json 2>&1 >> beacon-debug.txt
+echo "=== System Information ===" > beaconled-debug.txt
+python --version >> beaconled-debug.txt
+git --version >> beaconled-debug.txt
+pip list | grep beaconled >> beaconled-debug.txt
+echo "=== Git Status ===" >> beaconled-debug.txt
+git status >> beaconled-debug.txt
+echo "=== Beacon Test ===" >> beaconled-debug.txt
+beaconled --format json 2>&1 >> beaconled-debug.txt
 ```
 
 ### Report Issues
@@ -461,14 +461,14 @@ When reporting issues, include:
 1. Operating system and version
 2. Python version (`python --version`)
 3. Git version (`git --version`)
-4. Beacon version (`pip show beacon`)
+4. Beacon version (`pip show beaconled`)
 5. Full error message
 6. Steps to reproduce
 7. Diagnostic report (from above)
 
 ### Community Support
 
-- **GitHub Issues**: https://github.com/shrwnsan/beacon-delivery-compass/issues
+- **GitHub Issues**: https://github.com/shrwnsan/beaconled-delivery-compass/issues
 - **Discussions**: Use GitHub Discussions for questions
 - **Documentation**: Check docs/ directory for updates
 
@@ -477,7 +477,7 @@ When reporting issues, include:
 | Issue | Quick Fix |
 |-------|-----------|
 | Command not found | `source venv/bin/activate` |
-| Not a git repo | `git init` or `beacon --repo /path` |
+| Not a git repo | `git init` or `beaconled --repo /path` |
 | Python version | `python3.8 -m venv venv` |
 | Permission denied | Use virtual environment |
 | Large repo slow | Use `--since "1 week ago"` |

@@ -25,19 +25,19 @@ Welcome to the Beacon documentation! This is your delivery compass for empowered
 
 1. **Install Beacon**
    ```bash
-   pip install beacon
+   pip install beaconled
    ```
 
 2. **Basic Usage**
    ```bash
    # Analyze latest commit
-   beacon
+   beaconled
 
    # Weekly team report
-   beacon --range --since "1 week ago"
+   beaconled --range --since "1 week ago"
 
    # JSON output for automation
-   beacon --format json
+   beaconled --format json
    ```
 
 3. **Explore Examples**
@@ -62,8 +62,8 @@ Welcome to the Beacon documentation! This is your delivery compass for empowered
 
 ## 🔗 Quick Links
 
-- **GitHub Repository**: [beacon-delivery-compass](https://github.com/shrwnsan/beacon-delivery-compass)
-- **Issues & Support**: [GitHub Issues](https://github.com/shrwnsan/beacon-delivery-compass/issues)
+- **GitHub Repository**: [beaconled-delivery-compass](https://github.com/shrwnsan/beaconled-delivery-compass)
+- **Issues & Support**: [GitHub Issues](https://github.com/shrwnsan/beaconled-delivery-compass/issues)
 - **Contributing**: See [CONTRIBUTING.md](../CONTRIBUTING.md)
 
 ## 📋 Documentation Index

@@ -1,4 +1,4 @@
-# Beacon
+# Beaconled
 
 Your delivery compass for empowered product builders.
 
@@ -22,16 +22,16 @@ We strongly recommend using a virtual environment to avoid conflicts with other 
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Install beacon
-pip install beacon
+# Install beaconled
+pip install beaconled
 ```
 
 For development or testing the latest version:
 
 ```bash
 # Clone and install in development mode
-git clone https://github.com/shrwnsan/beacon-delivery-compass.git
-cd beacon-delivery-compass
+git clone https://github.com/shrwnsan/beaconled-delivery-compass.git
+cd beaconled-delivery-compass
 python -m venv venv
 source venv/bin/activate
 pip install -e ".[dev]"
@@ -41,13 +41,13 @@ pip install -e ".[dev]"
 
 ```bash
 # Analyze latest commit
-beacon
+beaconled
 
 # Weekly team report
-beacon --range --since "1 week ago"
+beaconled --range --since "1 week ago"
 
 # JSON output for automation
-beacon --format json
+beaconled --format json
 ```
 
 ## Documentation

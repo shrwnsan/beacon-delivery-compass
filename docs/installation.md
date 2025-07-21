@@ -29,32 +29,32 @@ python3 --version
 
 ```bash
 # Create a new virtual environment
-python -m venv beacon-env
+python -m venv beaconled-env
 
 # Activate the virtual environment
 # On macOS/Linux:
-source beacon-env/bin/activate
+source beaconled-env/bin/activate
 
 # On Windows:
-beacon-env\Scripts\activate
+beaconled-env\Scripts\activate
 ```
 
-You'll know the virtual environment is active when you see `(beacon-env)` in your terminal prompt.
+You'll know the virtual environment is active when you see `(beaconled-env)` in your terminal prompt.
 
 ### 2. Install Beacon
 
 ```bash
 # Install from PyPI (when available)
-pip install beacon
+pip install beaconled
 
 # Or install the latest development version
-pip install git+https://github.com/shrwnsan/beacon-delivery-compass.git
+pip install git+https://github.com/shrwnsan/beaconled-delivery-compass.git
 ```
 
 ### 3. Verify Installation
 
 ```bash
-beacon --help
+beaconled --help
 ```
 
 ## Development Installation
@@ -64,8 +64,8 @@ If you want to contribute to Beacon or test the latest features:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/shrwnsan/beacon-delivery-compass.git
-cd beacon-delivery-compass
+git clone https://github.com/shrwnsan/beaconled-delivery-compass.git
+cd beaconled-delivery-compass
 ```
 
 ### 2. Create and Activate Virtual Environment
@@ -91,7 +91,7 @@ This installs Beacon in "editable" mode, so changes to the source code are immed
 pytest
 
 # Run with coverage
-pytest --cov=beacon --cov-report=term-missing
+pytest --cov=beaconled --cov-report=term-missing
 
 # Run code quality checks
 black src tests
@@ -110,8 +110,8 @@ If you want to install Beacon globally but isolated from other packages:
 pip install --user pipx
 pipx ensurepath
 
-# Install beacon with pipx
-pipx install beacon
+# Install beaconled with pipx
+pipx install beaconled
 ```
 
 ### System-wide Installation (Not Recommended)
@@ -120,7 +120,7 @@ While possible, we don't recommend system-wide installation as it can cause conf
 
 ```bash
 # Only if you really need system-wide installation
-pip install beacon
+pip install beaconled
 ```
 
 ## Managing Your Virtual Environment
@@ -129,8 +129,8 @@ pip install beacon
 
 ```bash
 # Activate (run this each time you open a new terminal)
-source beacon-env/bin/activate  # macOS/Linux
-beacon-env\Scripts\activate     # Windows
+source beaconled-env/bin/activate  # macOS/Linux
+beaconled-env\Scripts\activate     # Windows
 
 # Deactivate when you're done
 deactivate
@@ -140,18 +140,18 @@ deactivate
 
 ```bash
 # Make sure your virtual environment is active
-source beacon-env/bin/activate
+source beaconled-env/bin/activate
 
 # Update to latest version
-pip install --upgrade beacon
+pip install --upgrade beaconled
 ```
 
 ### Removing the Installation
 
 ```bash
 # Simply delete the virtual environment directory
-rm -rf beacon-env  # macOS/Linux
-rmdir /s beacon-env  # Windows
+rm -rf beaconled-env  # macOS/Linux
+rmdir /s beaconled-env  # Windows
 ```
 
 ## Troubleshooting
@@ -162,8 +162,8 @@ If you have multiple Python versions installed:
 
 ```bash
 # Use specific Python version
-python3.9 -m venv beacon-env
-python3.10 -m venv beacon-env
+python3.9 -m venv beaconled-env
+python3.10 -m venv beaconled-env
 ```
 
 ### Permission Errors
