@@ -4,14 +4,14 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="beacon",
+    name="beaconled",
     version="0.1.0",
     author="Your Name",
     author_email="your.email@example.com",
     description="Your delivery compass for empowered product builders",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/shrwnsan/beacon-delivery-compass",
+    url="https://github.com/shrwnsan/beaconled-delivery-compass",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     classifiers=[
@@ -40,7 +40,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "beacon=beacon.cli:main",
+            "beaconled=beaconled.cli:main",
         ],
     },
 )

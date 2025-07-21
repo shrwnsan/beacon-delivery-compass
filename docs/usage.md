@@ -8,10 +8,10 @@ This guide covers how to use Beacon effectively for analyzing your git repositor
 
 ```bash
 # Activate your virtual environment
-source beacon-env/bin/activate  # macOS/Linux
-beacon-env\Scripts\activate     # Windows
+source beaconled-env/bin/activate  # macOS/Linux
+beaconled-env\Scripts\activate     # Windows
 
-# You should see (beacon-env) in your prompt
+# You should see (beaconled-env) in your prompt
 ```
 
 ## Basic Usage
@@ -20,7 +20,7 @@ beacon-env\Scripts\activate     # Windows
 
 ```bash
 # Analyze the latest commit (HEAD)
-beacon
+beaconled
 
 # Example output:
 # Commit: abc12345
@@ -43,10 +43,10 @@ beacon
 
 ```bash
 # Analyze a specific commit by hash
-beacon abc12345
+beaconled abc12345
 
 # You can use short hashes too
-beacon abc123
+beaconled abc123
 ```
 
 ## Output Formats
@@ -56,9 +56,9 @@ Beacon supports three output formats to suit different needs:
 ### Standard Format (Default)
 
 ```bash
-beacon --format standard
+beaconled --format standard
 # or simply
-beacon
+beaconled
 ```
 
 Clean, human-readable output perfect for quick reviews.
@@ -66,7 +66,7 @@ Clean, human-readable output perfect for quick reviews.
 ### Extended Format
 
 ```bash
-beacon --format extended
+beaconled --format extended
 ```
 
 Includes additional details like file type breakdowns:
@@ -80,7 +80,7 @@ File type breakdown:
 ### JSON Format
 
 ```bash
-beacon --format json
+beaconled --format json
 ```
 
 Machine-readable output perfect for automation and integration:
@@ -113,7 +113,7 @@ Analyze multiple commits over a time period:
 
 ```bash
 # Analyze last week's commits
-beacon --range --since "1 week ago"
+beaconled --range --since "1 week ago"
 
 # Example output:
 # Range Analysis: 2025-07-13 to 2025-07-20
@@ -134,20 +134,20 @@ beacon --range --since "1 week ago"
 
 ```bash
 # Specific date range
-beacon --range --since "2025-07-01" --until "2025-07-15"
+beaconled --range --since "2025-07-01" --until "2025-07-15"
 
 # Last month
-beacon --range --since "1 month ago"
+beaconled --range --since "1 month ago"
 
 # Since a specific date
-beacon --range --since "2025-06-01"
+beaconled --range --since "2025-06-01"
 ```
 
 ### Sprint Analysis
 
 ```bash
 # Two-week sprint analysis with JSON output for reporting
-beacon --range --since "2 weeks ago" --format json > sprint-report.json
+beaconled --range --since "2 weeks ago" --format json > sprint-report.json
 ```
 
 ## Repository Options
@@ -156,10 +156,10 @@ beacon --range --since "2 weeks ago" --format json > sprint-report.json
 
 ```bash
 # Analyze a different repository
-beacon --repo /path/to/other/repo
+beaconled --repo /path/to/other/repo
 
 # Works with all other options
-beacon --repo /path/to/other/repo --range --since "1 week ago"
+beaconled --repo /path/to/other/repo --range --since "1 week ago"
 ```
 
 ## Common Workflows
@@ -168,37 +168,37 @@ beacon --repo /path/to/other/repo --range --since "1 week ago"
 
 ```bash
 # Quick check of yesterday's work
-beacon --range --since "1 day ago"
+beaconled --range --since "1 day ago"
 ```
 
 ### Weekly Team Reports
 
 ```bash
 # Generate team report for the week
-beacon --range --since "1 week ago" --format extended > weekly-report.txt
+beaconled --range --since "1 week ago" --format extended > weekly-report.txt
 ```
 
 ### Sprint Retrospectives
 
 ```bash
 # Comprehensive sprint analysis
-beacon --range --since "2 weeks ago" --format json > sprint-metrics.json
+beaconled --range --since "2 weeks ago" --format json > sprint-metrics.json
 ```
 
 ### Code Review Preparation
 
 ```bash
 # Analyze specific commits before review
-beacon abc123
-beacon def456
-beacon ghi789
+beaconled abc123
+beaconled def456
+beaconled ghi789
 ```
 
 ### CI/CD Integration
 
 ```bash
 # Generate metrics for build pipeline
-beacon --format json > build-metrics.json
+beaconled --format json > build-metrics.json
 ```
 
 ## Pro Tips
@@ -209,22 +209,22 @@ Add these to your shell profile (`.bashrc`, `.zshrc`, etc.):
 
 ```bash
 # Quick aliases
-alias beacon-week="beacon --range --since '1 week ago'"
-alias beacon-json="beacon --format json"
-alias beacon-sprint="beacon --range --since '2 weeks ago' --format extended"
+alias beaconled-week="beaconled --range --since '1 week ago'"
+alias beaconled-json="beaconled --format json"
+alias beaconled-sprint="beaconled --range --since '2 weeks ago' --format extended"
 ```
 
 ### 2. Combine with Other Tools
 
 ```bash
 # Save weekly report with timestamp
-beacon --range --since "1 week ago" > "report-$(date +%Y-%m-%d).txt"
+beaconled --range --since "1 week ago" > "report-$(date +%Y-%m-%d).txt"
 
 # Count commits in range
-beacon --range --since "1 week ago" --format json | jq '.total_commits'
+beaconled --range --since "1 week ago" --format json | jq '.total_commits'
 
 # Extract author statistics
-beacon --range --since "1 week ago" --format json | jq '.authors'
+beaconled --range --since "1 week ago" --format json | jq '.authors'
 ```
 
 ### 3. Virtual Environment Automation
@@ -233,9 +233,9 @@ Create a script to automatically activate your environment:
 
 ```bash
 #!/bin/bash
-# save as ~/bin/beacon-env
-source ~/beacon-env/bin/activate
-beacon "$@"
+# save as ~/bin/beaconled-env
+source ~/beaconled-env/bin/activate
+beaconled "$@"
 deactivate
 ```
 
@@ -247,19 +247,19 @@ deactivate
 # save as analyze-project.sh
 cd /path/to/your/project
 source venv/bin/activate
-beacon --range --since "1 week ago" --format extended
+beaconled --range --since "1 week ago" --format extended
 ```
 
 ## Troubleshooting
 
 ### Virtual Environment Not Active
 
-If you see "command not found: beacon":
+If you see "command not found: beaconled":
 
 ```bash
 # Make sure your virtual environment is active
-source beacon-env/bin/activate
-which beacon  # Should show path in your venv
+source beaconled-env/bin/activate
+which beaconled  # Should show path in your venv
 ```
 
 ### Git Repository Issues
@@ -269,7 +269,7 @@ which beacon  # Should show path in your venv
 git status
 
 # Or specify repository path
-beacon --repo /path/to/git/repo
+beaconled --repo /path/to/git/repo
 ```
 
 ### Date Format Issues
@@ -287,7 +287,7 @@ Beacon accepts various date formats:
 - name: Generate Beacon Report
   run: |
     source venv/bin/activate
-    beacon --range --since "1 week ago" --format json > beacon-report.json
+    beaconled --range --since "1 week ago" --format json > beaconled-report.json
 ```
 
 ### Git Hooks
@@ -296,7 +296,7 @@ Beacon accepts various date formats:
 #!/bin/bash
 # .git/hooks/post-commit
 source venv/bin/activate
-beacon --format extended
+beaconled --format extended
 ```
 
 ## Next Steps

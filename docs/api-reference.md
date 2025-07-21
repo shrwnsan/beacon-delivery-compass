@@ -2,11 +2,11 @@
 
 ## Command Line Interface
 
-### beacon
+### beaconled
 The main command-line interface for Beacon.
 
 ```bash
-beacon [OPTIONS] [COMMIT_HASH]
+beaconled [OPTIONS] [COMMIT_HASH]
 ```
 
 #### Arguments
@@ -24,19 +24,19 @@ beacon [OPTIONS] [COMMIT_HASH]
 #### Examples
 ```bash
 # Basic usage
-beacon
+beaconled
 
 # Specific commit
-beacon abc123
+beaconled abc123
 
 # JSON output
-beacon --format json
+beaconled --format json
 
 # Weekly report
-beacon --range --since "1 week ago"
+beaconled --range --since "1 week ago"
 
 # Custom repository
-beacon --repo /path/to/repo --format extended
+beaconled --repo /path/to/repo --format extended
 ```
 
 ## Python API
@@ -47,7 +47,7 @@ beacon --repo /path/to/repo --format extended
 Represents statistics for a single commit.
 
 ```python
-from beacon.core.models import CommitStats
+from beaconled.core.models import CommitStats
 
 stats = CommitStats(
     hash="abc123",
@@ -75,7 +75,7 @@ stats = CommitStats(
 Represents statistics for a single file change.
 
 ```python
-from beacon.core.models import FileStats
+from beaconled.core.models import FileStats
 
 file_stats = FileStats(
     path="src/main.py",
@@ -95,7 +95,7 @@ file_stats = FileStats(
 Represents statistics for a range of commits.
 
 ```python
-from beacon.core.models import RangeStats
+from beaconled.core.models import RangeStats
 
 range_stats = RangeStats(
     start_date="2025-07-13",
@@ -123,7 +123,7 @@ range_stats = RangeStats(
 Analyze a single commit.
 
 ```python
-from beacon.core.analyzer import GitAnalyzer
+from beaconled.core.analyzer import GitAnalyzer
 
 analyzer = GitAnalyzer(repo_path="/path/to/repo")
 stats = analyzer.analyze_commit("abc123")
@@ -138,7 +138,7 @@ stats = analyzer.analyze_commit("abc123")
 Analyze a range of commits.
 
 ```python
-from beacon.core.analyzer import GitAnalyzer
+from beaconled.core.analyzer import GitAnalyzer
 
 analyzer = GitAnalyzer(repo_path="/path/to/repo")
 stats = analyzer.analyze_range(since="1 week ago", until="now")
@@ -156,7 +156,7 @@ stats = analyzer.analyze_range(since="1 week ago", until="now")
 Formats output in standard text format.
 
 ```python
-from beacon.formatters.standard import StandardFormatter
+from beaconled.formatters.standard import StandardFormatter
 
 formatter = StandardFormatter()
 output = formatter.format(stats)
@@ -166,7 +166,7 @@ output = formatter.format(stats)
 Formats output in extended text format with additional details.
 
 ```python
-from beacon.formatters.extended import ExtendedFormatter
+from beaconled.formatters.extended import ExtendedFormatter
 
 formatter = ExtendedFormatter()
 output = formatter.format(stats)
@@ -176,7 +176,7 @@ output = formatter.format(stats)
 Formats output as JSON.
 
 ```python
-from beacon.formatters.json_format import JSONFormatter
+from beaconled.formatters.json_format import JSONFormatter
 
 formatter = JSONFormatter()
 output = formatter.format(stats)
@@ -228,7 +228,7 @@ Error: Invalid date format: 'tomorrow'
 ### Exception Classes
 
 ```python
-from beacon.core.exceptions import (
+from beaconled.core.exceptions import (
     BeaconError,
     RepositoryNotFoundError,
     CommitNotFoundError,
@@ -243,8 +243,8 @@ from beacon.core.exceptions import (
 ```python
 #!/usr/bin/env python3
 import json
-from beacon.core.analyzer import GitAnalyzer
-from beacon.formatters.json_format import JSONFormatter
+from beaconled.core.analyzer import GitAnalyzer
+from beaconled.formatters.json_format import JSONFormatter
 
 # Analyze repository
 analyzer = GitAnalyzer("/path/to/repo")
@@ -261,14 +261,14 @@ print(formatter.format(stats))
 - name: Generate Beacon Report
   run: |
     python -c "
-    from beacon.core.analyzer import GitAnalyzer
-    from beacon.formatters.json_format import JSONFormatter
+    from beaconled.core.analyzer import GitAnalyzer
+    from beaconled.formatters.json_format import JSONFormatter
     
     analyzer = GitAnalyzer('.')
     stats = analyzer.analyze_range(since='1 week ago')
     formatter = JSONFormatter()
     
-    with open('beacon-report.json', 'w') as f:
+    with open('beaconled-report.json', 'w') as f:
         f.write(formatter.format(stats))
     "
 ```
@@ -276,7 +276,7 @@ print(formatter.format(stats))
 ### Custom Formatter
 
 ```python
-from beacon.core.models import CommitStats, RangeStats
+from beaconled.core.models import CommitStats, RangeStats
 from typing import Union
 
 class CustomFormatter:
