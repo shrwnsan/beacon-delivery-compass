@@ -1,9 +1,10 @@
 """Tests for the analyzer module."""
-import unittest
 import subprocess
-from unittest.mock import patch, MagicMock
+import unittest
+from unittest.mock import MagicMock, patch
+
 from beacon.core.analyzer import GitAnalyzer
-from beacon.core.models import CommitStats, FileStats
+from beacon.core.models import CommitStats
 
 
 class TestGitAnalyzer(unittest.TestCase):
@@ -27,9 +28,9 @@ class TestGitAnalyzer(unittest.TestCase):
             stdout=mock_output,
             returncode=0
         )
-        
+
         result = self.analyzer.get_commit_stats("abc123")
-        
+
         self.assertIsInstance(result, CommitStats)
         self.assertEqual(result.hash, "abc123")
         self.assertEqual(result.author, "John Doe")
@@ -43,7 +44,7 @@ class TestGitAnalyzer(unittest.TestCase):
     def test_get_commit_stats_failure(self, mock_run):
         """Test commit analysis with git command failure."""
         mock_run.side_effect = subprocess.CalledProcessError(1, 'git')
-        
+
         with self.assertRaises(subprocess.CalledProcessError):
             self.analyzer.get_commit_stats("nonexistent")
 

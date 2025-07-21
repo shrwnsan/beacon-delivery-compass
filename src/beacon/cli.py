@@ -3,18 +3,19 @@
 
 import argparse
 import sys
-from typing import Optional
 
 from .core.analyzer import GitAnalyzer
-from .formatters.standard import StandardFormatter
 from .formatters.extended import ExtendedFormatter
 from .formatters.json_format import JSONFormatter
+from .formatters.standard import StandardFormatter
 
 
 def main() -> None:
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
-        description="Beacon - Your delivery compass for empowered product builders"
+        description=(
+            "Beacon - Your delivery compass for empowered product builders"
+        )
     )
     parser.add_argument(
         "commit",
@@ -38,10 +39,14 @@ def main() -> None:
         help="Start date for range analysis (default: 1 week ago)",
     )
     parser.add_argument(
-        "--until", default="HEAD", help="End date for range analysis (default: HEAD)"
+        "--until",
+        default="HEAD",
+        help="End date for range analysis (default: HEAD)",
     )
     parser.add_argument(
-        "--repo", default=".", help="Repository path (default: current directory)"
+        "--repo",
+        default=".",
+        help="Repository path (default: current directory)",
     )
 
     args = parser.parse_args()
@@ -51,9 +56,10 @@ def main() -> None:
 
         if args.range:
             stats = analyzer.get_range_analytics(args.since, args.until)
-            formatter = (
-                JSONFormatter() if args.format == "json" else StandardFormatter()
-            )
+            if args.format == "json":
+                formatter = JSONFormatter()
+            else:
+                formatter = StandardFormatter()
             print(formatter.format_range_stats(stats))
         else:
             stats = analyzer.get_commit_stats(args.commit)

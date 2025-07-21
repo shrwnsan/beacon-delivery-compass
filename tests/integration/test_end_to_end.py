@@ -1,8 +1,7 @@
 """End-to-end integration tests."""
-import unittest
-import subprocess
 import json
-import os
+import subprocess
+import unittest
 
 
 class TestEndToEnd(unittest.TestCase):
@@ -43,7 +42,7 @@ class TestEndToEnd(unittest.TestCase):
             text=True
         )
         self.assertEqual(result.returncode, 0)
-        
+
         # Verify it's valid JSON
         try:
             data = json.loads(result.stdout)
