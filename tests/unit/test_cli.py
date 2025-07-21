@@ -1,8 +1,8 @@
 """Tests for the CLI module."""
 import unittest
-from unittest.mock import patch, MagicMock
-import sys
 from io import StringIO
+from unittest.mock import MagicMock, patch
+
 from beacon.cli import main
 
 
@@ -23,7 +23,7 @@ class TestCLI(unittest.TestCase):
         # Mock the analyzer and its methods
         mock_analyzer = MagicMock()
         mock_analyzer_class.return_value = mock_analyzer
-        
+
         # Mock commit stats
         from beacon.core.models import CommitStats, FileStats
         from datetime import datetime
@@ -38,13 +38,13 @@ class TestCLI(unittest.TestCase):
             files=[FileStats("test.py", 10, 5, 15)]
         )
         mock_analyzer.get_commit_stats.return_value = mock_stats
-        
+
         # Capture stdout
         captured_output = StringIO()
         with patch('sys.stdout', captured_output):
             with patch('sys.argv', ['beacon', 'abc123']):
                 main()
-        
+
         output = captured_output.getvalue()
         self.assertIn("abc123", output)
         self.assertIn("Test Author", output)

@@ -17,14 +17,17 @@ class StandardFormatter:
         output.append(f"Files changed: {stats.files_changed}")
         output.append(f"Lines added: {stats.lines_added}")
         output.append(f"Lines deleted: {stats.lines_deleted}")
-        output.append(f"Net change: {stats.lines_added - stats.lines_deleted}")
+        output.append(
+            f"Net change: {stats.lines_added - stats.lines_deleted}"
+        )
 
         if stats.files:
             output.append("")
             output.append("File changes:")
             for file_stat in stats.files:
                 output.append(
-                    f"  {file_stat.path}: +{file_stat.lines_added} -{file_stat.lines_deleted}"
+                    f"  {file_stat.path}: "
+                    f"+{file_stat.lines_added} -{file_stat.lines_deleted}"
                 )
 
         return "\n".join(output)
@@ -33,7 +36,8 @@ class StandardFormatter:
         """Format range statistics as standard text."""
         output = []
         output.append(
-            f"Range Analysis: {stats.start_date.strftime('%Y-%m-%d')} to {stats.end_date.strftime('%Y-%m-%d')}"
+            f"Range Analysis: {stats.start_date.strftime('%Y-%m-%d')} to "
+            f"{stats.end_date.strftime('%Y-%m-%d')}"
         )
         output.append("")
         output.append(f"Total commits: {stats.total_commits}")

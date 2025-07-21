@@ -1,10 +1,9 @@
 """Git repository analyzer."""
 
 import subprocess
-import json
 from datetime import datetime
-from typing import List, Dict
-from .models import CommitStats, RangeStats, FileStats
+
+from .models import CommitStats, FileStats, RangeStats
 
 
 class GitAnalyzer:
@@ -27,7 +26,9 @@ class GitAnalyzer:
             "--numstat",
             commit_hash,
         ]
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, check=True
+        )
 
         lines = result.stdout.strip().split("\n")
         header = lines[0].split("|")
@@ -72,7 +73,9 @@ class GitAnalyzer:
             files=files,
         )
 
-    def get_range_analytics(self, since: str, until: str = "HEAD") -> RangeStats:
+    def get_range_analytics(
+        self, since: str, until: str = "HEAD"
+    ) -> RangeStats:
         """Get analytics for a range of commits."""
         # Get commit list
         cmd = [
@@ -85,10 +88,14 @@ class GitAnalyzer:
             "--format=%H",
             "--reverse",
         ]
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, check=True
+        )
 
         commit_hashes = [
-            line.strip() for line in result.stdout.strip().split("\n") if line.strip()
+            line.strip()
+            for line in result.stdout.strip().split("\n")
+            if line.strip()
         ]
 
         commits = []
@@ -103,7 +110,9 @@ class GitAnalyzer:
                 commits.append(commit_stats)
 
                 # Update author stats
-                authors[commit_stats.author] = authors.get(commit_stats.author, 0) + 1
+                authors[commit_stats.author] = (
+                    authors.get(commit_stats.author, 0) + 1
+                )
 
                 # Update totals
                 total_files += commit_stats.files_changed
