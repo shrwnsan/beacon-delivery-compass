@@ -45,7 +45,8 @@ class StandardFormatter:
         output.append(f"Total lines added: {stats.total_lines_added}")
         output.append(f"Total lines deleted: {stats.total_lines_deleted}")
         output.append(
-            f"Net change: {stats.total_lines_added - stats.total_lines_deleted}"
+            f"Net change: "
+            f"{stats.total_lines_added - stats.total_lines_deleted}"
         )
 
         if stats.authors:
