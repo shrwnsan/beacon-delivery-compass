@@ -10,7 +10,7 @@ Automatically display commit statistics after each commit:
 ```bash
 #!/bin/bash
 # .git/hooks/post-commit
-source venv/bin/activate  # Adjust path as needed
+source .venv/bin/activate  # Adjust path as needed
 beaconled --format standard
 ```
 
@@ -25,7 +25,7 @@ Review your changes before pushing:
 ```bash
 #!/bin/bash
 # .git/hooks/pre-push
-source venv/bin/activate
+source .venv/bin/activate
 echo "📊 Changes since last push:"
 beaconled --range --since "1 day ago" --format extended
 ```
@@ -36,7 +36,7 @@ Check commit size and impact:
 ```bash
 #!/bin/bash
 # .git/hooks/pre-commit
-source venv/bin/activate
+source .venv/bin/activate
 
 # Check if commit is too large
 stats=$(beaconled --format json)
@@ -178,8 +178,8 @@ pipeline {
         stage('Generate Analytics') {
             steps {
                 sh '''
-                    python -m venv venv
-                    source venv/bin/activate
+                    python -m venv .venv
+                    source .venv/bin/activate
                     pip install beaconled
                     beaconled --format json > beaconled-report.json
                 '''
@@ -217,7 +217,7 @@ Create a daily standup script:
 ```bash
 #!/bin/bash
 # daily-standup.sh
-source venv/bin/activate
+source .venv/bin/activate
 
 echo "🚀 Daily Development Summary"
 echo "=========================="
@@ -232,7 +232,7 @@ beaconled --range --since "1 day ago" --format json > daily-report.json
 ```bash
 #!/bin/bash
 # sprint-planning.sh
-source venv/bin/activate
+source .venv/bin/activate
 
 echo "📈 Sprint Analytics"
 echo "=================="
@@ -247,7 +247,7 @@ beaconled --range --since "2 weeks ago" --format json | jq '.summary'
 ```bash
 #!/bin/bash
 # pre-review-check.sh
-source venv/bin/activate
+source .venv/bin/activate
 
 # Analyze the PR branch
 beaconled --range --since "main" --format extended
@@ -337,13 +337,13 @@ Create `.vscode/tasks.json`:
         {
             "label": "Beacon: Current Commit",
             "type": "shell",
-            "command": "source venv/bin/activate && beaconled",
+            "command": "source .venv/bin/activate && beaconled",
             "group": "build"
         },
         {
             "label": "Beacon: Weekly Report",
             "type": "shell",
-            "command": "source venv/bin/activate && beaconled --range --since '1 week ago' --format extended",
+            "command": "source .venv/bin/activate && beaconled --range --since '1 week ago' --format extended",
             "group": "build"
         }
     ]

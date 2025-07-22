@@ -29,17 +29,17 @@ python3 --version
 
 ```bash
 # Create a new virtual environment
-python -m venv beaconled-env
+python -m venv .venv
 
 # Activate the virtual environment
 # On macOS/Linux:
-source beaconled-env/bin/activate
+source .venv/bin/activate
 
 # On Windows:
-beaconled-env\Scripts\activate
+.venv\Scripts\activate
 ```
 
-You'll know the virtual environment is active when you see `(beaconled-env)` in your terminal prompt.
+You'll know the virtual environment is active when you see `(.venv)` in your terminal prompt.
 
 ### 2. Install Beacon
 
@@ -71,8 +71,8 @@ cd beaconled-delivery-compass
 ### 2. Create and Activate Virtual Environment
 
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 ```
 
 ### 3. Install in Development Mode
@@ -129,8 +129,8 @@ pip install beaconled
 
 ```bash
 # Activate (run this each time you open a new terminal)
-source beaconled-env/bin/activate  # macOS/Linux
-beaconled-env\Scripts\activate     # Windows
+source .venv/bin/activate  # macOS/Linux
+.venv\Scripts\activate     # Windows
 
 # Deactivate when you're done
 deactivate
@@ -140,7 +140,7 @@ deactivate
 
 ```bash
 # Make sure your virtual environment is active
-source beaconled-env/bin/activate
+source .venv/bin/activate
 
 # Update to latest version
 pip install --upgrade beaconled
@@ -150,8 +150,8 @@ pip install --upgrade beaconled
 
 ```bash
 # Simply delete the virtual environment directory
-rm -rf beaconled-env  # macOS/Linux
-rmdir /s beaconled-env  # Windows
+rm -rf .venv  # macOS/Linux
+rmdir /s .venv  # Windows
 ```
 
 ## Troubleshooting
@@ -162,8 +162,8 @@ If you have multiple Python versions installed:
 
 ```bash
 # Use specific Python version
-python3.9 -m venv beaconled-env
-python3.10 -m venv beaconled-env
+python3.9 -m venv .venv
+python3.10 -m venv .venv
 ```
 
 ### Permission Errors

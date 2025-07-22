@@ -8,10 +8,10 @@ This guide covers how to use Beacon effectively for analyzing your git repositor
 
 ```bash
 # Activate your virtual environment
-source beaconled-env/bin/activate  # macOS/Linux
-beaconled-env\Scripts\activate     # Windows
+source .venv/bin/activate  # macOS/Linux
+.venv\Scripts\activate     # Windows
 
-# You should see (beaconled-env) in your prompt
+# You should see (.venv) in your prompt
 ```
 
 ## Basic Usage
@@ -234,7 +234,7 @@ Create a script to automatically activate your environment:
 ```bash
 #!/bin/bash
 # save as ~/bin/beaconled-env
-source ~/beaconled-env/bin/activate
+source ~/.venv/bin/activate
 beaconled "$@"
 deactivate
 ```
@@ -246,7 +246,7 @@ deactivate
 #!/bin/bash
 # save as analyze-project.sh
 cd /path/to/your/project
-source venv/bin/activate
+source .venv/bin/activate
 beaconled --range --since "1 week ago" --format extended
 ```
 
@@ -258,7 +258,7 @@ If you see "command not found: beaconled":
 
 ```bash
 # Make sure your virtual environment is active
-source beaconled-env/bin/activate
+source .venv/bin/activate
 which beaconled  # Should show path in your venv
 ```
 
@@ -286,7 +286,7 @@ Beacon accepts various date formats:
 ```yaml
 - name: Generate Beacon Report
   run: |
-    source venv/bin/activate
+    source .venv/bin/activate
     beaconled --range --since "1 week ago" --format json > beaconled-report.json
 ```
 
@@ -295,7 +295,7 @@ Beacon accepts various date formats:
 ```bash
 #!/bin/bash
 # .git/hooks/post-commit
-source venv/bin/activate
+source .venv/bin/activate
 beaconled --format extended
 ```
 

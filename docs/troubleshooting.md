@@ -24,8 +24,8 @@ python3 --version
 # Windows: Download from python.org
 
 # Use specific Python version
-python3.8 -m venv venv
-source venv/bin/activate
+python3.8 -m venv .venv
+source .venv/bin/activate
 pip install beaconled
 ```
 
@@ -40,9 +40,9 @@ beaconled: command not found
 **Solution**:
 ```bash
 # Ensure virtual environment is active
-source venv/bin/activate  # macOS/Linux
+source .venv/bin/activate  # macOS/Linux
 # or
-venv\Scripts\activate     # Windows
+.venv\Scripts\activate     # Windows
 
 # Check if beaconled is installed
 pip list | grep beaconled
@@ -61,8 +61,8 @@ ERROR: Could not install packages due to an EnvironmentError: [Errno 13] Permiss
 **Solution**:
 ```bash
 # Use virtual environment (recommended)
-python -m venv venv
-source venv/bin/activate
+python -m venv .venv
+source .venv/bin/activate
 pip install beaconled
 
 # Or use --user flag (not recommended)
@@ -303,8 +303,8 @@ head -1 .git/hooks/post-commit
 # Or use full path
 - name: Run Beacon
   run: |
-    python -m venv venv
-    source venv/bin/activate
+    python -m venv .venv
+    source .venv/bin/activate
     pip install beaconled
     beaconled --format json
 ```
@@ -476,9 +476,9 @@ When reporting issues, include:
 
 | Issue | Quick Fix |
 |-------|-----------|
-| Command not found | `source venv/bin/activate` |
+| Command not found | `source .venv/bin/activate` |
 | Not a git repo | `git init` or `beaconled --repo /path` |
-| Python version | `python3.8 -m venv venv` |
+| Python version | `python3.8 -m venv .venv` |
 | Permission denied | Use virtual environment |
 | Large repo slow | Use `--since "1 week ago"` |
 | Invalid date | Use "1 week ago" format |
