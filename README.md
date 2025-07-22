@@ -21,8 +21,10 @@ For detailed installation instructions, please refer to the [Installation Guide]
 
 For more detailed usage examples, please refer to the [Usage Examples](docs/usage.md).
 
-# Weekly team report
+## Weekly team report
+```bash
 beaconled --range --since "1 week ago"
+```
 ```
 
 ## Documentation
