@@ -27,7 +27,7 @@ setup(
     ],
     python_requires=">=3.8",
     install_requires=[
-        # No external dependencies - uses only standard library
+        "colorama>=0.4.4",
     ],
     extras_require={
         "dev": [

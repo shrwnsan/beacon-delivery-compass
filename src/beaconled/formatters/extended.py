@@ -1,8 +1,13 @@
 """Extended output formatter."""
 
+import colorama
+from colorama import Fore, Style
+
 from ..core.models import CommitStats, RangeStats
 from .standard import StandardFormatter
 
+# Initialize colorama for cross-platform color support
+colorama.init()
 
 class ExtendedFormatter(StandardFormatter):
     """Extended formatter with additional details."""
@@ -30,11 +35,13 @@ class ExtendedFormatter(StandardFormatter):
                 file_types[ext]["added"] += file_stat.lines_added
                 file_types[ext]["deleted"] += file_stat.lines_deleted
 
-            output += "\n\nFile type breakdown:"
+            output += f"\n\n{Fore.MAGENTA}File type breakdown:{Style.RESET_ALL}"
             for ext, data in sorted(file_types.items()):
                 output += (
-                    f"\n  .{ext}: {data['count']} files, "
-                    f"+{data['added']} -{data['deleted']}"
+                    f"\n  .{Fore.CYAN}{ext}{Style.RESET_ALL}: "
+                    f"{data['count']} files, "
+                    f"{Fore.GREEN}+{data['added']}{Style.RESET_ALL} "
+                    f"{Fore.RED}-{data['deleted']}{Style.RESET_ALL}"
                 )
 
         return output
@@ -52,8 +59,8 @@ class ExtendedFormatter(StandardFormatter):
                     daily_activity[day] = 0
                 daily_activity[day] += 1
 
-            output += "\n\nDaily activity:"
+            output += f"\n\n{Fore.MAGENTA}Daily activity:{Style.RESET_ALL}"
             for day, count in sorted(daily_activity.items()):
-                output += f"\n  {day}: {count} commits"
+                output += f"\n  {Fore.CYAN}{day}{Style.RESET_ALL}: {count} commits"
 
         return output
