@@ -166,10 +166,11 @@ class GitAnalytics:
         return dict(type_counts)
     
     def _analyze_components(self, files: List[str]) -> Dict:
-        """Analyze which components were affected."""
+        """Analyze which product components were affected."""
         components = {
             "backend": 0,
             "frontend": 0,
+            "api": 0,
             "documentation": 0,
             "configuration": 0,
             "tests": 0,
@@ -183,17 +184,21 @@ class GitAnalytics:
                 continue
             
             file_lower = file.lower()
+            filename = file.split('/')[-1]
             
-            if file.startswith('backend/'):
+            # Focus on product-related components
+            if 'backend' in file_lower or file.startswith('src/'):
                 components["backend"] += 1
-            elif file.startswith('frontend/'):
+            elif 'frontend' in file_lower or file.endswith(('.js', '.ts', '.tsx', '.jsx', '.css', '.html')):
                 components["frontend"] += 1
+            elif 'api' in file_lower or 'service' in file_lower:
+                components["api"] += 1
+            elif 'test' in file_lower or filename.endswith(('.test.js', '.spec.js', '.test.ts', '.spec.ts')):
+                components["tests"] += 1
             elif file.startswith('docs/') or file.endswith('.md'):
                 components["documentation"] += 1
             elif any(file.endswith(ext) for ext in config_extensions):
                 components["configuration"] += 1
-            elif 'test' in file_lower or file_lower.endswith('.test.js') or file_lower.endswith('.spec.js'):
-                components["tests"] += 1
             else:
                 components["other"] += 1
         
@@ -314,30 +319,49 @@ Date: {commit['date']}"""
         components = stats["components"]
         impact = stats["impact_analysis"]
         
-        output = f"""--Files Added/Modified:
-{statistics['files_changed']} files changed in total
-{statistics['insertions']} insertions, {statistics['deletions']} deletions
-{len(file_changes['added'])} new files created
-{len(file_changes['modified'])} existing files improved"""
+        # Calculate net changes
+        net_changes = statistics['insertions'] - statistics['deletions']
+        change_indicator = "📈 Growth" if net_changes > 0 else "📉 Reduction" if net_changes < 0 else "⚖️ Balance"
+        
+        # Product-focused insights
+        product_focus = []
+        if components.get("frontend", 0) > 0:
+            product_focus.append("UI/UX improvements")
+        if components.get("backend", 0) > 0:
+            product_focus.append("Core functionality")
+        if components.get("api", 0) > 0:
+            product_focus.append("API enhancements")
+        
+        output = f"""--📊 Product Development Summary:
+{statistics['files_changed']} files updated
+{statistics['insertions']} new lines, {statistics['deletions']} removed
+{change_indicator}: {abs(net_changes)} net changes
+{len(file_changes['added'])} new features/files added
+{len(file_changes['modified'])} existing features improved"""
         
         if file_changes['deleted']:
-            output += f"\n{len(file_changes['deleted'])} files deleted"
+            output += f"\n{len(file_changes['deleted'])} deprecated features removed"
         
-        output += f"""
-
---Breakdown by Component:"""
+        if product_focus:
+            output += f"\n\n--🎯 Product Focus Areas:"
+            for focus in product_focus:
+                output += f"\n  • {focus}"
+        
+        output += f"\n\n--🏗️ Component Impact:"
         for component, count in components.items():
-            if count > 0:
-                output += f"\n{component.title()}: {count} files"
+            if count > 0 and component in ["backend", "frontend", "api", "tests"]:
+                output += f"\n{component.title()}: {count} files affected"
+        
+        output += f"\n\n--⚡ Development Impact:"
+        if impact['high_impact'] > 0:
+            output += f"\n🔴 High Impact: {impact['high_impact']} files (core services)"
+        if impact['medium_impact'] > 0:
+            output += f"\n🟡 Medium Impact: {impact['medium_impact']} files (features/components)"
+        if impact['low_impact'] > 0:
+            output += f"\n🟢 Low Impact: {impact['low_impact']} files (docs, config)"
         
         output += f"""
-
---Impact Analysis:
-High Impact: {impact['high_impact']} files (core services)
-Medium Impact: {impact['medium_impact']} files (API endpoints, components)
-Low Impact: {impact['low_impact']} files (documentation, config)
-
---Commit Details:
+\n--📝 Commit Details:
 Hash: {commit['short_hash']}
 Branch: {commit['branch']}
 Author: {commit['author']}
@@ -372,14 +396,51 @@ def main():
             if args.format == "json":
                 print(json.dumps(stats, indent=2, default=str))
             else:
-                print(f"📈 Range Analytics ({args.since} to {args.until})")
-                print(f"Total Commits: {stats['total_commits']}")
-                print(f"Total Files Changed: {stats['summary']['total_files_changed']}")
-                print(f"Total Insertions: {stats['summary']['total_insertions']}")
-                print(f"Total Deletions: {stats['summary']['total_deletions']}")
-                print("\nTop Contributors:")
-                for author, count in stats['summary']['authors'].most_common(5):
-                    print(f"  - {author}: {count} commits")
+                # Calculate weekly insights
+                total_changes = stats['summary']['total_insertions'] + stats['summary']['total_deletions']
+                avg_files_per_commit = stats['summary']['total_files_changed'] / max(stats['total_commits'], 1)
+                
+                # Product velocity indicators
+                velocity_score = min(100, (stats['total_commits'] * 10) + (avg_files_per_commit * 5))
+                
+                print(f"🚀 Weekly Product Development Report")
+                print(f"Period: {args.since} to {args.until}")
+                print()
+                print(f"📊 Development Velocity:")
+                print(f"   {stats['total_commits']} commits this week")
+                print(f"   {stats['summary']['total_files_changed']} files updated")
+                print(f"   {total_changes} total code changes")
+                print(f"   {avg_files_per_commit:.1f} files per commit (avg)")
+                
+                print(f"\n🎯 Product Impact Areas:")
+                component_summary = stats['summary']['components']
+                for component in ['frontend', 'backend', 'api', 'tests']:
+                    count = component_summary.get(component, 0)
+                    if count > 0:
+                        print(f"   • {component.title()}: {count} files")
+                
+                print(f"\n👥 Team Contributions:")
+                for author, count in stats['summary']['authors'].most_common():
+                    print(f"   • {author}: {count} commits")
+                
+                print(f"\n📈 Key Insights:")
+                if stats['total_commits'] > 10:
+                    print("   ✅ High development velocity - great momentum!")
+                elif stats['total_commits'] > 5:
+                    print("   ⚡ Steady progress being made")
+                else:
+                    print("   🐌 Consider increasing development pace")
+                
+                if component_summary.get('frontend', 0) > component_summary.get('backend', 0):
+                    print("   🎨 Focus on user-facing improvements")
+                elif component_summary.get('backend', 0) > component_summary.get('frontend', 0):
+                    print("   ⚙️ Emphasis on core functionality")
+                
+                print(f"\n💡 Recommendations:")
+                if component_summary.get('tests', 0) < stats['total_commits'] * 0.5:
+                    print("   • Consider adding more tests")
+                if stats['summary']['total_files_changed'] > 50:
+                    print("   • Large changes - ensure thorough review")
         else:
             stats = analytics.get_commit_stats(args.commit)
             print(format_commit_stats(stats, args.format))
