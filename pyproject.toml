@@ -2,6 +2,51 @@
 requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "beaconled"
+version = "0.1.0"
+description = "Your delivery compass for empowered product builders. A comprehensive toolkit for analyzing git repository statistics and development metrics."
+readme = "README.md"
+requires-python = ">=3.7"
+license = {text = "MIT"}
+authors = [
+    {name = "shrwnsan"},
+]
+maintainers = [
+    {name = "shrwnsan"},
+]
+keywords = ["git", "analytics", "metrics", "development", "productivity"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Version Control :: Git",
+]
+dependencies = [
+    "click>=8.0.0",
+    "gitpython>=3.1.0",
+    "rich>=10.0.0",
+    "pydantic>=1.8.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/shrwnsan/beacon-delivery-compass"
+Documentation = "https://github.com/shrwnsan/beacon-delivery-compass#readme"
+Repository = "https://github.com/shrwnsan/beacon-delivery-compass.git"
+Issues = "https://github.com/shrwnsan/beacon-delivery-compass/issues"
+
+[project.scripts]
+beaconled = "beaconled.cli:main"
+
 [tool.black]
 line-length = 88
 target-version = ['py39']
