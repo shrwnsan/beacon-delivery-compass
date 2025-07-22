@@ -29,10 +29,10 @@ beaconled --range --since "1 week ago"
 
 ## Documentation
 
-- [Installation Guide](docs/installation.md)
-- [Usage Examples](docs/usage.md)
-- [Integration Guide](docs/integrations.md)
-- [API Reference](docs/api-reference.md)
+- [Installation Guide](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/installation.md)
+- [Usage Examples](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/usage.md)
+- [Integration Guide](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/integrations.md)
+- [API Reference](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/api-reference.md)
 
 ## Contributing
 
