@@ -1,0 +1,29 @@
+{
+  "metrics": {
+    "feature_velocity": {
+      "enabled": true,
+      "target": 3.0,
+      "unit": "features/week"
+    },
+    "customer_driven_index": {
+      "enabled": true,
+      "target": 60.0,
+      "unit": "percent"
+    },
+    "technical_debt_ratio": {
+      "enabled": true,
+      "target": 20.0,
+      "unit": "percent"
+    },
+    "release_readiness": {
+      "enabled": true,
+      "target": 80.0,
+      "unit": "score"
+    }
+  },
+  "reporting": {
+    "weekly_summary": true,
+    "daily_alerts": true,
+    "executive_summary": true
+  }
+}

@@ -30,24 +30,51 @@ echo "📊 Changes since last push:"
 beaconled --range --since "1 day ago" --format extended
 ```
 
-### Pre-Commit Hook (for team standards)
-Check commit size and impact:
+### Integrating with `pre-commit` Framework
 
-```bash
-#!/bin/bash
-# .git/hooks/pre-commit
-source .venv/bin/activate
+For more robust commit message enforcement, integrate with the `pre-commit` framework:
 
-# Check if commit is too large
-stats=$(beaconled --format json)
-files_changed=$(echo $stats | jq '.files_changed')
+1.  **Install `pre-commit`:**
+    ```bash
+    pip install pre-commit
+    ```
 
-if [ "$files_changed" -gt 20 ]; then
-    echo "⚠️  Large commit detected ($files_changed files)"
-    echo "Consider splitting into smaller commits"
-    exit 1
-fi
-```
+2.  **Create a `.pre-commit-config.yaml` file in the root of your repository:**
+    ```yaml
+    repos:
+    -   repo: https://github.com/pre-commit/pre-commit-hooks
+        rev: v4.4.0
+        hooks:
+        -   id: check-added-large-files
+        -   id: check-yaml
+        -   id: end-of-file-fixer
+        -   id: trailing-whitespace
+
+    # Add beaconled hook here (example)
+    # -   repo: local
+    #     hooks:
+    #     -   id: beaconled-commit-message
+    #         name: Check commit message with beaconled
+    #         entry: beaconled --commit
+    #         language: system
+    #         types: [text]
+    ```
+
+3.  **Configure the `beaconled` hook:**
+    *   You'll need to create a custom hook that uses `beaconled` to check the commit message. The example above shows how to define a local hook that runs `beaconled --commit` on each commit.
+    *   You may need to adjust the `entry` and `types` settings to match your specific needs.  For example, you might want to use a script to parse the output of `beaconled` and enforce specific commit message formats.
+
+4.  **Install the pre-commit hooks:**
+    ```bash
+    pre-commit install
+    ```
+
+5.  **Run the pre-commit hooks:**
+    ```bash
+    pre-commit run --all-files
+    ```
+
+Now, every time you commit changes, the pre-commit hooks will run automatically and check your commit messages. If any issues are found, the commit will be rejected, and you'll need to fix the commit message before you can commit the changes.
 
 ## CI/CD Pipeline Integration
 
