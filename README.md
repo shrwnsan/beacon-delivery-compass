@@ -19,8 +19,8 @@ We strongly recommend using a virtual environment to avoid conflicts with other 
 
 ```bash
 # Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 # Install beaconled
 pip install beaconled
@@ -32,8 +32,8 @@ For development or testing the latest version:
 # Clone and install in development mode
 git clone https://github.com/shrwnsan/beaconled-delivery-compass.git
 cd beaconled-delivery-compass
-python -m venv venv
-source venv/bin/activate
+python -m venv .venv
+source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
