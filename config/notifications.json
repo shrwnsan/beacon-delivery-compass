@@ -1,0 +1,39 @@
+{
+  "slack": {
+    "webhook_url": "",
+    "channel": "#product-alerts",
+    "enabled": false
+  },
+  "email": {
+    "smtp_server": "smtp.gmail.com",
+    "smtp_port": 587,
+    "username": "",
+    "password": "",
+    "enabled": false
+  },
+  "recipients": {
+    "product_managers": [
+      "pm@company.com"
+    ],
+    "engineering_leads": [
+      "lead@company.com"
+    ],
+    "executives": [
+      "exec@company.com"
+    ]
+  },
+  "thresholds": {
+    "feature_velocity": {
+      "warning": 2,
+      "critical": 1
+    },
+    "technical_debt_ratio": {
+      "warning": 30,
+      "critical": 40
+    },
+    "customer_driven_index": {
+      "warning": 40,
+      "critical": 30
+    }
+  }
+}
