@@ -62,7 +62,7 @@ def main() -> None:
                 formatter = ExtendedFormatter()
             else:
                 formatter = StandardFormatter()
-            print(formatter.format_range_stats(stats))
+            output = formatter.format_range_stats(stats)
         else:
             stats = analyzer.get_commit_stats(args.commit)
 
@@ -73,10 +73,24 @@ def main() -> None:
             else:
                 formatter = JSONFormatter()
 
-            print(formatter.format_commit_stats(stats))
+            output = formatter.format_commit_stats(stats)
+
+        # Handle output with proper encoding
+        try:
+            print(output)
+        except UnicodeEncodeError:
+            # Fallback for systems with limited encoding support
+            # Replace problematic characters with ASCII alternatives
+            safe_output = output.encode('ascii', 'replace').decode('ascii')
+            print(safe_output)
 
     except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
+        # Ensure error messages are also handled properly
+        try:
+            print(f"Error: {e}", file=sys.stderr)
+        except UnicodeEncodeError:
+            safe_error = str(e).encode('ascii', 'replace').decode('ascii')
+            print(f"Error: {safe_error}", file=sys.stderr)
         sys.exit(1)
 
 
