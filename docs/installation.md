@@ -13,7 +13,7 @@ Virtual environments are essential for Python development because they:
 
 ## Prerequisites
 
-- Python 3.8 or higher
+- Python 3.7 or higher
 - Git (for repository analysis)
 
 Check your Python version:
@@ -44,16 +44,17 @@ You'll know the virtual environment is active when you see `(.venv)` in your ter
 ### 2. Install Beacon
 
 ```bash
-# Install from PyPI (when available)
+# Install from PyPI
 pip install beaconled
 
 # Or install the latest development version
-pip install git+https://github.com/shrwnsan/beaconled-delivery-compass.git
+pip install git+https://github.com/shrwnsan/beacon-delivery-compass.git
 ```
 
 ### 3. Verify Installation
 
 ```bash
+beaconled --version
 beaconled --help
 ```
 
@@ -64,8 +65,8 @@ If you want to contribute to Beacon or test the latest features:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/shrwnsan/beaconled-delivery-compass.git
-cd beaconled-delivery-compass
+git clone https://github.com/shrwnsan/beacon-delivery-compass.git
+cd beacon-delivery-compass
 ```
 
 ### 2. Create and Activate Virtual Environment
@@ -98,6 +99,25 @@ black src tests
 flake8 src tests
 mypy src
 ```
+
+## Quick Setup Scripts
+
+For quick setup, we provide platform-specific scripts:
+
+### Linux/macOS
+```bash
+./scripts/setup.sh
+```
+
+### Windows
+```cmd
+.\scripts\setup.bat
+```
+
+These scripts will:
+1. Create a virtual environment
+2. Install dependencies
+3. Install in development mode
 
 ## Alternative Installation Methods
 
@@ -162,8 +182,9 @@ If you have multiple Python versions installed:
 
 ```bash
 # Use specific Python version
+python3.7 -m venv .venv
+python3.8 -m venv .venv
 python3.9 -m venv .venv
-python3.10 -m venv .venv
 ```
 
 ### Permission Errors

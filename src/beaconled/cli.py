@@ -58,6 +58,8 @@ def main() -> None:
             stats = analyzer.get_range_analytics(args.since, args.until)
             if args.format == "json":
                 formatter = JSONFormatter()
+            elif args.format == "extended":
+                formatter = ExtendedFormatter()
             else:
                 formatter = StandardFormatter()
             print(formatter.format_range_stats(stats))

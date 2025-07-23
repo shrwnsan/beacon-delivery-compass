@@ -3,96 +3,136 @@
 ## Overview
 The Analytics Dashboard provides comprehensive insights into development activity, team productivity, and code quality metrics for Beacon - your delivery compass for empowered product builders.
 
-## Quick Start
+## Metric Interpretation Guide
 
-### Generate Commit Statistics
-```bash
-# Analyze latest commit (standard format)
-./docs/scripts/commit-analytics.sh
+### Key Metrics Explained
+| Metric | Description | Ideal Range | Interpretation |
+|--------|-------------|-------------|---------------|
+| **Commit Frequency** | Number of commits over time | 3-10/day/developer | Higher = active development; Lower = possible blockers |
+| **Files Changed** | Total files modified | Varies by project | High numbers may indicate large features or refactoring |
+| **Lines Added/Deleted** | Code volume changes | Balanced ratio | High additions = new features; High deletions = cleanup |
+| **Net Change** | (Lines added) - (Lines deleted) | Positive growth | Negative may indicate tech debt reduction |
+| **Component Impact** | Files by component type | Balanced distribution | High core changes = foundational work; High test changes = quality focus |
 
-# Analyze specific commit with detailed breakdown
-./docs/scripts/commit-analytics.sh -d -f extended abc123
+### Health Indicators
+- 🟢 **Balanced Metrics**: Similar ratios of additions/deletions across components
+- 🟡 **Warning Signs**: High deletions without tests, frequent config changes
+- 🔴 **Critical Issues**: Core changes without tests, documentation ratio < 5%
 
-# Generate JSON output for automation
-python docs/scripts/analytics_reporter.py --format json
+## Sample Dashboards
+
+### Development Velocity Dashboard
+```mermaid
+graph TD
+    A[Development Velocity] --> B[Commits]
+    A --> C[Files Changed]
+    A --> D[Lines Changed]
+    B --> E[Daily: 15]
+    B --> F[Weekly: 98]
+    C --> G[Avg: 8/commit]
+    C --> H[Total: 42/week]
+    D --> I[+++ 1,234]
+    D --> J[--- 567]
 ```
 
-### Weekly Team Report
-```bash
-# Generate weekly analytics
-python docs/scripts/analytics_reporter.py --range --since "1 week ago"
+**Interpretation**:  
+Healthy velocity with consistent commit activity. Net positive change indicates feature development outweighing cleanup.
 
-# Monthly summary
-python docs/scripts/analytics_reporter.py --range --since "1 month ago"
+### Code Health Dashboard
+```mermaid
+pie
+    title Code Change Distribution
+    "Core Logic" : 45
+    "Tests" : 30
+    "Documentation" : 15
+    "Configuration" : 10
 ```
 
-## Sample Outputs
+**Interpretation**:  
+Well-balanced distribution with significant test coverage. Ideal ratio is 3:1 code-to-tests.
 
-### Standard Commit Format
+### Team Performance Dashboard
+```mermaid
+barChart
+    title Team Contributions
+    xAxis Days
+    yAxis Commits
+    series Team A
+    series Team B
+    data  Mon [5, 7]
+    data  Tue [8, 4]
+    data  Wed [6, 9]
+    data  Thu [7, 6]
+    data  Fri [4, 8]
 ```
-📊 Commit Stats:
-8 files changed
-455 insertions, 36 deletions
-Commit Hash: cce265f
-Branch: feature/changelog-documentation
-Author: John Developer
-Date: 2024-01-15 14:30:00 -0800
-Files by Type:
-  - .md: 3 files
-  - .py: 3 files
-  - .ts: 2 files
+
+**Interpretation**:  
+Balanced contributions across teams. Wednesday/Friday show complementary productivity patterns.
+
+## Visualization Examples
+
+### Trend Analysis
+```
+Commit Frequency (Last 30 Days)
+  ^
+10|       o       o
+  |      / \     / \
+ 5|-----/---\---/---\-----
+  |   /     \ /     \
+ 0+---------------------->
+   1   5   10   15   20   25   30
 ```
 
-### Extended Analysis Format
+**Interpretation**:  
+Peaks indicate sprint activity, valleys may represent code review/planning days.
+
+### Hotspot Identification
 ```
---Files Added/Modified:
-8 files changed in total
-462 insertions, 38 deletions
-5 new files created
-3 existing files improved
-
---Breakdown by Component:
-Backend: 4 files (+250, -20)
-Frontend: 3 files (+180, -15)
-Documentation: 1 file (+32, -3)
-
---Impact Analysis:
-High Impact: 2 files (core services)
-Medium Impact: 4 files (API endpoints, components)
-Low Impact: 2 files (documentation, config)
-
---Commit Details:
-Hash: cce265f
-Branch: feature/changelog-documentation
-Author: John Developer
-Date: 2024-01-15 14:30:00 -0800
-Message: Add comprehensive changelog documentation
+Frequently Changed Files (Last Quarter)
+src/analytics.py  : ███████████████████ 19 changes
+tests/test_utils.py: ████████████ 12 changes
+config/settings.py: ███████ 7 changes
 ```
+
+**Interpretation**:  
+Analytics module is evolving rapidly - ensure adequate test coverage.
 
 ## Key Metrics Tracked
 
 ### Development Velocity
-- **Commits per Day/Week**: Track development activity frequency
-- **Lines of Code**: Insertions and deletions over time
-- **Files Modified**: Scope of changes per commit
-- **Feature Completion Rate**: Story points delivered per sprint
+- **Commits per Day/Week**: Track development activity frequency  
+  *Healthy: Consistent daily commits, not clustered*
+- **Lines of Code**: Insertions and deletions over time  
+  *Healthy: Balanced additions/deletions (1.5:1 ratio)*
+- **Files Modified**: Scope of changes per commit  
+  *Healthy: 3-8 files/commit for medium projects*
+- **Feature Completion Rate**: Story points delivered per sprint  
+  *Healthy: 80-120% of planned capacity*
 
 ### Code Quality Indicators
-- **Test Coverage**: Percentage and trend analysis
-- **Component Impact**: High/medium/low impact file changes
-- **Technical Debt**: Refactoring vs. feature development ratio
-- **Documentation Updates**: Docs changes per feature
+- **Test Coverage**: Percentage and trend analysis  
+  *Healthy: >80% coverage, increasing trend*
+- **Component Impact**: High/medium/low impact file changes  
+  *Healthy: <20% high-impact changes without tests*
+- **Technical Debt**: Refactoring vs. feature development ratio  
+  *Healthy: 20-30% refactoring effort*
+- **Documentation Updates**: Docs changes per feature  
+  *Healthy: 1 doc update per 3 features*
 
 ### Team Productivity
-- **Individual Contributions**: Commit frequency and code ownership
-- **Collaboration Patterns**: Cross-component contributions
-- **Review Participation**: Code review engagement
-- **Knowledge Sharing**: Mentoring and pair programming activity
+- **Individual Contributions**: Commit frequency and code ownership  
+  *Healthy: Balanced distribution, no single points of failure*
+- **Collaboration Patterns**: Cross-component contributions  
+  *Healthy: 30-50% cross-team contributions*
+- **Review Participation**: Code review engagement  
+  *Healthy: All team members participate in reviews*
+- **Knowledge Sharing**: Mentoring and pair programming activity  
+  *Healthy: 5-10% of commits from pairing sessions*
 
 ## Analytics Tools
 
 ### Bash Script (`commit-analytics.sh`)
-**Purpose**: Quick commit analysis with colored output
+**Purpose**: Quick commit analysis with colored output  
 **Features**:
 - Standard and extended output formats
 - File type and component breakdown
@@ -115,7 +155,7 @@ Message: Add comprehensive changelog documentation
 ```
 
 ### Python Reporter (`analytics_reporter.py`)
-**Purpose**: Advanced analytics and range analysis
+**Purpose**: Advanced analytics and range analysis  
 **Features**:
 - Single commit detailed analysis
 - Range analysis (weekly, monthly)
@@ -137,158 +177,97 @@ python docs/scripts/analytics_reporter.py --range --since "2024-01-01" --until "
 python docs/scripts/analytics_reporter.py --format json --range
 ```
 
-## Integration with Development Workflow
+## Dashboard Implementation Guide
 
-### Git Hooks Integration
-Add to `.git/hooks/post-commit`:
-```bash
-#!/bin/bash
-echo "📊 Commit Analytics:"
-./docs/scripts/commit-analytics.sh -f standard
+### Grafana Setup
+1. Install Grafana and Prometheus
+2. Configure Prometheus data source
+3. Import dashboard template:
+```json
+{
+  "dashboard": {
+    "title": "Beacon Analytics",
+    "panels": [
+      {
+        "title": "Commit Frequency",
+        "type": "graph",
+        "targets": [{
+          "expr": "sum(beaconled_commits_total[1d])"
+        }]
+      }
+    ]
+  }
+}
 ```
 
-### CI/CD Pipeline Integration
-Add to GitHub Actions workflow:
-```yaml
-- name: Generate Commit Analytics
-  run: |
-    python docs/scripts/analytics_reporter.py --format json > commit-stats.json
-    
-- name: Upload Analytics
-  uses: actions/upload-artifact@v3
-  with:
-    name: commit-analytics
-    path: commit-stats.json
-```
-
-### Weekly Reporting Automation
-Create a scheduled job:
-```bash
-# Add to crontab for weekly reports
-0 9 * * 1 cd /path/to/project && python docs/scripts/analytics_reporter.py --range --since "1 week ago" | mail -s "Weekly Dev Report" team@company.com
-```
-
-## Customization Options
-
-### File Type Categories
-Modify the file type analysis in `analytics_reporter.py`:
+### Custom Metrics Collection
 ```python
-def _analyze_file_types(self, files: List[str]) -> Dict:
-    # Add custom file type categorization
-    categories = {
-        'source_code': ['.py', '.js', '.ts', '.tsx'],
-        'configuration': ['.json', '.yaml', '.yml', '.toml'],
-        'documentation': ['.md', '.rst', '.txt'],
-        'assets': ['.png', '.jpg', '.svg', '.css']
-    }
+# prometheus-exporter.py
+from prometheus_client import start_http_server, Counter, Gauge
+import time
+from beaconled.core.analyzer import GitAnalyzer
+
+commits = Counter('beacon_commits', 'Total commits analyzed')
+changed_files = Gauge('beacon_files_changed', 'Files changed in analysis period')
+
+def collect_metrics():
+    analyzer = GitAnalyzer()
+    stats = analyzer.get_range_analytics("1 day ago")
+    commits.inc(stats.total_commits)
+    changed_files.set(stats.total_files_changed)
+
+if __name__ == '__main__':
+    start_http_server(8000)
+    while True:
+        collect_metrics()
+        time.sleep(3600)  # Collect hourly
 ```
 
-### Component Mapping
-Customize component analysis:
-```python
-def _analyze_components(self, files: List[str]) -> Dict:
-    # Define your project structure
-    component_patterns = {
-        'api_layer': r'^backend/api/',
-        'business_logic': r'^backend/services/',
-        'ui_components': r'^frontend/src/components/',
-        'data_models': r'^backend/models/',
-    }
-```
-
-### Impact Assessment Rules
-Adjust impact analysis criteria:
-```python
-high_impact_patterns = [
-    r'main\.py$',           # Application entry points
-    r'config\.(py|js)$',    # Configuration files
-    r'requirements\.txt$',   # Dependencies
-    r'package\.json$',      # Package definitions
-    # Add your critical files
-]
-```
-
-## Reporting Templates
-
-### Daily Standup Report
-```bash
-#!/bin/bash
-echo "🚀 Daily Development Summary"
-echo "=========================="
-python docs/scripts/analytics_reporter.py --range --since "1 day ago"
-```
-
-### Sprint Review Metrics
-```bash
-#!/bin/bash
-echo "📈 Sprint Analytics"
-echo "=================="
-python docs/scripts/analytics_reporter.py --range --since "2 weeks ago" --format json | \
-jq '.summary | {
-  total_commits: .total_commits,
-  files_changed: .total_files_changed,
-  lines_added: .total_insertions,
-  top_contributors: .authors
-}'
-```
-
-### Release Notes Generator
-```bash
-#!/bin/bash
-echo "📋 Release Notes Data"
-echo "===================="
-git log --since="1 month ago" --pretty=format:"%h - %s (%an)" | \
-while read line; do
-  commit_hash=$(echo $line | cut -d' ' -f1)
-  ./docs/scripts/commit-analytics.sh $commit_hash -f json
-done
-```
-
-## Best Practices
+## Best Practices for Analysis
 
 ### For Product Managers
-- Review weekly analytics reports for velocity trends
-- Use component breakdown to understand feature development focus
-- Track documentation updates alongside feature delivery
-- Monitor team collaboration patterns
+1. **Velocity Trends**: Look for consistent weekly patterns
+2. **Feature Focus**: Component distribution shows priority areas
+3. **Risk Assessment**: High-impact changes need verification
+4. **Team Capacity**: Contributor distribution indicates bandwidth
 
 ### For Engineering Managers
-- Use individual contribution data for 1:1 discussions
-- Identify knowledge sharing opportunities from code ownership patterns
-- Track technical debt through refactoring vs. feature ratios
-- Monitor code review participation and quality
+1. **Burnout Prevention**: Watch for individual contributor spikes
+2. **Knowledge Gaps**: Identify components with single owners
+3. **Quality Gates**: Require tests for high-impact changes
+4. **Tech Debt**: Monitor refactoring ratio
 
 ### For Developers
-- Use commit analytics to improve commit quality
-- Review impact analysis to understand change scope
-- Track personal productivity trends
-- Identify opportunities for knowledge sharing
+1. **Impact Awareness**: Understand change significance
+2. **Collaboration**: Use pairing stats to find pairing opportunities
+3. **Quality Focus**: Maintain test coverage above 80%
+4. **Documentation**: Keep docs ratio above 5% of changes
 
 ## Troubleshooting
 
-### Common Issues
-1. **Git command failures**: Ensure you're in a git repository
-2. **Permission errors**: Make scripts executable with `chmod +x`
-3. **Python dependencies**: Install required packages if needed
-4. **Large repositories**: Consider using `--since` to limit analysis scope
+### Data Discrepancies
+1. **Missing Commits**: Check date ranges and repository path
+2. **Inconsistent Counts**: Verify git history depth
+3. **Permission Issues**: Ensure access to repository
+4. **Version Mismatch**: Update Beacon to latest version
 
-### Performance Optimization
-- Use date ranges for large repositories
-- Cache results for frequently accessed data
-- Consider sampling for very active repositories
-- Use JSON format for programmatic processing
+### Visualization Issues
+1. **Broken Charts**: Check data source connections
+2. **Incorrect Scales**: Verify timezone settings
+3. **Missing Data**: Confirm metrics collection interval
+4. **Performance Problems**: Limit historical data scope
 
 ## Future Enhancements
 
 ### Planned Features
-- Web-based analytics dashboard
-- Integration with project management tools
-- Automated trend analysis and alerts
-- Machine learning for productivity insights
-- Real-time development metrics
+- Predictive analytics for project timelines
+- Integration with error monitoring tools
+- Code complexity metrics
+- Automated code quality scoring
+- Team wellness indicators
 
 ### Integration Opportunities
-- Slack/Teams notifications for significant changes
-- JIRA/GitHub Issues correlation
-- Code quality tool integration
-- Performance benchmark tracking
+- Jira/Asana for task tracking
+- Sentry for error correlation
+- HR systems for team analytics
+- Calendar systems for meeting impact analysis

@@ -1,287 +1,283 @@
 # API Reference
 
-## Command Line Interface
+## CLI Command Reference
 
-### beaconled
-The main command-line interface for Beacon.
+### `beaconled`
+The main command-line interface for Beacon analytics.
 
+**Syntax**:
 ```bash
-beaconled [OPTIONS] [COMMIT_HASH]
+beaconled [COMMIT_HASH] [OPTIONS]
 ```
 
-#### Arguments
-- `COMMIT_HASH` (optional): Specific commit hash to analyze. If omitted, analyzes HEAD.
+**Arguments**:
+- `COMMIT_HASH`: Optional commit hash to analyze (default: HEAD)
 
-#### Options
-- `--format FORMAT`: Output format (`standard`, `extended`, `json`)
-- `--range`: Enable range analysis mode
-- `--since DATE`: Start date for range analysis
-- `--until DATE`: End date for range analysis
-- `--repo PATH`: Path to git repository (default: current directory)
-- `--help`: Show help message and exit
-- `--version`: Show version information
+**Options**:
+| Option | Description | Default |
+|--------|-------------|---------|
+| `-f`, `--format FORMAT` | Output format (`standard`, `extended`, `json`) | `standard` |
+| `-r`, `--range` | Analyze range of commits | |
+| `--since SINCE` | Start date for range analysis | `1 week ago` |
+| `--until UNTIL` | End date for range analysis | `HEAD` |
+| `--repo PATH` | Repository path to analyze | `.` (current directory) |
+| `-h`, `--help` | Show help message | |
 
-#### Examples
+**Examples**:
 ```bash
-# Basic usage
+# Analyze HEAD commit
 beaconled
 
-# Specific commit
-beaconled abc123
+# Analyze specific commit in JSON format
+beaconled abc123 --format json
 
-# JSON output
-beaconled --format json
+# Analyze last month's commits
+beaconled --range --since "1 month ago"
 
-# Weekly report
-beaconled --range --since "1 week ago"
-
-# Custom repository
-beaconled --repo /path/to/repo --format extended
+# Analyze different repository
+beaconled --repo ../other-project --range --since "2025-07-01"
 ```
 
-## Python API
+## Python API Reference
 
-### Core Classes
+### `beaconled.core` Package
 
-#### `CommitStats`
+#### `GitAnalyzer` Class
+```python
+class GitAnalyzer(repo_path: str = ".")
+```
+Analyzes git repository statistics.
+
+**Parameters**:
+- `repo_path`: Path to git repository (default: current directory)
+
+**Methods**:
+
+##### `get_commit_stats()`
+```python
+def get_commit_stats(commit_hash: str = "HEAD") -> CommitStats
+```
+Get statistics for a single commit.
+
+**Parameters**:
+- `commit_hash`: Commit hash to analyze (default: HEAD)
+
+**Returns**:
+- `CommitStats` object containing commit details
+
+##### `get_range_analytics()`
+```python
+def get_range_analytics(since: str, until: str = "HEAD") -> RangeStats
+```
+Get analytics for a range of commits.
+
+**Parameters**:
+- `since`: Start date for range analysis
+- `until`: End date for range analysis (default: HEAD)
+
+**Returns**:
+- `RangeStats` object containing range analytics
+
+---
+
+### Data Models
+
+#### `CommitStats` Class
+```python
+class CommitStats:
+    hash: str
+    author: str
+    date: datetime
+    message: str
+    files_changed: int
+    lines_added: int
+    lines_deleted: int
+    files: List[FileStats]
+```
 Represents statistics for a single commit.
 
+#### `FileStats` Class
 ```python
-from beaconled.core.models import CommitStats
-
-stats = CommitStats(
-    hash="abc123",
-    author="John Doe",
-    date="2025-07-20T10:30:00",
-    message="Add new feature",
-    files_changed=3,
-    lines_added=45,
-    lines_deleted=12,
-    files=[...]
-)
+class FileStats:
+    path: str
+    lines_added: int
+    lines_deleted: int
+    lines_changed: int
 ```
+Represents file change statistics within a commit.
 
-**Attributes:**
-- `hash`: str - Commit hash
-- `author`: str - Author name
-- `date`: str - Commit date in ISO format
-- `message`: str - Commit message
-- `files_changed`: int - Number of files changed
-- `lines_added`: int - Lines added
-- `lines_deleted`: int - Lines deleted
-- `files`: List[FileStats] - Detailed file changes
-
-#### `FileStats`
-Represents statistics for a single file change.
-
+#### `RangeStats` Class
 ```python
-from beaconled.core.models import FileStats
-
-file_stats = FileStats(
-    path="src/main.py",
-    lines_added=30,
-    lines_deleted=5,
-    lines_changed=35
-)
+class RangeStats:
+    start_date: datetime
+    end_date: datetime
+    total_commits: int
+    total_files_changed: int
+    total_lines_added: int
+    total_lines_deleted: int
+    commits: List[CommitStats]
+    authors: Dict[str, int]
 ```
+Represents analytics for a range of commits.
 
-**Attributes:**
-- `path`: str - File path
-- `lines_added`: int - Lines added
-- `lines_deleted`: int - Lines deleted
-- `lines_changed`: int - Total lines changed
-
-#### `RangeStats`
-Represents statistics for a range of commits.
-
-```python
-from beaconled.core.models import RangeStats
-
-range_stats = RangeStats(
-    start_date="2025-07-13",
-    end_date="2025-07-20",
-    total_commits=15,
-    total_files_changed=42,
-    total_insertions=1234,
-    total_deletions=567,
-    authors={"John Doe": 8, "Jane Smith": 4}
-)
-```
-
-**Attributes:**
-- `start_date`: str - Range start date
-- `end_date`: str - Range end date
-- `total_commits`: int - Total commits in range
-- `total_files_changed`: int - Total files changed
-- `total_insertions`: int - Total lines added
-- `total_deletions`: int - Total lines deleted
-- `authors`: Dict[str, int] - Commit count per author
-
-### Core Functions
-
-#### `analyze_commit()`
-Analyze a single commit.
-
-```python
-from beaconled.core.analyzer import GitAnalyzer
-
-analyzer = GitAnalyzer(repo_path="/path/to/repo")
-stats = analyzer.analyze_commit("abc123")
-```
-
-**Parameters:**
-- `commit_hash`: str - Commit hash to analyze
-
-**Returns:** `CommitStats` object
-
-#### `analyze_range()`
-Analyze a range of commits.
-
-```python
-from beaconled.core.analyzer import GitAnalyzer
-
-analyzer = GitAnalyzer(repo_path="/path/to/repo")
-stats = analyzer.analyze_range(since="1 week ago", until="now")
-```
-
-**Parameters:**
-- `since`: str - Start date (relative or absolute)
-- `until`: str - End date (relative or absolute)
-
-**Returns:** `RangeStats` object
+---
 
 ### Formatters
 
-#### `StandardFormatter`
-Formats output in standard text format.
-
+#### `Formatter` Base Class
 ```python
-from beaconled.formatters.standard import StandardFormatter
+class Formatter(ABC):
+    @abstractmethod
+    def format_commit_stats(self, stats: CommitStats) -> str:
+        pass
+        
+    @abstractmethod
+    def format_range_stats(self, stats: RangeStats) -> str:
+        pass
+```
+Base class for all output formatters.
 
-formatter = StandardFormatter()
-output = formatter.format(stats)
+#### `StandardFormatter`
+```python
+class StandardFormatter(Formatter):
+```
+Produces human-readable output in compact format.
+
+**Example Output**:
+```
+📊 Commit: abc12345
+👤 Author: John Doe
+📅 Date: 2025-07-20 10:30:00
+💬 Message: Add new feature
+
+📂 Files changed: 3
+➕ Lines added: 45
+➖ Lines deleted: 12
 ```
 
 #### `ExtendedFormatter`
-Formats output in extended text format with additional details.
-
 ```python
-from beaconled.formatters.extended import ExtendedFormatter
+class ExtendedFormatter(Formatter):
+```
+Produces detailed output with additional metrics.
 
-formatter = ExtendedFormatter()
-output = formatter.format(stats)
+**Example Output**:
+```
+📊 Commit: abc12345
+👤 Author: John Doe
+📅 Date: 2025-07-20 10:30:00
+💬 Message: Add new feature
+
+📂 Files changed: 3
+➕ Lines added: 45
+➖ Lines deleted: 12
+
+File types:
+  .py: 2 files (+45 -5)
+  .md: 1 file (+0 -7)
+
+Components:
+  Core: src/analytics.py (+30 -5)
+  Tests: tests/test_analytics.py (+15 -0)
+  Docs: README.md (+0 -7)
 ```
 
 #### `JSONFormatter`
-Formats output as JSON.
-
 ```python
-from beaconled.formatters.json_format import JSONFormatter
+class JSONFormatter(Formatter):
+```
+Produces machine-readable JSON output.
 
-formatter = JSONFormatter()
-output = formatter.format(stats)
+**Example Output**:
+```json
+{
+  "hash": "abc12345",
+  "author": "John Doe",
+  "date": "2025-07-20T10:30:00+08:00",
+  "message": "Add new feature",
+  "files_changed": 3,
+  "lines_added": 45,
+  "lines_deleted": 12,
+  "files": [
+    {
+      "path": "src/analytics.py",
+      "lines_added": 30,
+      "lines_deleted": 5
+    }
+  ]
+}
 ```
 
-## Environment Variables
+## Class Diagram
 
-### `BEACON_REPO_PATH`
-Default repository path when `--repo` is not specified.
-
-```bash
-export BEACON_REPO_PATH=/path/to/default/repo
-```
-
-### `BEACON_FORMAT`
-Default output format.
-
-```bash
-export BEACON_FORMAT=extended
-```
-
-## Exit Codes
-
-- `0`: Success
-- `1`: General error
-- `2`: Invalid arguments
-- `3`: Git repository not found
-- `4`: Invalid commit hash
-
-## Error Handling
-
-### Common Error Messages
-
-**Repository not found:**
-```
-Error: Not a git repository (or any of the parent directories)
-```
-
-**Invalid commit hash:**
-```
-Error: Commit 'abc123' not found
-```
-
-**Invalid date format:**
-```
-Error: Invalid date format: 'tomorrow'
-```
-
-### Exception Classes
-
-```python
-from beaconled.core.exceptions import (
-    BeaconError,
-    RepositoryNotFoundError,
-    CommitNotFoundError,
-    InvalidDateError
-)
-```
-
-## Integration Examples
-
-### Python Script Integration
-
-```python
-#!/usr/bin/env python3
-import json
-from beaconled.core.analyzer import GitAnalyzer
-from beaconled.formatters.json_format import JSONFormatter
-
-# Analyze repository
-analyzer = GitAnalyzer("/path/to/repo")
-stats = analyzer.analyze_range(since="1 week ago")
-
-# Format as JSON
-formatter = JSONFormatter()
-print(formatter.format(stats))
-```
-
-### CI/CD Pipeline Integration
-
-```yaml
-- name: Generate Beacon Report
-  run: |
-    python -c "
-    from beaconled.core.analyzer import GitAnalyzer
-    from beaconled.formatters.json_format import JSONFormatter
+```mermaid
+classDiagram
+    class GitAnalyzer {
+        - repo_path: str
+        + get_commit_stats(commit_hash: str) CommitStats
+        + get_range_analytics(since: str, until: str) RangeStats
+    }
     
-    analyzer = GitAnalyzer('.')
-    stats = analyzer.analyze_range(since='1 week ago')
-    formatter = JSONFormatter()
+    class CommitStats {
+        + hash: str
+        + author: str
+        + date: datetime
+        + message: str
+        + files_changed: int
+        + lines_added: int
+        + lines_deleted: int
+        + files: List[FileStats]
+    }
     
-    with open('beaconled-report.json', 'w') as f:
-        f.write(formatter.format(stats))
-    "
+    class FileStats {
+        + path: str
+        + lines_added: int
+        + lines_deleted: int
+        + lines_changed: int
+    }
+    
+    class RangeStats {
+        + start_date: datetime
+        + end_date: datetime
+        + total_commits: int
+        + total_files_changed: int
+        + total_lines_added: int
+        + total_lines_deleted: int
+        + commits: List[CommitStats]
+        + authors: Dict[str, int]
+    }
+    
+    class Formatter {
+        <<abstract>>
+        + format_commit_stats(stats: CommitStats) str
+        + format_range_stats(stats: RangeStats) str
+    }
+    
+    class StandardFormatter {
+        + format_commit_stats(stats: CommitStats) str
+        + format_range_stats(stats: RangeStats) str
+    }
+    
+    class ExtendedFormatter {
+        + format_commit_stats(stats: CommitStats) str
+        + format_range_stats(stats: RangeStats) str
+    }
+    
+    class JSONFormatter {
+        + format_commit_stats(stats: CommitStats) str
+        + format_range_stats(stats: RangeStats) str
+    }
+    
+    GitAnalyzer --> CommitStats
+    GitAnalyzer --> RangeStats
+    RangeStats --> CommitStats
+    CommitStats --> FileStats
+    StandardFormatter --|> Formatter
+    ExtendedFormatter --|> Formatter
+    JSONFormatter --|> Formatter
 ```
 
-### Custom Formatter
-
-```python
-from beaconled.core.models import CommitStats, RangeStats
-from typing import Union
-
-class CustomFormatter:
-    def format(self, stats: Union[CommitStats, RangeStats]) -> str:
-        if isinstance(stats, CommitStats):
-            return f"Commit {stats.hash}: {stats.lines_added}+ {stats.lines_deleted}-"
-        else:
-            return f"Range {stats.start_date} to {stats.end_date}: {stats.total_commits} commits"
+## Next Steps
+- [Usage Guide](usage.md) - Practical examples and workflows
+- [Integration Guide](integrations.md) - CI/CD and team workflow integration
+- [Analytics Dashboard](ANALYTICS_DASHBOARD.md) - Metric interpretation guide
