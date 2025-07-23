@@ -11,10 +11,12 @@ Welcome to the Beacon documentation! This is your delivery compass for empowered
 - **[Advanced Examples](examples/advanced-usage.md)** - Custom metrics and automation
 
 ### Core Documentation
+- **[System Architecture](architecture.md)** - High-level system design and component relationships
 - **[API Reference](api-reference.md)** - Complete command-line and Python API reference
 - **[Analytics Dashboard](ANALYTICS_DASHBOARD.md)** - Understanding your development metrics
 - **[Development Analytics](DEVELOPMENT_ANALYTICS.md)** - Deep dive into development patterns
 - **[Product Analytics](PRODUCT_ANALYTICS.md)** - Measuring product impact metrics
+- **[Configuration Guide](configuration.md)** - Customizing Beacon's behavior
 
 ### Integration & Automation
 - **[Integration Guide](integrations.md)** - CI/CD, Git hooks, and team workflows
@@ -113,9 +115,11 @@ Welcome to the Beacon documentation! This is your delivery compass for empowered
 |----------|---------|
 | [Installation](installation.md) | Setup and installation guide |
 | [Usage](usage.md) | Complete usage guide |
+| [System Architecture](architecture.md) | High-level system design |
 | [API Reference](api-reference.md) | Command-line and Python API |
 | [Analytics Dashboard](ANALYTICS_DASHBOARD.md) | Understanding metrics |
 | [Product Analytics](PRODUCT_ANALYTICS.md) | Product impact measurement |
+| [Configuration Guide](configuration.md) | Customizing Beacon's behavior |
 | [Integrations](integrations.md) | CI/CD and workflow integration |
 | [Troubleshooting](troubleshooting.md) | Common issues and solutions |
 | [Basic Examples](examples/basic-usage.md) | Practical usage examples |
