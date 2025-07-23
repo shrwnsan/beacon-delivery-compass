@@ -15,18 +15,41 @@ A comprehensive toolkit for analyzing git repository statistics and development 
 
 ## Installation
 
-For detailed installation instructions, please refer to the [Installation Guide](docs/installation.md).
+Beacon requires Python 3.7+ and Git. We recommend installing in a virtual environment.
+
+### Quick Install
+
+```bash
+# Create and activate a virtual environment
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install from PyPI
+pip install beaconled
+```
+
+### Verify Installation
+
+```bash
+beaconled --version
+```
+
+For more detailed instructions, including development setup and troubleshooting, see the [Installation Guide](docs/installation.md).
 
 ## Quick Start
 
-For more detailed usage examples, please refer to the [Usage Examples](docs/usage.md).
+Analyze a git repository:
 
-## Weekly team report
+```bash
+beaconled /path/to/repo
+```
+
+Generate a weekly team report:
 ```bash
 beaconled --range --since "1 week ago"
 ```
-```
 
+For more detailed usage examples, please refer to the [Usage Examples](docs/usage.md).
 ## Documentation
 
 - [Installation Guide](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/installation.md)

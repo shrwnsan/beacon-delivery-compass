@@ -8,11 +8,13 @@ Welcome to the Beacon documentation! This is your delivery compass for empowered
 - **[Installation Guide](installation.md)** - Set up Beacon in your environment
 - **[Usage Guide](usage.md)** - Learn how to use Beacon effectively
 - **[Basic Examples](examples/basic-usage.md)** - Quick start examples and common workflows
+- **[Advanced Examples](examples/advanced-usage.md)** - Custom metrics and automation
 
 ### Core Documentation
 - **[API Reference](api-reference.md)** - Complete command-line and Python API reference
 - **[Analytics Dashboard](ANALYTICS_DASHBOARD.md)** - Understanding your development metrics
 - **[Development Analytics](DEVELOPMENT_ANALYTICS.md)** - Deep dive into development patterns
+- **[Product Analytics](PRODUCT_ANALYTICS.md)** - Measuring product impact metrics
 
 ### Integration & Automation
 - **[Integration Guide](integrations.md)** - CI/CD, Git hooks, and team workflows
@@ -42,6 +44,7 @@ Welcome to the Beacon documentation! This is your delivery compass for empowered
 
 3. **Explore Examples**
    - Check out [basic usage examples](examples/basic-usage.md)
+   - Explore [advanced usage examples](examples/advanced-usage.md)
    - Try the [analytics scripts](../scripts/)
 
 ## 📊 Key Features
@@ -59,6 +62,7 @@ Welcome to the Beacon documentation! This is your delivery compass for empowered
 - **Code Reviews**: Change impact assessment
 - **Team Reports**: Weekly and monthly analytics
 - **CI/CD Integration**: Automated metrics collection
+- **Product Analytics**: Feature impact measurement
 
 ## 🔗 Quick Links
 
@@ -74,9 +78,11 @@ Welcome to the Beacon documentation! This is your delivery compass for empowered
 | [Usage](usage.md) | Complete usage guide |
 | [API Reference](api-reference.md) | Command-line and Python API |
 | [Analytics Dashboard](ANALYTICS_DASHBOARD.md) | Understanding metrics |
+| [Product Analytics](PRODUCT_ANALYTICS.md) | Product impact measurement |
 | [Integrations](integrations.md) | CI/CD and workflow integration |
 | [Troubleshooting](troubleshooting.md) | Common issues and solutions |
-| [Examples](examples/basic-usage.md) | Practical usage examples |
+| [Basic Examples](examples/basic-usage.md) | Practical usage examples |
+| [Advanced Examples](examples/advanced-usage.md) | Custom metrics and automation |
 | [Scripts](scripts-readme.md) | Analytics scripts documentation |
 
 ## 💡 Next Steps
@@ -84,8 +90,9 @@ Welcome to the Beacon documentation! This is your delivery compass for empowered
 1. Start with [Installation](installation.md) to get Beacon running
 2. Read the [Usage Guide](usage.md) for comprehensive instructions
 3. Try the [Basic Examples](examples/basic-usage.md) for hands-on learning
-4. Explore [Integrations](integrations.md) for team workflows
-5. Check [Troubleshooting](troubleshooting.md) if you encounter issues
+4. Explore [Advanced Examples](examples/advanced-usage.md) for custom workflows
+5. Set up [Integrations](integrations.md) for team workflows
+6. Check [Troubleshooting](troubleshooting.md) if you encounter issues
 
 ---
 

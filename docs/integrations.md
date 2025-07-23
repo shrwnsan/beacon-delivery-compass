@@ -31,7 +31,6 @@ beaconled --range --since "1 day ago" --format extended
 ```
 
 ### Integrating with `pre-commit` Framework
-
 For more robust commit message enforcement, integrate with the `pre-commit` framework:
 
 1.  **Install `pre-commit`:**
@@ -119,47 +118,56 @@ jobs:
         path: commit-stats.json
 ```
 
-#### Weekly Team Report
+#### Advanced GitHub Actions Workflow
 ```yaml
-# .github/workflows/weekly-report.yml
-name: Weekly Team Report
+# .github/workflows/beaconled-advanced.yml
+name: Beacon Advanced Analytics
 
 on:
   schedule:
-    - cron: '0 9 * * 1'  # Every Monday at 9 AM
+    - cron: '0 0 * * 1'  # Run every Monday at midnight
+  workflow_dispatch:
 
 jobs:
-  weekly-report:
+  analytics:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10']
     
     steps:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
     
-    - name: Set up Python
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
-        python-version: '3.8'
+        python-version: ${{ matrix.python-version }}
     
-    - name: Install Beacon
-      run: pip install beaconled
-    
-    - name: Generate Weekly Report
+    - name: Install dependencies
       run: |
-        beaconled --range --since "1 week ago" --format extended > weekly-report.txt
+        python -m pip install --upgrade pip
+        pip install beaconled
+    
+    - name: Generate weekly report
+      run: |
+        beaconled --range --since "1 week ago" --format json > weekly-report.json
+    
+    - name: Upload report
+      uses: actions/upload-artifact@v3
+      with:
+        name: weekly-analytics-${{ matrix.python-version }}
+        path: weekly-report.json
     
     - name: Send to Slack
-      uses: 8398a7/action-slack@v3
+      if: matrix.python-version == '3.8'
+      uses: slackapi/slack-github-action@v1.23.0
       with:
-        status: ${{ job.status }}
-        text: |
-          📊 Weekly Development Report
-          ```
-          $(cat weekly-report.txt)
-          ```
+        channel-id: 'C12345678' # Slack channel ID
+        slack-message: "Weekly analytics report generated for Python ${{ matrix.python-version }}"
       env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+        SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 ```
 
 ### GitLab CI/CD
@@ -372,6 +380,20 @@ Create `.vscode/tasks.json`:
             "type": "shell",
             "command": "source .venv/bin/activate && beaconled --range --since '1 week ago' --format extended",
             "group": "build"
+        },
+        {
+            "label": "Beacon: Custom Range",
+            "type": "shell",
+            "command": "source .venv/bin/activate && beaconled --range --since '${input:sinceDate}' --format extended",
+            "group": "build",
+            "problemMatcher": []
+        }
+    ],
+    "inputs": [
+        {
+            "id": "sinceDate",
+            "type": "promptString",
+            "description": "Enter since date (e.g., '1 week ago'):"
         }
     ]
 }
@@ -387,6 +409,17 @@ Create `.idea/beaconled.xml`:
     <option name="SCRIPT_NAME" value="beaconled" />
     <option name="PARAMETERS" value="--range --since '1 week ago' --format extended" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+  </configuration>
+  <configuration default="false" name="Beacon Custom" type="PythonConfigurationType">
+    <option name="SCRIPT_NAME" value="beaconled" />
+    <option name="PARAMETERS" value="--range --since $since$ --format $format$" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <option name="PARAM_ENV">
+      <map>
+        <entry key="since" value="1 week ago" />
+        <entry key="format" value="extended" />
+      </map>
+    </option>
   </configuration>
 </component>
 ```
@@ -422,6 +455,39 @@ services:
     command: ["--range", "--since", "1 week ago", "--format", "json"]
 ```
 
+### Kubernetes Deployment
+
+```yaml
+# beaconled-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: beaconled
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: beaconled
+  template:
+    metadata:
+      labels:
+        app: beaconled
+    spec:
+      containers:
+      - name: beaconled
+        image: your-registry/beaconled:latest
+        volumeMounts:
+        - name: code-volume
+          mountPath: /workspace
+        command: ["beaconled"]
+        args: ["--range", "--since", "1 week ago", "--format", "json"]
+      volumes:
+      - name: code-volume
+        hostPath:
+          path: /path/to/your/repo
+          type: Directory
+```
+
 ## Monitoring and Alerting
 
 ### Prometheus Metrics
@@ -430,26 +496,71 @@ services:
 # prometheus-exporter.py
 from prometheus_client import Counter, Gauge, start_http_server
 from beaconled.core.analyzer import GitAnalyzer
+import time
 
 commits_total = Counter('beaconled_commits_total', 'Total commits analyzed')
 files_changed = Gauge('beaconled_files_changed', 'Files changed in last commit')
 lines_added = Gauge('beaconled_lines_added', 'Lines added in last commit')
+lines_deleted = Gauge('beaconled_lines_deleted', 'Lines deleted in last commit')
 
 def collect_metrics():
     analyzer = GitAnalyzer()
-    stats = analyzer.analyze_range(since="1 hour ago")
+    stats = analyzer.get_range_analytics(since="1 hour ago")
     
     commits_total.inc(stats.total_commits)
     if stats.total_commits > 0:
-        latest = analyzer.analyze_commit()
+        latest = analyzer.get_commit_stats()
         files_changed.set(latest.files_changed)
         lines_added.set(latest.lines_added)
+        lines_deleted.set(latest.lines_deleted)
 
 if __name__ == "__main__":
     start_http_server(8000)
     while True:
         collect_metrics()
         time.sleep(300)  # Collect every 5 minutes
+```
+
+### Grafana Dashboard
+
+1. Create a dashboard with the following panels:
+   - Commits per day (graph)
+   - Files changed (gauge)
+   - Lines added/deleted (bar chart)
+   - Top contributors (table)
+
+2. Use Prometheus as data source
+
+## Webhook Integration
+
+### Generic Webhook Example
+
+```python
+# webhook-reporter.py
+import requests
+import json
+from beaconled.core.analyzer import GitAnalyzer
+
+def send_webhook(url, payload):
+    headers = {'Content-Type': 'application/json'}
+    response = requests.post(url, data=json.dumps(payload), headers=headers)
+    return response.status_code
+
+if __name__ == "__main__":
+    analyzer = GitAnalyzer()
+    stats = analyzer.get_range_analytics(since="1 day ago")
+    
+    payload = {
+        "event": "daily_report",
+        "data": {
+            "commits": stats.total_commits,
+            "files_changed": stats.total_files_changed,
+            "lines_added": stats.total_lines_added,
+            "lines_deleted": stats.total_lines_deleted
+        }
+    }
+    
+    send_webhook("https://your-webhook-url.com", payload)
 ```
 
 ## Best Practices
@@ -471,3 +582,8 @@ if __name__ == "__main__":
 - Provide clear documentation
 - Gather feedback regularly
 - Iterate based on team needs
+
+## Next Steps
+- [API Reference](api-reference.md) - Complete command reference
+- [Usage Guide](usage.md) - Practical examples and workflows
+- [Analytics Dashboard](ANALYTICS_DASHBOARD.md) - Metric interpretation guide
