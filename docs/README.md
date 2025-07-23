@@ -35,8 +35,45 @@ Welcome to the Beacon documentation! This is your delivery compass for empowered
    # Analyze latest commit
    beaconled
 
+   # Example output:
+   # 📊 Commit: abc12345
+   # 👤 Author: John Doe
+   # 📅 Date: 2025-07-20 10:30:00
+   # 💬 Message: Add new feature for user analytics
+   #
+   # 📂 Files changed: 3
+   # ➕ Lines added: 45
+   # ➖ Lines deleted: 12
+   # 🔀 Net change: 33
+   #
+   # Changed files:
+   #   src/analytics.py   (+30 -5)
+   #   tests/test_analytics.py (+15 -0)
+   #   README.md          (+0 -7)
+
    # Weekly team report
    beaconled --range --since "1 week ago"
+
+   # Example output:
+   # 📊 Range Analysis: 2025-07-13 to 2025-07-20
+   #
+   # 📂 Total commits: 15
+   # 📂 Total files changed: 42
+   # ➕ Total lines added: 1,234
+   # ➖ Total lines deleted: 567
+   # 🔀 Net change: 667
+   #
+   # 👥 Contributors:
+   #   John Doe: 8 commits
+   #   Jane Smith: 4 commits
+   #   Bob Wilson: 3 commits
+   #
+   # 📊 Commit frequency:
+   #   Monday: 2
+   #   Tuesday: 3
+   #   Wednesday: 1
+   #   Thursday: 4
+   #   Friday: 5
 
    # JSON output for automation
    beaconled --format json
