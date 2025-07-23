@@ -50,6 +50,7 @@ beaconled --range --since "1 week ago"
 ```
 
 For more detailed usage examples, please refer to the [Usage Examples](docs/usage.md).
+
 ## Documentation
 
 - [Installation Guide](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/installation.md)
