@@ -61,7 +61,7 @@ When analyzing a repository, Beacon provides commit details, file changes, and m
 beaconled /path/to/my-project
 ```
 
-```
+```bash
 Repository Analysis: /path/to/my-project
 Analysis Period: Last 30 commits
 
@@ -108,7 +108,7 @@ For range analysis with contributor breakdown and commit frequency:
 beaconled --range --since "1 week ago" --format standard
 ```
 
-```
+```bash
 Weekly Team Report
 Analysis Period: 2025-01-16 to 2025-01-23 (7 days)
 
