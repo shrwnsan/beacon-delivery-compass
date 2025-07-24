@@ -176,6 +176,20 @@ rmdir /s .venv  # Windows
 
 ## Troubleshooting
 
+### Dependency Installation Issues
+
+If you encounter `ModuleNotFoundError` after installation (e.g., missing `colorama`):
+1. Manually install dependencies:
+```bash
+pip install -r requirements.txt
+```
+2. Reinstall Beacon:
+```bash
+pip uninstall -y beaconled
+pip install --no-cache-dir beaconled
+```
+3. If issues persist, see our [Dependency Management Guide](DEPENDENCY_MANAGEMENT.md) for detailed solutions
+
 ### Python Version Issues
 
 If you have multiple Python versions installed:
