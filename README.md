@@ -166,6 +166,7 @@ Most Changed Components:
 - [Usage Examples](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/usage.md)
 - [Integration Guide](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/integrations.md)
 - [API Reference](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/api-reference.md)
+- [Changelog](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/CHANGELOG.md)
 
 ## Contributing
 
