@@ -188,7 +188,7 @@ pip install -r requirements.txt
 pip uninstall -y beaconled
 pip install --no-cache-dir beaconled
 ```
-3. If issues persist, see our [Dependency Management Guide](DEPENDENCY_MANAGEMENT.md) for detailed solutions
+3. If issues persist, see our [Performance and Usability Plan](PERFORMANCE_AND_USABILITY_PLAN.md) for detailed solutions
 
 ### Python Version Issues
 
