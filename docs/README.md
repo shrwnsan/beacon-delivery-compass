@@ -17,7 +17,7 @@ Welcome to the Beacon documentation! This is your delivery compass for empowered
 - **[Development Analytics](DEVELOPMENT_ANALYTICS.md)** - Deep dive into development patterns
 - **[Product Analytics](PRODUCT_ANALYTICS.md)** - Measuring product impact metrics
 - **[Configuration Guide](configuration.md)** - Customizing Beacon's behavior
-- **[Dependency Management](DEPENDENCY_MANAGEMENT.md)** - Strategy for managing dependencies and installation issues
+- **[Performance and Usability Plan](PERFORMANCE_AND_USABILITY_PLAN.md)** - Strategy for performance optimization and user experience improvements
 
 ### Integration & Automation
 - **[Integration Guide](integrations.md)** - CI/CD, Git hooks, and team workflows
