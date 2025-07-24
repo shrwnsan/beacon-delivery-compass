@@ -48,6 +48,17 @@ Issues = "https://github.com/shrwnsan/beacon-delivery-compass/issues"
 [project.scripts]
 beaconled = "beaconled.cli:main"
 
+[project.optional-dependencies]
+dev = [
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "isort>=5.10.0",
+    "pre-commit>=3.0.0"
+]
+
 [tool.black]
 line-length = 88
 target-version = ['py39']
