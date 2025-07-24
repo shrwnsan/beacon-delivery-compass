@@ -20,7 +20,7 @@ def main() -> None:
     parser.add_argument(
         "--version",
         action="version",
-        version="beaconled 0.1.0",
+        version="beaconled 0.2.0",
         help="Show program's version number and exit"
     )
     parser.add_argument(
