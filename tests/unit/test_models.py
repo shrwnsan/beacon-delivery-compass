@@ -40,7 +40,10 @@ class TestCommitStats(unittest.TestCase):
 
         self.assertEqual(commit_stats.hash, "abc123")
         self.assertEqual(commit_stats.author, "Test Author")
-        self.assertEqual(commit_stats.date, datetime.fromisoformat("2025-07-20T10:00:00+08:00"))
+        self.assertEqual(
+            commit_stats.date,
+            datetime.fromisoformat("2025-07-20T10:00:00+08:00")
+        )
         self.assertEqual(commit_stats.message, "Test commit")
         self.assertEqual(commit_stats.files_changed, 1)
         self.assertEqual(commit_stats.lines_added, 10)
@@ -74,8 +77,14 @@ class TestRangeStats(unittest.TestCase):
             authors={"Test Author": 1}
         )
 
-        self.assertEqual(range_stats.start_date, datetime.fromisoformat("2025-07-20T10:00:00+08:00"))
-        self.assertEqual(range_stats.end_date, datetime.fromisoformat("2025-07-21T10:00:00+08:00"))
+        self.assertEqual(
+            range_stats.start_date,
+            datetime.fromisoformat("2025-07-20T10:00:00+08:00")
+        )
+        self.assertEqual(
+            range_stats.end_date,
+            datetime.fromisoformat("2025-07-21T10:00:00+08:00")
+        )
         self.assertEqual(range_stats.total_commits, 1)
         self.assertEqual(range_stats.total_files_changed, 1)
         self.assertEqual(range_stats.total_lines_added, 10)
