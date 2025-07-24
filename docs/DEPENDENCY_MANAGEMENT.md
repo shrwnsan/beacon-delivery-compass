@@ -82,8 +82,47 @@ graph LR
 - [ ] CI pipeline passes on all supported systems
 - [ ] Test PyPI installation succeeds in clean environment
 
+## Future Improvements
+
+### Output Formatting Enhancements
+Based on real-world usage with large repositories like Home Assistant, we need to improve the extended output format:
+
+1. **Intelligent Truncation**:
+   - Contributor list limited to top 10 with "and X more" indicator
+   - File listings grouped by type after 20 changed files
+
+2. **Visual Enhancements**:
+```python
+# Before
+"Contributors: ... (100+ names)"
+
+# After
+"👥 Top Contributors (of 115):"
+"  epenet: 81 commits"
+"  Erik Montnemery: 72 commits"
+"  ..."
+"  and 105 others"
+```
+
+3. **Insight Generation**:
+```mermaid
+pie
+    title File Type Distribution
+    "Python" : 45
+    "YAML" : 30
+    "Markdown" : 15
+    "Other" : 10
+```
+
+4. **Progress Indicators**:
+```python
+# Lines changed visualization
+[██████████░░░░] 142K/200K lines
+```
+
 ## Timeline
 1. Week 1: Implement dependency verifier and docs update
 2. Week 2: Set up CI testing matrix
 3. Week 3: Packaging validation and PyPI test upload
-4. Week 4: Final verification and release
+4. Week 4: Output formatting improvements
+5. Week 5: Final verification and release
