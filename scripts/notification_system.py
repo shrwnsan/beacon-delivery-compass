@@ -49,9 +49,33 @@ class NotificationSystem:
         
         try:
             with open(config_path, 'r') as f:
-                return {**default_config, **json.load(f)}
+                config = json.load(f)
+                # Validate config structure
+                self._validate_config(config)
+                return {**default_config, **config}
         except FileNotFoundError:
             return default_config
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON in config file: {e}")
+    
+    def _validate_config(self, config: Dict) -> None:
+        """Validate configuration structure and values."""
+        # Validate webhook URLs
+        if 'slack' in config and 'webhook_url' in config['slack']:
+            webhook_url = config['slack']['webhook_url']
+            if webhook_url and not webhook_url.startswith('https://hooks.slack.com/'):
+                raise ValueError("Invalid Slack webhook URL format")
+        
+        # Validate email settings
+        if 'email' in config:
+            email_config = config['email']
+            if email_config.get('enabled', False):
+                if not email_config.get('username'):
+                    raise ValueError("Email username required when email is enabled")
+                if not email_config.get('smtp_server'):
+                    raise ValueError("SMTP server required when email is enabled")
+                if not isinstance(email_config.get('smtp_port'), int):
+                    raise ValueError("SMTP port must be an integer")
     
     def process_insights(self, insights: Dict) -> None:
         """Process insights and trigger appropriate notifications."""
@@ -165,7 +189,7 @@ Review the attached insights and schedule follow-up discussions as needed.
         }
         
         try:
-            response = requests.post(webhook_url, json=payload)
+            response = requests.post(webhook_url, json=payload, timeout=30, verify=True)
             response.raise_for_status()
         except Exception as e:
             print(f"Failed to send Slack alert: {e}")
@@ -188,6 +212,10 @@ Review the attached insights and schedule follow-up discussions as needed.
             return
         
         try:
+            # Validate recipients
+            if not recipients or not all(isinstance(r, str) and '@' in r for r in recipients):
+                raise ValueError("Invalid email recipients")
+            
             msg = MIMEMultipart()
             msg['From'] = self.config['email']['username']
             msg['To'] = ', '.join(recipients)
@@ -197,7 +225,8 @@ Review the attached insights and schedule follow-up discussions as needed.
             
             server = smtplib.SMTP(
                 self.config['email']['smtp_server'],
-                self.config['email']['smtp_port']
+                self.config['email']['smtp_port'],
+                timeout=30  # Add timeout to prevent hanging
             )
             server.starttls()
             server.login(

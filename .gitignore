@@ -56,3 +56,14 @@ htmlcov/
 docs/_build/
 site/
 audit*.*
+
+# Security - Sensitive configuration files
+config/*.json
+!config/*.example.json
+.env.local
+.env.production
+secrets/
+*.key
+*.pem
+*.p12
+*.pfx
