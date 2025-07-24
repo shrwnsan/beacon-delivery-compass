@@ -41,6 +41,9 @@ python -m build       # Build distribution packages
 pip install beacon    # Install from PyPI
 ```
 
+## Git Commands
+- **Always use --no-pager**: When running git commands to read terminal output, use `git --no-pager <command>` to ensure full output is displayed without pagination
+
 ## CI/CD
 - GitHub Actions workflow testing across Python 3.8-3.11
 - Automated linting, type checking, and testing
