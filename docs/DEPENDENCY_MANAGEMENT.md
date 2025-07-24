@@ -84,8 +84,47 @@ graph LR
 
 ## Future Improvements
 
+### Progress Indicators
+To address long processing times in large repositories like Home Assistant:
+
+1. **Immediate Solution (v0.2.0)**:
+   - Spinner animation during analysis
+   - Stage notifications: "Analyzing commits...", "Processing files..."
+   - Implemented using Beacon's `rich` dependency
+
+```python
+from rich.progress import Progress, SpinnerColumn
+
+with Progress(SpinnerColumn(), "[progress.description]{task.description}") as progress:
+    task = progress.add_task("Analyzing repository...", total=None)
+    # Analysis happens here
+```
+
+2. **Medium-term (v0.3.0)**:
+   - Progress bars with estimated time
+   - Per-stage tracking:
+     - Commit reading
+     - File analysis
+     - Report generation
+
+```mermaid
+graph LR
+    A[Start] --> B[Read Commits]
+    B --> C[Process Files]
+    C --> D[Generate Report]
+    D --> E[Output Results]
+    style B fill:#f9f,stroke:#333
+    style C fill:#9f9,stroke:#333
+    style D fill:#99f,stroke:#333
+```
+
+3. **Long-term (v0.4.0)**:
+   - Parallel processing
+   - Performance optimizations
+   - Estimated time remaining display
+
 ### Output Formatting Enhancements
-Based on real-world usage with large repositories like Home Assistant, we need to improve the extended output format:
+Based on real-world usage with large repositories:
 
 1. **Intelligent Truncation**:
    - Contributor list limited to top 10 with "and X more" indicator
@@ -112,12 +151,6 @@ pie
     "YAML" : 30
     "Markdown" : 15
     "Other" : 10
-```
-
-4. **Progress Indicators**:
-```python
-# Lines changed visualization
-[██████████░░░░] 142K/200K lines
 ```
 
 ## Timeline
