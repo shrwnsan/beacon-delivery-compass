@@ -9,7 +9,13 @@ class TestEndToEnd(unittest.TestCase):
 
     def setUp(self):
         """Set up test environment."""
-        self.beacon_cmd = [".venv\\Scripts\\beaconled"]
+        import sys
+        import os
+        # Use sys.executable to get the Python interpreter path, then construct the path to beaconled
+        if sys.platform == "win32":
+            self.beacon_cmd = [os.path.join(os.getcwd(), ".venv", "Scripts", "beaconled")]
+        else:
+            self.beacon_cmd = [os.path.join(os.getcwd(), ".venv", "bin", "beaconled")]
 
     def test_beaconled_help(self):
         """Test that beaconled help command works."""
@@ -106,7 +112,7 @@ class TestEndToEnd(unittest.TestCase):
         self.assertIn("Total lines added:", result.stdout)
         self.assertIn("Total lines deleted:", result.stdout)
         self.assertIn("Contributors:", result.stdout)
-        self.assertIn("Daily activity:", result.stdout)
+        self.assertIn("Temporal Analysis - Daily Activity Timeline:", result.stdout)
 
 
 if __name__ == '__main__':
