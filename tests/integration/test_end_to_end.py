@@ -11,11 +11,16 @@ class TestEndToEnd(unittest.TestCase):
         """Set up test environment."""
         import sys
         import os
-        # Use sys.executable to get the Python interpreter path, then construct the path to beaconled
+        # Use sys.executable to get the Python interpreter path,
+        # then construct the path to beaconled
         if sys.platform == "win32":
-            self.beacon_cmd = [os.path.join(os.getcwd(), ".venv", "Scripts", "beaconled")]
+            self.beacon_cmd = [
+                os.path.join(os.getcwd(), ".venv", "Scripts", "beaconled")
+            ]
         else:
-            self.beacon_cmd = [os.path.join(os.getcwd(), ".venv", "bin", "beaconled")]
+            self.beacon_cmd = [
+                os.path.join(os.getcwd(), ".venv", "bin", "beaconled")
+            ]
 
     def test_beaconled_help(self):
         """Test that beaconled help command works."""
@@ -99,7 +104,9 @@ class TestEndToEnd(unittest.TestCase):
     def test_beaconled_range_analysis_extended(self):
         """Test range analysis with extended output."""
         result = subprocess.run(
-            self.beacon_cmd + ["--range", "--since", "1 week ago", "--format", "extended"],
+            self.beacon_cmd + [
+                "--range", "--since", "1 week ago", "--format", "extended"
+            ],
             capture_output=True,
             text=True
         )
@@ -112,7 +119,10 @@ class TestEndToEnd(unittest.TestCase):
         self.assertIn("Total lines added:", result.stdout)
         self.assertIn("Total lines deleted:", result.stdout)
         self.assertIn("Contributors:", result.stdout)
-        self.assertIn("Temporal Analysis - Daily Activity Timeline:", result.stdout)
+        self.assertIn(
+            "Temporal Analysis - Daily Activity Timeline:",
+            result.stdout
+        )
 
 
 if __name__ == '__main__':
