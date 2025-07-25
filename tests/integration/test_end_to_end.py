@@ -40,13 +40,36 @@ class TestEndToEnd(unittest.TestCase):
             capture_output=True,
             text=True
         )
-        self.assertEqual(result.returncode, 0)
+        if result.returncode != 0:
+            print("\n=== stderr ===")
+            print(result.stderr)
+            print("=== stdout ===")
+            print(result.stdout)
+        self.assertEqual(result.returncode, 0, "Command failed with non-zero exit code")
         self.assertIn("Commit:", result.stdout)
         self.assertIn("Author:", result.stdout)
         self.assertIn("Files changed:", result.stdout)
 
     def test_beaconled_json_output(self):
         """Test JSON output format."""
+        result = subprocess.run(
+            self.beacon_cmd + ["--format", "json"],
+            capture_output=True,
+            text=True
+        )
+        if result.returncode != 0:
+            print("\n=== stderr ===")
+            print(result.stderr)
+            print("=== stdout ===")
+            print(result.stdout)
+        self.assertEqual(result.returncode, 0, "Command failed with non-zero exit code")
+        try:
+            json.loads(result.stdout)
+        except json.JSONDecodeError as e:
+            self.fail(f"Output is not valid JSON: {e}")
+
+    def test_beaconled_extended_output(self):
+        """Test extended output format."""
         result = subprocess.run(
             self.beacon_cmd + ["--format", "json"],
             capture_output=True,

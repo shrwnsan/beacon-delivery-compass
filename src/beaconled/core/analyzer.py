@@ -2,7 +2,7 @@
 
 import os
 import subprocess
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from .models import CommitStats, FileStats, RangeStats
@@ -16,7 +16,17 @@ class GitAnalyzer:
         self.repo_path = self._validate_repo_path(repo_path)
 
     def _validate_repo_path(self, repo_path: str) -> str:
-        """Validate and sanitize repository path."""
+        """Validate and sanitize repository path.
+        
+        Args:
+            repo_path: Path to the git repository
+            
+        Returns:
+            str: Absolute path to the validated repository
+            
+        Raises:
+            ValueError: If the path is invalid, not a directory, or not a git repository
+        """
         try:
             path = Path(repo_path).resolve()
             
@@ -38,21 +48,65 @@ class GitAnalyzer:
         except Exception as e:
             raise ValueError(f"Invalid repository path: {e}")
 
+    def _parse_git_date(self, date_str: str) -> datetime:
+        """Parse a date string from git log into a timezone-aware datetime.
+        
+        Handles git log's default date format: "YYYY-MM-DD HH:MM:SS +ZZZZ"
+        and converts it to a timezone-aware datetime object.
+        
+        Args:
+            date_str: Date string from git log
+            
+        Returns:
+            datetime: Timezone-aware datetime object
+            
+        Note:
+            If parsing fails, falls back to the current time in UTC and logs a warning.
+        """
+        try:
+            # Try parsing with space separator (git log format)
+            if ' ' in date_str:
+                # Format: "YYYY-MM-DD HH:MM:SS +ZZZZ" -> "YYYY-MM-DDTHH:MM:SS+ZZ:ZZ"
+                date_parts = date_str.split()
+                if len(date_parts) >= 2:
+                    # Reconstruct in ISO 8601 format with timezone
+                    tz = date_parts[-1]
+                    if len(tz) == 5:  # Handle +0800 -> +08:00
+                        tz = f"{tz[:3]}:{tz[3:]}"
+                    date_str = f"{date_parts[0]}T{date_parts[1]}{tz}"
+            
+            return datetime.fromisoformat(date_str)
+        except ValueError as e:
+            # Fallback to current time if parsing fails
+            print(f"Warning: Failed to parse date '{date_str}': {e}")
+            return datetime.now(timezone.utc)
+
     def get_commit_stats(self, commit_hash: str = "HEAD") -> CommitStats:
-        """Get statistics for a single commit."""
+        """Get statistics for a single commit.
+        
+        This method retrieves commit information using `git show` with a custom format.
+        The format includes the commit hash, author, date, and subject.
+        The date is parsed using the `_parse_git_date` method to handle different date formats.
+        
+        Args:
+            commit_hash: Commit hash to retrieve statistics for (default: "HEAD")
+        
+        Returns:
+            CommitStats: Statistics for the specified commit
+        """
         # Validate commit hash to prevent injection
         if not self._is_valid_commit_hash(commit_hash):
             raise ValueError("Invalid commit hash format")
             
-        # Get commit info
+        # Get commit info using git show with custom format
         cmd = [
             "git",
             "-C",
             self.repo_path,
             "show",
-            "--format=%H|%an|%ad|%s",
-            "--date=iso",
-            "--numstat",
+            "--format=%H|%an|%ad|%s",  # Hash|Author|Date|Subject
+            "--date=iso",              # Use ISO 8601 format for dates
+            "--numstat",               # Include file stats
             commit_hash,
         ]
         result = subprocess.run(
@@ -64,7 +118,7 @@ class GitAnalyzer:
 
         commit_hash = header[0]
         author = header[1]
-        date = datetime.fromisoformat(header[2].replace(" ", "T"))
+        date = self._parse_git_date(header[2])
         message = header[3]
 
         files = []
