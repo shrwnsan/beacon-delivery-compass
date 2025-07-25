@@ -82,7 +82,9 @@ class ExtendedFormatter(StandardFormatter):
                 date_str = current_date.strftime("%Y-%m-%d")
                 commit_count = daily_activity[date_str]
                 bar = "█" * min(commit_count, 50)  # Limit bar length to 50 characters
-                output += f"\n  {Fore.CYAN}{date_str}{Style.RESET_ALL}: {commit_count:2d} {bar}"
+                output += (
+                    f"\n  {Fore.CYAN}{date_str}{Style.RESET_ALL}: {commit_count:2d} {bar}"
+                )
                 current_date += timedelta(days=1)
         
-        return output
+            return output
