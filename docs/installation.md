@@ -1,31 +1,21 @@
-# Installation Guide
+# 📦 Installation Guide
 
-This guide covers different ways to install Beacon, with a strong emphasis on using virtual environments to maintain a clean Python setup.
+This guide covers different ways to install Beacon Delivery Compass, with best practices for maintaining a clean Python development environment.
 
-## Why Use Virtual Environments?
+## 🏁 Prerequisites
 
-Virtual environments are essential for Python development because they:
-- Prevent package conflicts between different projects
-- Allow you to use different versions of packages for different projects
-- Keep your system Python clean and stable
-- Make it easy to reproduce environments across different machines
-- Enable easy cleanup by simply deleting the virtual environment
+- **Python 3.7** or higher
+- **Git** (for repository analysis)
+- **pip** (Python package installer)
 
-## Prerequisites
-
-- Python 3.7 or higher
-- Git (for repository analysis)
-
-Check your Python version:
+Verify your Python installation:
 ```bash
-python --version
-# or
-python3 --version
+python --version  # or python3 --version
 ```
 
-## Recommended Installation (with Virtual Environment)
+## 🚀 Recommended Installation (Virtual Environment)
 
-### 1. Create a Virtual Environment
+### 1. Create and Activate a Virtual Environment
 
 ```bash
 # Create a new virtual environment
@@ -34,195 +24,97 @@ python -m venv .venv
 # Activate the virtual environment
 # On macOS/Linux:
 source .venv/bin/activate
-
-# On Windows:
-.venv\Scripts\activate
+# On Windows (Command Prompt):
+.venv\Scripts\activate.bat
+# On Windows (PowerShell):
+.venv\Scripts\Activate.ps1
 ```
 
 You'll know the virtual environment is active when you see `(.venv)` in your terminal prompt.
 
-### 2. Install Beacon
+### 2. Install Beacon Delivery Compass
 
 ```bash
-# Install from PyPI
+# Install the latest stable version from PyPI
 pip install beaconled
 
-# Or install the latest development version
-pip install git+https://github.com/shrwnsan/beacon-delivery-compass.git
-```
-
-### 3. Verify Installation
-
-```bash
+# Verify installation
 beaconled --version
-beaconled --help
 ```
 
-## Development Installation
+## 🔧 Alternative Installation Methods
 
-If you want to contribute to Beacon or test the latest features:
+### Development Installation
 
-### 1. Clone the Repository
+If you plan to contribute to the project:
 
 ```bash
+# Clone the repository
 git clone https://github.com/shrwnsan/beacon-delivery-compass.git
 cd beacon-delivery-compass
-```
 
-### 2. Create and Activate Virtual Environment
-
-```bash
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-```
-
-### 3. Install in Development Mode
-
-```bash
-# Install with development dependencies
+# Install in development mode with all dependencies
 pip install -e ".[dev]"
-```
 
-This installs Beacon in "editable" mode, so changes to the source code are immediately reflected.
-
-### 4. Run Tests
-
-```bash
-# Run all tests
+# Run tests to verify installation
 pytest
-
-# Run with coverage
-pytest --cov=beaconled --cov-report=term-missing
-
-# Run code quality checks
-black src tests
-flake8 src tests
-mypy src
 ```
 
-## Quick Setup Scripts
-
-For quick setup, we provide platform-specific scripts:
-
-### Linux/macOS
-```bash
-./scripts/setup.sh
-```
-
-### Windows
-```cmd
-.\scripts\setup.bat
-```
-
-These scripts will:
-1. Create a virtual environment
-2. Install dependencies
-3. Install in development mode
-
-## Alternative Installation Methods
-
-### Using pipx (Isolated Installation)
-
-If you want to install Beacon globally but isolated from other packages:
+### Global Installation (Not Recommended)
 
 ```bash
-# Install pipx if you don't have it
-pip install --user pipx
-pipx ensurepath
-
-# Install beaconled with pipx
-pipx install beaconled
+# Install globally (requires admin/sudo)
+pip install --user beaconled
 ```
 
-### System-wide Installation (Not Recommended)
+## 🔄 Upgrading
 
-While possible, we don't recommend system-wide installation as it can cause conflicts:
-
-```bash
-# Only if you really need system-wide installation
-pip install beaconled
-```
-
-## Managing Your Virtual Environment
-
-### Activating and Deactivating
+To upgrade to the latest version:
 
 ```bash
-# Activate (run this each time you open a new terminal)
-source .venv/bin/activate  # macOS/Linux
-.venv\Scripts\activate     # Windows
-
-# Deactivate when you're done
-deactivate
-```
-
-### Updating Beacon
-
-```bash
-# Make sure your virtual environment is active
-source .venv/bin/activate
-
-# Update to latest version
 pip install --upgrade beaconled
 ```
 
-### Removing the Installation
+## 🛠️ Troubleshooting
+
+### Common Issues
+
+1. **Command Not Found**
+   - Ensure the virtual environment is activated
+   - Verify the installation directory is in your system's PATH
+
+2. **Permission Errors**
+   - Avoid using `sudo` with pip
+   - Use the `--user` flag or a virtual environment
+
+3. **Dependency Conflicts**
+   - Create a fresh virtual environment
+   - Update pip: `python -m pip install --upgrade pip`
+
+### Getting Help
+
+If you encounter any issues:
+1. Check the [Troubleshooting Guide](TROUBLESHOOTING.md)
+2. Search the [GitHub Issues](https://github.com/shrwnsan/beacon-delivery-compass/issues)
+3. [Open a new issue](https://github.com/shrwnsan/beacon-delivery-compass/issues/new) if your problem isn't documented
+
+## 🧹 Uninstalling
+
+To remove Beacon Delivery Compass:
 
 ```bash
-# Simply delete the virtual environment directory
-rm -rf .venv  # macOS/Linux
-rmdir /s .venv  # Windows
+# Deactivate the virtual environment first if active
+deactivate
+
+# Uninstall the package
+pip uninstall beaconled
+
+# Optional: Remove the virtual environment
+rm -rf .venv  # On Windows: rmdir /s /q .venv
 ```
 
-## Troubleshooting
+## 📚 Next Steps
 
-### Dependency Installation Issues
-
-If you encounter `ModuleNotFoundError` after installation (e.g., missing `colorama`):
-1. Manually install dependencies:
-```bash
-pip install -r requirements.txt
-```
-2. Reinstall Beacon:
-```bash
-pip uninstall -y beaconled
-pip install --no-cache-dir beaconled
-```
-3. If issues persist, see our [Performance and Usability Plan](PERFORMANCE_AND_USABILITY_PLAN.md) for detailed solutions
-
-### Python Version Issues
-
-If you have multiple Python versions installed:
-
-```bash
-# Use specific Python version
-python3.7 -m venv .venv
-python3.8 -m venv .venv
-python3.9 -m venv .venv
-```
-
-### Permission Errors
-
-If you get permission errors, make sure you're using a virtual environment rather than installing system-wide.
-
-### Git Not Found
-
-Beacon requires Git to analyze repositories. Install Git from:
-- macOS: `brew install git` or download from [git-scm.com](https://git-scm.com/)
-- Linux: `sudo apt-get install git` or equivalent for your distribution
-- Windows: Download from [git-scm.com](https://git-scm.com/)
-
-## Next Steps
-
-Once installed, check out:
-- [Usage Examples](usage.md) - Learn how to use Beacon effectively
-- [Integration Guide](integrations.md) - Integrate Beacon into your workflow
-- [API Reference](api-reference.md) - Detailed command reference
-
-## Best Practices Summary
-
-1. **Always use virtual environments** for Python projects
-2. **Activate your virtual environment** before running Beacon
-3. **Keep your virtual environments organized** (use descriptive names)
-4. **Document your environment** (consider using requirements.txt files)
-5. **Update regularly** but test in development first
+- [Getting Started Guide](USAGE.md)
+- [Configuration Options](CONFIGURATION.md)
+- [Contributing Guidelines](../CONTRIBUTING.md)
