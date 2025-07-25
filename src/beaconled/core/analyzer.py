@@ -1,8 +1,10 @@
 """Git repository analyzer."""
 
 import os
-import subprocess
 from datetime import datetime, timezone
+from typing import List, Optional, Dict, Any, Union
+import git
+from pathlib import Path
 from pathlib import Path
 
 from .models import CommitStats, FileStats, RangeStats
@@ -84,146 +86,179 @@ class GitAnalyzer:
     def get_commit_stats(self, commit_hash: str = "HEAD") -> CommitStats:
         """Get statistics for a single commit.
         
-        This method retrieves commit information using `git show` with a custom format.
-        The format includes the commit hash, author, date, and subject.
-        The date is parsed using the `_parse_git_date` method to handle different date formats.
+        This method retrieves commit information using GitPython, which provides
+        a more Pythonic interface to git repositories compared to subprocess.
         
         Args:
             commit_hash: Commit hash to retrieve statistics for (default: "HEAD")
         
         Returns:
             CommitStats: Statistics for the specified commit
-        """
-        # Validate commit hash to prevent injection
-        if not self._is_valid_commit_hash(commit_hash):
-            raise ValueError("Invalid commit hash format")
             
-        # Get commit info using git show with custom format
-        cmd = [
-            "git",
-            "-C",
-            self.repo_path,
-            "show",
-            "--format=%H|%an|%ad|%s",  # Hash|Author|Date|Subject
-            "--date=iso",              # Use ISO 8601 format for dates
-            "--numstat",               # Include file stats
-            commit_hash,
-        ]
-        result = subprocess.run(
-            cmd, capture_output=True, text=True, check=True, timeout=30
-        )
-
-        lines = result.stdout.strip().split("\n")
-        header = lines[0].split("|")
-
-        commit_hash = header[0]
-        author = header[1]
-        date = self._parse_git_date(header[2])
-        message = header[3]
-
-        files = []
-        total_added = 0
-        total_deleted = 0
-
-        for line in lines[2:]:  # Skip header and empty line
-            if line.strip():
-                parts = line.split("\t")
-                if len(parts) >= 3:
-                    added = int(parts[0]) if parts[0] != "-" else 0
-                    deleted = int(parts[1]) if parts[1] != "-" else 0
-                    path = parts[2]
-
-                    files.append(
-                        FileStats(
-                            path=path,
-                            lines_added=added,
-                            lines_deleted=deleted,
-                            lines_changed=added + deleted,
-                        )
+        Raises:
+            git.GitCommandError: If there's an error executing git commands
+            ValueError: If the commit hash is invalid
+        """
+        if not self._is_valid_commit_hash(commit_hash):
+            raise ValueError(f"Invalid commit hash: {commit_hash}")
+            
+        try:
+            # Initialize the git repository
+            repo = git.Repo(self.repo_path)
+            
+            # Get the commit object
+            commit = repo.commit(commit_hash)
+            
+            # Get commit details
+            commit_hash = commit.hexsha
+            author = f"{commit.author.name} <{commit.author.email}>"
+            date = commit.authored_datetime or datetime.now(timezone.utc)
+            message = commit.message.split('\n')[0]  # Get first line of commit message
+            
+            # Initialize file stats
+            files = []
+            total_added = 0
+            total_deleted = 0
+            
+            # Get diff stats for this commit
+            if commit.parents:
+                # Compare with first parent (most common case)
+                diff_index = commit.parents[0].diff(commit, create_patch=False)
+            else:
+                # For initial commit, compare with empty tree
+                diff_index = commit.diff(git.NULL_TREE, create_patch=False)
+            
+            # Process each changed file in the diff
+            for diff in diff_index:
+                # Get the path (use b_path for new files, a_path for deleted files)
+                path = diff.b_path if diff.b_path else diff.a_path
+                
+                # Get line statistics - handle both bytes and string diff outputs
+                diff_content = diff.diff
+                if isinstance(diff_content, bytes):
+                    added = diff_content.count(b'\n+') - 1  # Subtract 1 for the header line
+                    deleted = diff_content.count(b'\n-') - 1  # Subtract 1 for the header line
+                else:
+                    # Convert to bytes if it's a string
+                    if isinstance(diff_content, str):
+                        diff_content = diff_content.encode('utf-8')
+                    added = diff_content.count(b'\n+') - 1
+                    deleted = diff_content.count(b'\n-') - 1
+                
+                # Ensure non-negative values
+                added = max(0, added)
+                deleted = max(0, deleted)
+                
+                files.append(
+                    FileStats(
+                        path=path,
+                        lines_added=added,
+                        lines_deleted=deleted,
+                        lines_changed=added + deleted,
                     )
+                )
+                
+                total_added += added
+                total_deleted += deleted
 
-                    total_added += added
-                    total_deleted += deleted
-
-        return CommitStats(
-            hash=commit_hash,
-            author=author,
-            date=date,
-            message=message,
-            files_changed=len(files),
-            lines_added=total_added,
-            lines_deleted=total_deleted,
-            files=files,
-        )
+            return CommitStats(
+                hash=commit_hash,
+                author=author,
+                date=date,
+                message=message,
+                files_changed=len(files),
+                lines_added=total_added,
+                lines_deleted=total_deleted,
+                files=files,
+            )
+            
+        except git.GitCommandError as e:
+            raise RuntimeError(f"Git command failed: {e}")
+        except Exception as e:
+            raise RuntimeError(f"Error getting commit stats: {e}")
 
     def get_range_analytics(
         self, since: str, until: str = "HEAD"
     ) -> RangeStats:
-        """Get analytics for a range of commits."""
+        """Get analytics for a range of commits.
+        
+        Args:
+            since: Start date for the range (git date format)
+            until: End date for the range (default: "HEAD")
+            
+        Returns:
+            RangeStats: Statistics for the specified commit range
+            
+        Raises:
+            git.GitCommandError: If there's an error executing git commands
+            ValueError: If the date format is invalid
+        """
         # Validate date parameters
         if not self._is_valid_date_string(since):
             raise ValueError("Invalid since date format")
         if not self._is_valid_date_string(until):
             raise ValueError("Invalid until date format")
             
-        # Get commit list
-        cmd = [
-            "git",
-            "-C",
-            self.repo_path,
-            "log",
-            f"--since={since}",
-            f"--until={until}",
-            "--format=%H",
-            "--reverse",
-        ]
-        result = subprocess.run(
-            cmd, capture_output=True, text=True, check=True, timeout=30
-        )
+        try:
+            # Initialize the git repository
+            repo = git.Repo(self.repo_path)
+            
+            # Get all commits since the specified date
+            # We need to use git rev-list directly to handle date-based ranges
+            commit_hashes = repo.git.rev_list(
+                '--since', since,
+                until,
+                '--reverse'
+            ).splitlines()
+            
+            # Get commit objects for each hash
+            commits = [repo.commit(hash) for hash in commit_hashes if hash]
+            
+            commit_stats_list = []
+            authors = {}
+            total_files = 0
+            total_added = 0
+            total_deleted = 0
+            
+            for commit in commits:
+                try:
+                    # Get stats for this commit
+                    commit_stats = self.get_commit_stats(commit.hexsha)
+                    commit_stats_list.append(commit_stats)
+                    
+                    # Update author stats
+                    author = f"{commit.author.name} <{commit.author.email}>"
+                    authors[author] = authors.get(author, 0) + 1
+                    
+                    # Update totals
+                    total_files += commit_stats.files_changed
+                    total_added += commit_stats.lines_added
+                    total_deleted += commit_stats.lines_deleted
+                    
+                except Exception as e:
+                    # Log the error but continue with other commits
+                    print(f"Warning: Could not process commit {commit.hexsha}: {e}")
+                    continue
 
-        commit_hashes = [
-            line.strip()
-            for line in result.stdout.strip().split("\n")
-            if line.strip()
-        ]
-
-        commits = []
-        authors = {}
-        total_files = 0
-        total_added = 0
-        total_deleted = 0
-
-        for commit_hash in commit_hashes:
-            try:
-                commit_stats = self.get_commit_stats(commit_hash)
-                commits.append(commit_stats)
-
-                # Update author stats
-                authors[commit_stats.author] = (
-                    authors.get(commit_stats.author, 0) + 1
-                )
-
-                # Update totals
-                total_files += commit_stats.files_changed
-                total_added += commit_stats.lines_added
-                total_deleted += commit_stats.lines_deleted
-
-            except subprocess.CalledProcessError:
-                continue  # Skip problematic commits
-
-        start_date = commits[0].date if commits else datetime.now()
-        end_date = commits[-1].date if commits else datetime.now()
-
-        return RangeStats(
-            start_date=start_date,
-            end_date=end_date,
-            total_commits=len(commits),
-            total_files_changed=total_files,
-            total_lines_added=total_added,
-            total_lines_deleted=total_deleted,
-            commits=commits,
-            authors=authors,
-        )
+            # Get date range
+            start_date = commit_stats_list[0].date if commit_stats_list else datetime.now(timezone.utc)
+            end_date = commit_stats_list[-1].date if commit_stats_list else datetime.now(timezone.utc)
+            
+            return RangeStats(
+                start_date=start_date,
+                end_date=end_date,
+                total_commits=len(commit_stats_list),
+                total_files_changed=total_files,
+                total_lines_added=total_added,
+                total_lines_deleted=total_deleted,
+                commits=commit_stats_list,
+                authors=authors,
+            )
+            
+        except git.GitCommandError as e:
+            raise RuntimeError(f"Git command failed: {e}")
+        except Exception as e:
+            raise RuntimeError(f"Error getting range analytics: {e}")
 
     def _is_valid_commit_hash(self, commit_hash: str) -> bool:
         """Validate commit hash format to prevent injection."""
