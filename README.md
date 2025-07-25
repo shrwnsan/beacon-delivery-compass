@@ -1,8 +1,10 @@
-# Beacon
+# Beacon Delivery Compass
 
-Your delivery compass for empowered product builders.
+[![PyPI version](https://badge.fury.io/py/beaconled.svg)](https://badge.fury.io/py/beaconled)
+[![Python Version](https://img.shields.io/pypi/pyversions/beaconled.svg)](https://pypi.org/project/beaconled/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A comprehensive toolkit for analyzing git repository statistics and development metrics.
+Your delivery compass for empowered product builders. A comprehensive toolkit for analyzing git repository statistics and development metrics.
 
 ## Features
 
@@ -162,16 +164,21 @@ Most Changed Components:
 
 ## Documentation
 
-- [Installation Guide](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/installation.md)
-- [Usage Examples](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/usage.md)
-- [Integration Guide](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/integrations.md)
-- [API Reference](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/api-reference.md)
-- [Changelog](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/CHANGELOG.md)
+- [Installation Guide](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/installation.md) - Detailed setup instructions and troubleshooting
+- [Usage Guide](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/USAGE.md) - Comprehensive usage documentation
+- [Roadmap](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/ROADMAP.md) - Development plans and upcoming features
+- [Integration Guide](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/integrations.md) - Instructions for integrating with CI/CD pipelines and git hooks
+- [API Reference](docs/api-reference.md) - Detailed API documentation
+- [Changelog](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/CHANGELOG.md) - Release notes and version history
 
 ## Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+Contributions are welcome! Please see our [Contributing Guidelines](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/CONTRIBUTING.md) for details.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/LICENSE) file for details.
+
+## Roadmap
+
+Check out our [Roadmap](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/ROADMAP.md) to see what we're working on and what's coming next!
