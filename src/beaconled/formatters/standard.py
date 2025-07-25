@@ -49,12 +49,20 @@ class StandardFormatter:
         output.append("")
         output.append(f"{Fore.YELLOW}Total commits:{Style.RESET_ALL} {stats.total_commits}")
         output.append(f"{Fore.YELLOW}Total files changed:{Style.RESET_ALL} {stats.total_files_changed}")
-        output.append(f"{Fore.GREEN}Total lines added:{Style.RESET_ALL} {stats.total_lines_added}")
-        output.append(f"{Fore.RED}Total lines deleted:{Style.RESET_ALL} {stats.total_lines_deleted}")
-        
+        output.append(
+            f"{Fore.GREEN}Total lines added:{Style.RESET_ALL} "
+            f"{stats.total_lines_added}"
+        )
+        output.append(
+            f"{Fore.RED}Total lines deleted:{Style.RESET_ALL} "
+            f"{stats.total_lines_deleted}"
+        )
         net_change = stats.total_lines_added - stats.total_lines_deleted
         net_color = Fore.GREEN if net_change >= 0 else Fore.RED
-        output.append(f"{Fore.YELLOW}Net change:{Style.RESET_ALL} {net_color}{net_change}{Style.RESET_ALL}")
+        output.append(
+            f"{Fore.YELLOW}Net change:{Style.RESET_ALL} "
+            f"{net_color}{net_change}{Style.RESET_ALL}"
+        )
 
         if stats.authors:
             output.append("")
