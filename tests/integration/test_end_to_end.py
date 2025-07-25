@@ -88,11 +88,20 @@ class TestEndToEnd(unittest.TestCase):
 
     def test_beaconled_range_analysis(self):
         """Test range analysis functionality."""
+        cmd = self.beacon_cmd + ["--range", "--since", "1 week ago"]
+        print(f"\nRunning command: {' '.join(cmd)}")
         result = subprocess.run(
-            self.beacon_cmd + ["--range", "--since", "1 week ago"],
+            cmd,
             capture_output=True,
             text=True
         )
+        print(f"Return code: {result.returncode}")
+        print("=== STDOUT ===")
+        print(result.stdout)
+        print("=== STDERR ===")
+        print(result.stderr)
+        print("=============")
+        
         self.assertEqual(result.returncode, 0)
         self.assertIn("Range Analysis:", result.stdout)
         self.assertIn("Total commits:", result.stdout)
