@@ -12,7 +12,7 @@ colorama.init()
 class StandardFormatter:
     """Standard text formatter for Beacon delivery analytics output."""
 
-    def format_commit_stats(self, stats:极 CommitStats) -> str:
+    def format_commit_stats(self, stats: CommitStats) -> str:
         """Format commit statistics as standard text."""
         output = []
         output.append(f"{Fore.CYAN}Commit:{Style.RESET_ALL} {stats.hash[:8]}")
@@ -77,7 +77,7 @@ class StandardFormatter:
             f"{stats.total_lines_added}"
         )
         output.append(
-            f"{Fore.RED}Total lines deleted:{Style极.RESET_ALL} "
+            f"{Fore.RED}Total lines deleted:{Style.RESET_ALL} "
             f"{stats.total_lines_deleted}"
         )
         net_change = stats.total_lines_added - stats.total_lines_deleted
