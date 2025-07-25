@@ -2,8 +2,6 @@
 
 import json
 from datetime import datetime
-from unittest.mock import Mock
-
 import pytest
 from freezegun import freeze_time
 
@@ -25,9 +23,24 @@ def sample_commit_stats():
         lines_added=45,
         lines_deleted=12,
         files=[
-            FileStats(path="src/main.py", lines_added=30, lines_deleted=5, lines_changed=35),
-            FileStats(path="tests/test_main.py", lines_added=10, lines_deleted=5, lines_changed=15),
-            FileStats(path="docs/README.md", lines_added=5, lines_deleted=2, lines_changed=7),
+            FileStats(
+                path="src/main.py",
+                lines_added=30,
+                lines_deleted=5,
+                lines_changed=35
+            ),
+            FileStats(
+                path="tests/test_main.py",
+                lines_added=10,
+                lines_deleted=5,
+                lines_changed=15
+            ),
+            FileStats(
+                path="docs/README.md",
+                lines_added=5,
+                lines_deleted=2,
+                lines_changed=7
+            ),
         ],
     )
 
@@ -102,18 +115,12 @@ class TestStandardFormatter:
     """Test the StandardFormatter class."""
 
     def setup_method(self):
-        """Set up test fixtures before each test method."""
         self.formatter = StandardFormatter()
 
     def test_format_commit_stats(self, sample_commit_stats):
-        """Test formatting of commit statistics."""
         result = self.formatter.format_commit_stats(sample_commit_stats)
-        
-        # Remove ANSI color codes for testing
         import re
         clean_result = re.sub(r'\x1b\[[0-9;]*m', '', result)
-        
-        # Check basic content
         assert "Commit: abc123de" in clean_result
         assert "Author: John Doe <john@example.com>" in clean_result
         assert "Date: 2023-01-15 10:30:00" in clean_result
@@ -122,30 +129,21 @@ class TestStandardFormatter:
         assert "Lines added: 45" in clean_result
         assert "Lines deleted: 12" in clean_result
         assert "Net change: 33" in clean_result
-        
-        # Check file changes section
         assert "File changes:" in clean_result
         assert "src/main.py: +30 -5" in clean_result
         assert "tests/test_main.py: +10 -5" in clean_result
         assert "docs/README.md: +5 -2" in clean_result
 
     def test_format_range_stats(self, sample_range_stats):
-        """Test formatting of range statistics."""
         result = self.formatter.format_range_stats(sample_range_stats)
-        
-        # Remove ANSI color codes for testing
         import re
         clean_result = re.sub(r'\x1b\[[0-9;]*m', '', result)
-        
-        # Check basic content
         assert "Range Analysis: 2023-01-01 to 2023-01-31" in clean_result
         assert "Total commits: 5" in clean_result
         assert "Total files changed: 12" in clean_result
         assert "Total lines added: 156" in clean_result
         assert "Total lines deleted: 45" in clean_result
         assert "Net change: 111" in clean_result
-        
-        # Check contributors section
         assert "Contributors:" in clean_result
         assert "John Doe: 2 commits" in clean_result
         assert "Jane Smith: 2 commits" in clean_result
@@ -156,15 +154,11 @@ class TestJSONFormatter:
     """Test the JSONFormatter class."""
 
     def setup_method(self):
-        """Set up test fixtures before each test method."""
         self.formatter = JSONFormatter()
 
     def test_format_commit_stats(self, sample_commit_stats):
-        """Test JSON formatting of commit statistics."""
         result = self.formatter.format_commit_stats(sample_commit_stats)
         data = json.loads(result)
-        
-        # Check all fields are present and correct
         assert data["hash"] == "abc123def456"
         assert data["author"] == "John Doe <john@example.com>"
         assert data["date"] == "2023-01-15T10:30:00"
@@ -173,8 +167,6 @@ class TestJSONFormatter:
         assert data["lines_added"] == 45
         assert data["lines_deleted"] == 12
         assert data["net_change"] == 33
-        
-        # Check files array
         assert len(data["files"]) == 3
         assert data["files"][0]["path"] == "src/main.py"
         assert data["files"][0]["lines_added"] == 30
@@ -182,11 +174,8 @@ class TestJSONFormatter:
         assert data["files"][0]["lines_changed"] == 35
 
     def test_format_range_stats(self, sample_range_stats):
-        """Test JSON formatting of range statistics."""
         result = self.formatter.format_range_stats(sample_range_stats)
         data = json.loads(result)
-        
-        # Check all fields are present and correct
         assert data["start_date"] == "2023-01-01T00:00:00"
         assert data["end_date"] == "2023-01-31T00:00:00"
         assert data["total_commits"] == 5
@@ -194,9 +183,11 @@ class TestJSONFormatter:
         assert data["total_lines_added"] == 156
         assert data["total_lines_deleted"] == 45
         assert data["net_change"] == 111
-        assert data["authors"] == {"John Doe": 2, "Jane Smith": 2, "Bob Johnson": 1}
-        
-        # Check commits array
+        assert data["authors"] == {
+            "John Doe": 2,
+            "Jane Smith": 2,
+            "Bob Johnson": 1
+        }
         assert len(data["commits"]) == 5
         assert data["commits"][0]["hash"] == "abc123"
         assert data["commits"][0]["author"] == "John Doe"
@@ -207,64 +198,46 @@ class TestExtendedFormatter:
     """Test the ExtendedFormatter class."""
 
     def setup_method(self):
-        """Set up test fixtures before each test method."""
         self.formatter = ExtendedFormatter()
 
-    def test_format_commit_stats_with_file_types(self, sample_commit_stats):
-        """Test extended formatting of commit statistics with file type analysis."""
+    def test_format_commit_stats_with_file_types(
+        self, sample_commit_stats
+    ):
         result = self.formatter.format_commit_stats(sample_commit_stats)
-        
-        # Remove ANSI color codes for testing
         import re
         clean_result = re.sub(r'\x1b\[[0-9;]*m', '', result)
-        
-        # Check standard output is included
         assert "Commit: abc123de" in clean_result
         assert "Files changed: 3" in clean_result
-        
-        # Check file type breakdown
         assert "File type breakdown:" in clean_result
         assert ".py: 2 files, +40 -10" in clean_result
         assert ".md: 1 files, +5 -2" in clean_result
 
-    def test_format_range_stats_with_author_breakdown(self, sample_range_stats):
-        """Test extended formatting of range statistics with author contribution breakdown."""
+    def test_format_range_stats_with_author_breakdown(
+        self, sample_range_stats
+    ):
         result = self.formatter.format_range_stats(sample_range_stats)
-        
-        # Remove ANSI color codes for testing
         import re
         clean_result = re.sub(r'\x1b\[[0-9;]*m', '', result)
-        
-        # Check standard output is included
         assert "Range Analysis: 2023-01-01 to 2023-01-31" in clean_result
         assert "Total commits: 5" in clean_result
-        
-        # Check author contribution breakdown
         assert "Author Contribution Breakdown:" in clean_result
         assert "John Doe: 2 commits (40.0%)" in clean_result
         assert "Jane Smith: 2 commits (40.0%)" in clean_result
         assert "Bob Johnson: 1 commits (20.0%)" in clean_result
 
     @freeze_time("2023-01-31")
-    def test_format_range_stats_with_temporal_analysis(self, sample_range_stats):
-        """Test extended formatting of range statistics with temporal analysis visualization."""
+    def test_format_range_stats_with_temporal_analysis(
+        self, sample_range_stats
+    ):
         result = self.formatter.format_range_stats(sample_range_stats)
-        
-        # Remove ANSI color codes for testing
         import re
         clean_result = re.sub(r'\x1b\[[0-9;]*m', '', result)
-        
-        # Check temporal analysis section
         assert "Temporal Analysis - Daily Activity Timeline:" in clean_result
-        
-        # Check that all commit dates are represented
         assert "2023-01-10:  1 █" in clean_result
         assert "2023-01-12:  1 █" in clean_result
         assert "2023-01-15:  1 █" in clean_result
         assert "2023-01-20:  1 █" in clean_result
         assert "2023-01-25:  1 █" in clean_result
-        
-        # Check that dates without commits show zero activity (with proper spacing)
         assert "2023-01-11:  0" in clean_result
         assert "2023-01-13:  0" in clean_result
         assert "2023-01-14:  0" in clean_result

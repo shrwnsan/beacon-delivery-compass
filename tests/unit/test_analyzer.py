@@ -18,7 +18,6 @@ class TestGitAnalyzer(unittest.TestCase):
     @patch('subprocess.run')
     def test_get_commit_stats_success(self, mock_run):
         """Test successful commit analysis."""
-        # Mock git show output
         mock_output = (
             "abc123|John Doe|2025-07-20 10:00:00 +0800|Test commit\n"
             "\n"
@@ -49,18 +48,15 @@ class TestGitAnalyzer(unittest.TestCase):
         with self.assertRaises(subprocess.CalledProcessError):
             self.analyzer.get_commit_stats("nonexistent")
 
-
     @patch('subprocess.run')
     def test_get_range_analytics_success(self, mock_run):
         """Test successful range analysis."""
-        # Mock git log output
         mock_log_output = "abc123\ndef456\nghi789"
         mock_run.return_value = MagicMock(
             stdout=mock_log_output,
             returncode=0
         )
 
-        # Mock get_commit_stats
         mock_commit_stats = CommitStats(
             hash="abc123",
             author="Test Author",
@@ -71,7 +67,9 @@ class TestGitAnalyzer(unittest.TestCase):
             lines_deleted=5,
             files=[FileStats("test.py", 10, 5, 15)]
         )
-        self.analyzer.get_commit_stats = MagicMock(return_value=mock_commit_stats)
+        self.analyzer.get_commit_stats = MagicMock(
+            return_value=mock_commit_stats
+        )
 
         result = self.analyzer.get_range_analytics("1 week ago")
 
@@ -83,14 +81,14 @@ class TestGitAnalyzer(unittest.TestCase):
         self.assertEqual(len(result.commits), 3)
         self.assertEqual(len(result.authors), 1)
 
-    
-        @patch('subprocess.run')
-        def test_get_range_analytics_failure(self, mock_run):
-            """Test range analysis with git command failure."""
-            mock_run.side_effect = subprocess.CalledProcessError(1, 'git')
-    
-            with self.assertRaises(subprocess.CalledProcessError):
-                self.analyzer.get_range_analytics("1 week ago")
+    @patch('subprocess.run')
+    def test_get_range_analytics_failure(self, mock_run):
+        """Test range analysis with git command failure."""
+        mock_run.side_effect = subprocess.CalledProcessError(1, 'git')
+
+        with self.assertRaises(subprocess.CalledProcessError):
+            self.analyzer.get_range_analytics("1 week ago")
+
 
 if __name__ == '__main__':
     unittest.main()
