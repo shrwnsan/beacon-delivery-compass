@@ -17,7 +17,12 @@ Your delivery compass for empowered product builders. A comprehensive toolkit fo
 
 ## Installation
 
-Beacon requires Python 3.7+ and Git. We recommend installing in a virtual environment.
+Beacon requires:
+- Python 3.7+
+- Git 2.0+
+- GitPython 3.1.0+
+
+We recommend installing in a virtual environment.
 
 ### Quick Install
 

@@ -5,7 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.2.0] - 2025-07-25
+## [Unreleased]
+
+### Changed
+- **Refactored Git Integration**: Migrated from direct subprocess calls to GitPython for:
+  - Better error handling and exception management
+  - Improved cross-platform compatibility
+  - More maintainable and testable code
+  - Enhanced security by avoiding shell command injection risks
+  - More reliable repository operations
+
+## [0.2.0] - Unreleased
+
+### Changed
+- **Refactored Git Integration**: Migrated from direct subprocess calls to GitPython for:
+  - Better error handling and exception management
+  - Improved cross-platform compatibility
+  - More maintainable and testable code
+  - Enhanced security by avoiding shell command injection risks
+  - More reliable repository operations
+
+## [0.1.1] - 2025-07-25
 
 ### Added
 - Comprehensive product analytics system implementation
@@ -39,32 +59,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - Old egg-info directory
 
-## [0.1.1] - 2025-07-24
-
-### Changed
-- Migrated from setup.py to pyproject.toml for build configuration
-- Updated README documentation
-
 ## [0.1.0] - 2025-07-24
 
 ### Added
-- Initial release of beaconled package
+- Initial public release on PyPI
 - Core git analytics functionality
 - CLI interface for repository analysis
 - Initial documentation suite
+- Rebranded from "Git Analytics Toolkit" to "Beacon Delivery Compass"
 
 ### Changed
-- Rebranded from "Git Analytics Toolkit" to "Beacon"
-- Renamed package directory from git_analytics to beacon
-- Completed rebrand cleanup
+- Renamed package directory from git_analytics to beaconled
+- Updated all branding and documentation
 
 ### Fixed
 - Copyright year updated to 2025
-- Flake8 linting errors addressed
-
-## [0.0.1] - 2025-07-24
-
-### Added
-- Initial commit: Git Analytics Toolkit setup
-- Core functionality for git repository analysis
-- Initial steering documents for AI assistant guidance
+- Addressed all flake8 linting errors
