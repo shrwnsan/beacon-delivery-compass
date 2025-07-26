@@ -74,7 +74,7 @@ class ExtendedFormatter(StandardFormatter):
         # Add temporal analysis visualization
         if stats.commits:
             # Daily activity timeline
-            daily_activity = defaultdict(int)
+            daily_activity: dict[str, int] = defaultdict(int)
             for commit in stats.commits:
                 day = commit.date.strftime("%Y-%m-%d")
                 daily_activity[day] += 1
@@ -98,7 +98,8 @@ class ExtendedFormatter(StandardFormatter):
                 bar = "█" * min(commit_count, 50)  # Limit bar length to 50
                 output += (
                     f"\n  {Fore.CYAN}{date_str}{Style.RESET_ALL}: "
-                    f"{commit_count:2d} {bar}"
+                    f"{bar} {commit_count} commit{'s' if commit_count != 1 else ''}"
                 )
                 current_date += timedelta(days=1)
-            return output
+                
+        return output

@@ -8,8 +8,18 @@ from ..core.models import CommitStats, RangeStats
 class JSONFormatter:
     """JSON formatter for Beacon delivery analytics output."""
 
-    def _serialize_datetime(self, obj):
-        """JSON serializer for datetime objects."""
+    def _serialize_datetime(self, obj: object) -> str:
+        """JSON serializer for datetime objects.
+        
+        Args:
+            obj: Object to serialize
+            
+        Returns:
+            str: ISO formatted datetime string
+            
+        Raises:
+            TypeError: If the object is not a datetime
+        """
         if isinstance(obj, datetime):
             return obj.isoformat()
         raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
