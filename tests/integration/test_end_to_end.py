@@ -88,7 +88,7 @@ class TestEndToEnd(unittest.TestCase):
 
     def test_beaconled_range_analysis(self):
         """Test range analysis functionality."""
-        cmd = self.beacon_cmd + ["--range", "--since", "1 week ago"]
+        cmd = self.beacon_cmd + ["--range", "--since", "7d"]
         print(f"\nRunning command: {' '.join(cmd)}")
         result = subprocess.run(
             cmd,
@@ -137,7 +137,7 @@ class TestEndToEnd(unittest.TestCase):
         """Test range analysis with extended output."""
         result = subprocess.run(
             self.beacon_cmd + [
-                "--range", "--since", "1 week ago", "--format", "extended"
+                "--range", "--since", "7d", "--format", "extended"
             ],
             capture_output=True,
             text=True

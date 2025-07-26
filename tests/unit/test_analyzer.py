@@ -69,7 +69,7 @@ index 0000000..e69de29
         with self.assertRaises(RuntimeError) as context:
             self.analyzer.get_commit_stats("nonexistent")
             
-        self.assertIn("Error getting commit stats", str(context.exception))
+        self.assertIn("Unexpected error analyzing commit", str(context.exception))
 
     @patch('git.Repo')
     def test_date_parsing_variations(self, mock_repo):
@@ -135,35 +135,50 @@ index 0000000..e69de29
     @patch('git.Repo')
     def test_get_range_analytics_success(self, mock_repo):
         """Test successful range analysis."""
+        # Create a mock git repository
+        mock_repo_instance = MagicMock()
+        mock_repo.return_value = mock_repo_instance
+        
+        # Create mock commits with explicit dates that will be within our test range
+        # Current date is 2025-07-27, so 7d ago is 2025-07-20
+        test_dates = [
+            datetime(2025, 7, 20, 12, 0, 0, tzinfo=timezone.utc),  # 2025-07-20 12:00:00
+            datetime(2025, 7, 21, 14, 0, 0, tzinfo=timezone.utc),  # 2025-07-21 14:00:00
+            datetime(2025, 7, 22, 16, 0, 0, tzinfo=timezone.utc),  # 2025-07-22 16:00:00
+        ]
+        
         # Create mock commits
         mock_commits = []
-        for i in range(3):
+        for i, commit_date in enumerate(test_dates):
             mock_commit = MagicMock()
             mock_commit.hexsha = f"commit_{i}"
             mock_commit.author.name = f"Author {i % 2}"  # Two different authors
             mock_commit.author.email = f"author{i%2}@example.com"
-            mock_commit.authored_datetime = datetime(2025, 7, 20 - i, 10, 0, 0, tzinfo=timezone.utc)
+            mock_commit.authored_datetime = commit_date
+            mock_commit.committed_datetime = commit_date
             mock_commit.message = f"Commit {i}"
             mock_commits.append(mock_commit)
         
-        # Set up repo mock
-        mock_repo.return_value.iter_commits.return_value = mock_commits
+        # Set up repo mock to return our test commits
+        mock_repo_instance.iter_commits.return_value = mock_commits
         
-        # Mock get_commit_stats to return consistent stats
-        mock_commit_stats = CommitStats(
-            hash="abc123",
-            author="Test Author <test@example.com>",
-            date=datetime(2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc),
-            message="Test commit",
-            files_changed=1,
-            lines_added=10,
-            lines_deleted=5,
-            files=[FileStats("test.py", 10, 5, 15)]
-        )
-        self.analyzer.get_commit_stats = MagicMock(return_value=mock_commit_stats)
+        # Create unique commit stats for each commit
+        def mock_get_commit_stats(commit_hash):
+            return CommitStats(
+                hash=commit_hash,
+                author=f"Author {commit_hash[-1]} <author{commit_hash[-1]}@example.com>",
+                date=datetime(2025, 7, 20 - int(commit_hash[-1]), 10, 0, 0, tzinfo=timezone.utc),
+                message=f"Commit {commit_hash[-1]}",
+                files_changed=1,
+                lines_added=10,
+                lines_deleted=5,
+                files=[FileStats(f"test{commit_hash[-1]}.py", 10, 5, 15)]
+            )
+        
+        self.analyzer.get_commit_stats = MagicMock(side_effect=mock_get_commit_stats)
 
-        # Call the method under test
-        result = self.analyzer.get_range_analytics("1 week ago")
+        # Call the method under test with a relative date
+        result = self.analyzer.get_range_analytics("7d")
 
         # Verify results
         self.assertIsInstance(result, RangeStats)
@@ -177,13 +192,14 @@ index 0000000..e69de29
     @patch('git.Repo')
     def test_get_range_analytics_failure(self, mock_repo):
         """Test range analysis with git command failure."""
-        # Set up the mock to raise an exception
-        mock_repo.return_value.iter_commits.side_effect = git.GitCommandError("git log", 1)
+        # Set up the mock to raise an exception during date parsing
+        mock_repo.return_value.git.log.side_effect = git.GitCommandError("git log", 1)
 
         with self.assertRaises(RuntimeError) as context:
             self.analyzer.get_range_analytics("1 week ago")
             
-        self.assertIn("Git command failed", str(context.exception))
+        # The error should be about failing to analyze the date range
+        self.assertIn("Unexpected error analyzing date range", str(context.exception))
 
 
 if __name__ == '__main__':

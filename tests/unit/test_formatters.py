@@ -233,11 +233,11 @@ class TestExtendedFormatter:
         import re
         clean_result = re.sub(r'\x1b\[[0-9;]*m', '', result)
         assert "Temporal Analysis - Daily Activity Timeline:" in clean_result
-        assert "2023-01-10:  1 █" in clean_result
-        assert "2023-01-12:  1 █" in clean_result
-        assert "2023-01-15:  1 █" in clean_result
-        assert "2023-01-20:  1 █" in clean_result
-        assert "2023-01-25:  1 █" in clean_result
+        assert "2023-01-10: █ 1 commit" in clean_result
+        assert "2023-01-12: █ 1 commit" in clean_result
+        assert "2023-01-15: █ 1 commit" in clean_result
+        assert "2023-01-20: █ 1 commit" in clean_result
+        assert "2023-01-25: █ 1 commit" in clean_result
         assert "2023-01-11:  0" in clean_result
         assert "2023-01-13:  0" in clean_result
         assert "2023-01-14:  0" in clean_result

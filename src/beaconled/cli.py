@@ -41,13 +41,16 @@ def main() -> None:
     )
     parser.add_argument(
         "--since",
-        default="1 week ago",
-        help="Start date for range analysis (default: 1 week ago)",
+        default="7d",
+        help=("Start date for range analysis. "
+              "Formats: 1d (1 day), 2w (2 weeks), 3m (3 months), 1y (1 year) "
+              "or YYYY-MM-DD[ HH:MM] (default: 7d)"),
     )
     parser.add_argument(
         "--until",
-        default="HEAD",
-        help="End date for range analysis (default: HEAD)",
+        default="now",
+        help=("End date for range analysis. "
+              "Same formats as --since, or 'now' (default: now)"),
     )
     parser.add_argument(
         "--repo",
@@ -59,27 +62,33 @@ def main() -> None:
 
     try:
         analyzer = GitAnalyzer(args.repo)
+        output: str
 
         if args.range:
-            stats = analyzer.get_range_analytics(args.since, args.until)
+            # For range analysis, we need to parse the date strings
+            range_stats = analyzer.get_range_analytics(args.since, args.until)
             if args.format == "json":
-                formatter = JSONFormatter()
+                json_formatter = JSONFormatter()
+                output = json_formatter.format_range_stats(range_stats)
             elif args.format == "extended":
-                formatter = ExtendedFormatter()
-            else:
-                formatter = StandardFormatter()
-            output = formatter.format_range_stats(stats)
+                extended_formatter = ExtendedFormatter()
+                output = extended_formatter.format_range_stats(range_stats)
+            else:  # standard
+                standard_formatter = StandardFormatter()
+                output = standard_formatter.format_range_stats(range_stats)
         else:
-            stats = analyzer.get_commit_stats(args.commit)
+            # For single commit analysis
+            commit_stats = analyzer.get_commit_stats(args.commit)
 
-            if args.format == "standard":
-                formatter = StandardFormatter()
+            if args.format == "json":
+                json_formatter = JSONFormatter()
+                output = json_formatter.format_commit_stats(commit_stats)
             elif args.format == "extended":
-                formatter = ExtendedFormatter()
-            else:
-                formatter = JSONFormatter()
-
-            output = formatter.format_commit_stats(stats)
+                extended_formatter = ExtendedFormatter()
+                output = extended_formatter.format_commit_stats(commit_stats)
+            else:  # standard
+                standard_formatter = StandardFormatter()
+                output = standard_formatter.format_commit_stats(commit_stats)
 
         # Handle output with proper encoding
         try:
