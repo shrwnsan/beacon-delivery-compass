@@ -43,7 +43,21 @@ graph TD
 4. Results are passed to appropriate formatter
 5. Formatted output is returned to user/integrations
 
+## Git Integration
+
+### Migration to GitPython
+
+The system previously used direct subprocess calls to execute git commands. This has been migrated to use the GitPython library for several key benefits:
+
+- **Improved Security**: Eliminates shell command injection risks by using Python-native bindings
+- **Better Error Handling**: More granular exception handling for git operations
+- **Cross-Platform**: More consistent behavior across different operating systems
+- **Maintainability**: Cleaner, more Pythonic code that's easier to test and extend
+- **Performance**: Native Python bindings can be more efficient than spawning subprocesses
+
+The migration primarily affected the `core/analyzer.py` module, which now uses GitPython's object model to interact with git repositories.
+
 ## Dependencies
-- Zero external dependencies beyond Python standard library
-- GitPython for repository access
-- Optional: Requests for webhook integrations
+- Python 3.7+ standard library
+- GitPython (>=3.1.0) - For secure and efficient git repository access
+- Optional: Requests (for webhook integrations)
