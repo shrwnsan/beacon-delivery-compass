@@ -11,11 +11,27 @@ from .formatters.standard import StandardFormatter
 
 
 def main() -> None:
-    """Main CLI entry point."""
+    """Main CLI entry point for Beacon - Your delivery compass for empowered product builders.
+    
+    Beacon provides comprehensive git repository analysis with support for single commit
+    and date range analysis with flexible date formatting options.
+    """
     parser = argparse.ArgumentParser(
         description=(
-            "Beacon - Your delivery compass for empowered product builders"
-        )
+            "Beacon - Your delivery compass for empowered product builders\n\n"
+            "Examples:\n"
+            "  # Analyze the latest commit\n"
+            "  beaconled\n\n"
+            "  # Analyze a specific commit\n"
+            "  beaconled abc1234\n\n"
+            "  # Analyze changes in the last week\n"
+            "  beaconled --range --since "1w"\n\n"
+            "  # Analyze changes between specific dates\n"
+            "  beaconled --range --since "2025-01-01" --until "2025-01-31"\n\n"
+            "  # Output in JSON format\n"
+            "  beaconled --format json\n"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument(
         "--version",
@@ -42,15 +58,25 @@ def main() -> None:
     parser.add_argument(
         "--since",
         default="7d",
-        help=("Start date for range analysis. "
-              "Formats: 1d (1 day), 2w (2 weeks), 3m (3 months), 1y (1 year) "
-              "or YYYY-MM-DD[ HH:MM] (default: 7d)"),
+        help=("Start date for range analysis.\n"
+              "Relative formats:\n"
+              "  1d    - 1 day ago\n"
+              "  2w    - 2 weeks ago\n"
+              "  3m    - 3 months ago\n"
+              "  1y    - 1 year ago\n"
+              "\n"
+              "Absolute formats:\n"
+              "  YYYY-MM-DD          - Date only (midnight)\n"
+              "  YYYY-MM-DD HH:MM    - Date and time\n"
+              "\n"
+              "Default: 7d (last 7 days)"),
     )
     parser.add_argument(
         "--until",
         default="now",
-        help=("End date for range analysis. "
-              "Same formats as --since, or 'now' (default: now)"),
+        help=("End date for range analysis. Uses same formats as --since.\n"
+              "Special value 'now' means current time.\n"
+              "Default: now"),
     )
     parser.add_argument(
         "--repo",

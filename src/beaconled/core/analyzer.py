@@ -53,18 +53,39 @@ class GitAnalyzer:
     def _parse_date(self, date_str: str) -> datetime:
         """Parse date from relative or absolute format.
         
-        Supports:
-        - Relative: 1d, 2w, 3m, 1y (days, weeks, months, years)
-        - Absolute: YYYY-MM-DD or YYYY-MM-DD HH:MM
+        This method supports flexible date input formats to make it easier to specify
+        dates for analysis. It handles both relative and absolute date specifications.
+        
+        Supported Relative Formats:
+            - 1d    - 1 day ago
+            - 2w    - 2 weeks ago
+            - 3m    - 3 months ago (approximate, using 4 weeks per month)
+            - 1y    - 1 year ago (approximate, using 52 weeks per year)
+        
+        Supported Absolute Formats:
+            - YYYY-MM-DD              - Date only (midnight in local timezone)
+            - YYYY-MM-DD HH:MM        - Date and time (24-hour format)
+        
+        Examples:
+            >>> analyzer._parse_date("1d")      # 1 day ago from now
+            >>> analyzer._parse_date("2w")      # 2 weeks ago from now
+            >>> analyzer._parse_date("2025-01-15")          # Jan 15, 2025 00:00
+            >>> analyzer._parse_date("2025-01-15 14:30")    # Jan 15, 2025 14:30
+        
+        Note:
+            - Relative dates are calculated from the current time when this method is called
+            - Month and year calculations are approximate (4 weeks/month, 52 weeks/year)
+            - All times are in the local timezone
         
         Args:
-            date_str: Date string to parse
+            date_str: Date string to parse. Can be a relative date (e.g., "1d", "2w") 
+                     or an absolute date (e.g., "2025-01-15" or "2025-01-15 14:30").
             
         Returns:
-            datetime: Parsed datetime in local timezone
+            datetime: Parsed datetime in local timezone.
             
         Raises:
-            ValueError: If date string format is invalid
+            ValueError: If the date string format is invalid or the date is malformed.
         """
         # Handle relative dates
         if len(date_str) > 1 and date_str[-1] in {'d', 'w', 'm', 'y'}:
@@ -99,16 +120,38 @@ class GitAnalyzer:
             ) from e
             
     def _parse_git_date(self, date_str: str) -> datetime:
-        """Parse a date string from git log into a datetime.
+        """Parse a date string from git log output into a datetime object.
+        
+        This internal method handles the specific date formats used by git log,
+        particularly the default format that includes timezone information.
+        
+        Supported Formats:
+            - "YYYY-MM-DD HH:MM:SS +ZZZZ" - Default git log format with timezone
+            - "YYYY-MM-DD HH:MM:SS" - Just the timestamp without timezone
+            
+        Examples:
+            >>> analyzer._parse_git_date("2025-01-15 14:30:45 +0800")
+            datetime(2025, 1, 15, 14, 30, 45)
+            
+            >>> analyzer._parse_git_date("2025-01-15 14:30:45")
+            datetime(2025, 1, 15, 14, 30, 45)
+        
+        Note:
+            - Timezone information (if present) is currently discarded
+            - If parsing fails, falls back to the current time and logs a warning
+            - This is an internal method primarily used for processing git log output
         
         Args:
-            date_str: Date string from git log
+            date_str: Date string from git log, typically in the format 
+                     "YYYY-MM-DD HH:MM:SS +ZZZZ" or "YYYY-MM-DD HH:MM:SS"
             
         Returns:
-            datetime: Parsed datetime
+            datetime: Parsed datetime object in local timezone, or current time 
+                     if parsing fails
             
-        Note:
-            If parsing fails, falls back to the current time.
+        Raises:
+            Prints a warning message if date parsing fails, but does not raise
+            an exception to ensure the application continues running.
         """
         try:
             # Handle git's default format: "YYYY-MM-DD HH:MM:SS +ZZZZ"

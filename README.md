@@ -45,15 +45,45 @@ For more detailed instructions, including development setup and troubleshooting,
 
 ## Quick Start
 
-Analyze a git repository:
+### Date Format Reference
+Beacon supports both relative and absolute date formats for time-based analysis:
 
+#### Relative Date Formats
+```
+1d      # 1 day ago
+2w      # 2 weeks ago
+3m      # 3 months ago
+1y      # 1 year ago
+```
+
+#### Absolute Date Formats
+```
+2025-01-15          # January 15, 2025 at 00:00
+2025-01-15 14:30    # January 15, 2025 at 14:30
+```
+
+### Basic Usage
+
+Analyze a git repository:
 ```bash
 beaconled /path/to/repo
 ```
 
 Generate a weekly team report:
 ```bash
-beaconled --range --since "1 week ago"
+beaconled --range --since "1w" --until "now"
+```
+
+### Examples
+
+Analyze changes in the last 3 days:
+```bash
+beaconled --range --since "3d"
+```
+
+Analyze changes between specific dates:
+```bash
+beaconled --range --since "2025-01-01" --until "2025-01-31"
 ```
 
 For more detailed usage examples, please refer to the [Usage Examples](docs/usage.md).
