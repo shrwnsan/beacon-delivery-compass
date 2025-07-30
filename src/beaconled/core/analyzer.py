@@ -85,38 +85,93 @@ class GitAnalyzer:
             datetime: Parsed datetime in local timezone.
             
         Raises:
-            ValueError: If the date string format is invalid or the date is malformed.
+            ValueError: If the date string format is invalid, malformed, or out of range.
+                      The error message will provide specific guidance on the issue.
         """
-        # Handle relative dates
+        if not date_str or not date_str.strip():
+            raise ValueError(
+                "Date string cannot be empty. Please provide a valid date in one of these formats:\n"
+                "  - Relative: 1d (days), 2w (weeks), 3m (months), 1y (years)\n"
+                "  - Absolute: YYYY-MM-DD or YYYY-MM-DD HH:MM\n"
+                "Example: '1w' for one week ago, or '2025-01-15' for January 15, 2025"
+            )
+            
+        date_str = date_str.strip()
+        
+        # Handle relative dates (e.g., 1d, 2w, 3m, 1y)
         if len(date_str) > 1 and date_str[-1] in {'d', 'w', 'm', 'y'}:
-            now = datetime.now()
             try:
-                num = int(date_str[:-1])
+                # Extract number and unit
+                num_part = date_str[:-1]
+                if not num_part.isdigit():
+                    raise ValueError("Relative dates must start with a number")
+                    
+                num = int(num_part)
+                if num <= 0:
+                    raise ValueError("Relative date value must be a positive number")
+                    
                 unit = date_str[-1].lower()
+                now = datetime.now()
                 
-                if unit == 'd':
-                    return now - timedelta(days=num)
-                elif unit == 'w':
-                    return now - timedelta(weeks=num)
-                elif unit == 'm':
-                    return now - timedelta(weeks=num*4)  # Approximate
-                elif unit == 'y':
-                    return now - timedelta(weeks=num*52)  # Approximate
-            except (ValueError, IndexError):
-                pass  # Fall through to absolute date parsing
+                # Map units to timedelta
+                unit_map = {
+                    'd': ('day', 'days', timedelta(days=1)),
+                    'w': ('week', 'weeks', timedelta(weeks=1)),
+                    'm': ('month', 'months', timedelta(weeks=4)),  # Approximate
+                    'y': ('year', 'years', timedelta(weeks=52))    # Approximate
+                }
+                
+                if unit not in unit_map:
+                    valid_units = ", ".join(f"'{u}'" for u in unit_map.keys())
+                    raise ValueError(
+                        f"Invalid time unit '{unit}'. "
+                        f"Valid units are: {valid_units}"
+                    )
+                
+                unit_singular, unit_plural, delta = unit_map[unit]
+                return now - (delta * num)
+                
+            except ValueError as e:
+                # Provide a more specific error message for relative dates
+                raise ValueError(
+                    f"Invalid relative date format: '{date_str}'. "
+                    f"Expected format: <number><unit> where <unit> is one of: d (days), w (weeks), m (months), y (years)\n"
+                    f"Examples: '1d' (1 day ago), '2w' (2 weeks ago), '3m' (3 months ago)"
+                ) from e
         
         # Handle absolute dates
         try:
-            # Try with time
+            # Try with date and time first
             try:
-                return datetime.strptime(date_str, '%Y-%m-%d %H:%M')
+                parsed = datetime.strptime(date_str, '%Y-%m-%d %H:%M')
+                # Validate reasonable year range
+                if not (2000 <= parsed.year <= 2100):
+                    raise ValueError(f"Year {parsed.year} is outside the supported range (2000-2100)")
+                return parsed
             except ValueError:
                 # Try date only
-                return datetime.strptime(date_str, '%Y-%m-%d')
+                try:
+                    parsed = datetime.strptime(date_str, '%Y-%m-%d')
+                    if not (2000 <= parsed.year <= 2100):
+                        raise ValueError(f"Year {parsed.year} is outside the supported range (2000-2100)")
+                    return parsed
+                except ValueError as e:
+                    # Check for common mistakes in date format
+                    if len(date_str) == 10 and (date_str[4] != '-' or date_str[7] != '-'):
+                        raise ValueError(
+                            f"Invalid date format: '{date_str}'. "
+                            "For absolute dates, please use YYYY-MM-DD or YYYY-MM-DD HH:MM\n"
+                            "Example: '2025-01-15' or '2025-01-15 14:30'"
+                        ) from e
+                    raise  # Re-raise the original exception
+                    
         except ValueError as e:
+            # Provide a more helpful error message for absolute dates
             raise ValueError(
-                f"Invalid date format: {date_str}. "
-                "Use YYYY-MM-DD, YYYY-MM-DD HH:MM, or relative (1d, 2w, 3m, 1y)"
+                f"Could not parse date: '{date_str}'. Please use one of these formats:\n"
+                "  - Relative: <number><unit> (e.g., '1d', '2w', '3m', '1y')\n"
+                "  - Absolute: YYYY-MM-DD or YYYY-MM-DD HH:MM (e.g., '2025-01-15' or '2025-01-15 14:30')\n\n"
+                f"Original error: {str(e)}"
             ) from e
             
     def _parse_git_date(self, date_str: str) -> datetime:
