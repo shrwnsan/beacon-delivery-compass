@@ -239,42 +239,155 @@ beaconled --repo /path/to/other/repo --range --since "1 week ago"
 
 ## Common Workflows
 
-### Daily Standup Preparation
+### 1. Daily Standup Preparation
+Quickly review your work from the previous day to prepare for standup meetings.
+
 ```bash
-# Quick check of yesterday's work
+# Basic usage - shows changes from the last 24 hours
 beaconled --range --since "1 day ago"
+
+# More detailed view with file changes
+beaconled --range --since "1 day ago" --format extended
+
+# Save output to a file for reference
+beaconled --range --since "1 day ago" > standup-$(date +%Y-%m-%d).txt
 ```
 
-### Weekly Team Reports
+**Example Output**:
+```
+Standup Report for 2025-07-27 to 2025-07-28
+------------------------------------------
+Total Commits: 4
+Total Files Changed: 12
+Total Lines Added: 145
+Total Lines Deleted: 67
+
+Key Changes:
+- Added user authentication module (2 files, +85 -12)
+- Fixed database connection issue (3 files, +45 -32)
+- Updated documentation (1 file, +15 -23)
+```
+
+### 2. Weekly Team Reports
+Generate comprehensive reports for weekly team meetings or stakeholder updates.
+
 ```bash
-# Generate team report for the week
+# Basic weekly report
 beaconled --range --since "1 week ago" --format extended > weekly-report.txt
+
+# Include specific repository path
+beaconled --repo /path/to/repo --range --since "1 week ago" --format json > weekly-metrics.json
+
+# Filter by author (using jq for JSON processing)
+beaconled --range --since "1 week ago" --format json | jq '.commits[] | select(.author | contains("john.doe@example.com"))'
 ```
 
-### Sprint Retrospectives
+**Report Sections to Include**:
+- Summary of changes (commits, files, lines)
+- Top contributors
+- Most active files
+- Code churn metrics
+- Potential issues or anomalies
+
+### 3. Sprint Retrospectives
+Analyze team performance and code changes over the sprint period.
+
 ```bash
-# Comprehensive sprint analysis
+# Standard 2-week sprint analysis
 beaconled --range --since "2 weeks ago" --format json > sprint-metrics.json
+
+# Compare with previous sprint
+beaconled --range --since "4 weeks ago" --until "2 weeks ago" --format json > previous-sprint.json
+
+# Generate a comparison report
+python scripts/compare_sprints.py previous-sprint.json sprint-metrics.json > sprint-comparison.md
 ```
 
-### Code Review Preparation
+**Metrics to Track**:
+- Velocity (commits/story points per day)
+- Code churn rate
+- Test coverage changes
+- Bug fix vs feature work ratio
+
+### 4. Code Review Preparation
+Quickly understand changes before starting a code review.
+
 ```bash
-# Analyze specific commits before review
+# Review a specific pull request (using the merge commit)
 beaconled abc123
-beaconled def456
-beaconled ghi789
+
+# See changes in context with surrounding commits
+beaconled abc123^..abc123
+
+# Generate a side-by-side diff for the commit
+beaconled abc123 --format diff
 ```
 
-### CI/CD Integration
+**Review Checklist**:
+- [ ] Verify test coverage for changes
+- [ ] Check for any hardcoded values
+- [ ] Review error handling
+- [ ] Verify documentation updates
+
+### 5. CI/CD Integration
+Incorporate code metrics into your build and deployment pipelines.
+
 ```bash
-# Generate metrics for build pipeline
+# Generate build metrics
 beaconled --format json > build-metrics.json
+
+# Check test coverage changes
+beaconled --range --since "$LAST_BUILD" --format json | jq '.test_coverage.diff'
+
+# Fail build if too many changes in a single commit
+CHANGES=$(beaconled HEAD --format json | jq '.total_lines')
+if [ "$CHANGES" -gt 500 ]; then
+    echo "Error: Too many changes in a single commit ($CHANGES lines)"
+    exit 1
+fi
 ```
 
-### Release Notes Generation
+**Pipeline Integration Points**:
+- Pre-merge validation
+- Post-merge metrics collection
+- Release gating
+- Performance regression detection
+
+### 6. Release Notes Generation
+Automate the creation of release notes from commit history.
+
 ```bash
-# Generate changelog for the last month
-beaconled --range --since "1 month ago" --format extended > changelog.txt
+# Basic release notes
+beaconled --range --since "2025-06-01" --until "2025-06-30" --format extended > release-notes-v1.2.0.md
+
+# Group by feature/category
+beaconled --range --since "1 month ago" --format json | python scripts/generate_release_notes.py
+
+# Include GitHub/GitLab issues
+beaconled --range --since "1 month ago" --format json | jq '[.commits[] | select(.message | contains("fix"))]'
+```
+
+**Release Note Template**:
+```markdown
+# Release v1.2.0 (2025-07-28)
+
+## New Features
+- [FEAT-123] Added user authentication module
+- [FEAT-124] Implemented data export functionality
+
+## Bug Fixes
+- [BUG-45] Fixed database connection timeout
+- [BUG-46] Resolved login page layout issue
+
+## Improvements
+- Improved error messages for invalid inputs
+- Optimized database queries for better performance
+
+## Metrics
+- 42 commits
+- 28 files changed
+- 1,245 lines added
+- 567 lines removed
 ```
 
 ## Advanced Workflows
