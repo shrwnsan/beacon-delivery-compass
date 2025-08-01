@@ -93,27 +93,28 @@ class GitAnalyzer:
             - 1y    - 1 year ago (approximate, using 52 weeks per year)
         
         Supported Absolute Formats:
-            - YYYY-MM-DD              - Date only (midnight in local timezone)
-            - YYYY-MM-DD HH:MM        - Date and time (24-hour format)
+            - YYYY-MM-DD              - Date only (midnight UTC)
+            - YYYY-MM-DD HH:MM        - Date and time (24-hour format, UTC)
         
         Examples:
-            >>> analyzer._parse_date("1d")      # 1 day ago from now
-            >>> analyzer._parse_date("2w")      # 2 weeks ago from now
-            >>> analyzer._parse_date("2025-01-15")          # Jan 15, 2025 00:00
-            >>> analyzer._parse_date("2025-01-15 14:30")    # Jan 15, 2025 14:30
+            >>> analyzer._parse_date("1d")      # 1 day ago from now in UTC
+            >>> analyzer._parse_date("2w")      # 2 weeks ago from now in UTC
+            >>> analyzer._parse_date("2025-01-15")          # Jan 15, 2025 00:00 UTC
+            >>> analyzer._parse_date("2025-01-15 14:30")    # Jan 15, 2025 14:30 UTC
         
         Note:
-            - Relative dates are calculated from the current time when this method is called
+            - Relative dates are calculated from the current UTC time when this method is called
             - Month and year calculations are approximate (4 weeks/month, 52 weeks/year)
-            - All times are in the local timezone
+            - All times are in UTC for consistent internal handling
+            - For display purposes, times can be converted to local timezone
         
         Args:
             date_str: Date string to parse. Can be a relative date (e.g., "1d", "2w") 
                      or an absolute date (e.g., "2025-01-15" or "2025-01-15 14:30").
-            
+                    
         Returns:
-            datetime: Parsed datetime in local timezone.
-            
+            datetime: Parsed datetime in UTC timezone.
+                    
         Raises:
             ValueError: If the date string format is invalid, malformed, or out of range.
                       The error message will provide specific guidance on the issue.
@@ -122,7 +123,7 @@ class GitAnalyzer:
             raise ValueError(
                 "Date string cannot be empty. Please provide a valid date in one of these formats:\n"
                 "  - Relative: 1d (days), 2w (weeks), 3m (months), 1y (years)\n"
-                "  - Absolute: YYYY-MM-DD or YYYY-MM-DD HH:MM\n"
+                "  - Absolute: YYYY-MM-DD or YYYY-MM-DD HH:MM (in UTC)\n"
                 "  - Special: 'now' for current time\n"
                 "Example: '1w' for one week ago, '2025-01-15' for January 15, 2025, or 'now' for current time"
             )
@@ -131,7 +132,7 @@ class GitAnalyzer:
         
         # Handle special 'now' value
         if date_str.lower() == 'now':
-            return datetime.now()
+            return datetime.now(timezone.utc)
         
         # Handle relative dates (e.g., 1d, 2w, 3m, 1y)
         if len(date_str) > 1 and date_str[-1] in {'d', 'w', 'm', 'y'}:
@@ -146,7 +147,7 @@ class GitAnalyzer:
                     raise ValueError("Relative date value must be a positive number")
                     
                 unit = date_str[-1].lower()
-                now = datetime.now()
+                now = datetime.now(timezone.utc)
                 
                 # Map units to timedelta
                 unit_map = {
@@ -167,7 +168,6 @@ class GitAnalyzer:
                 return now - (delta * num)
                 
             except ValueError as e:
-                    # Convert to our custom exception
                 raise DateParseError(
                     date_str,
                     format_hint=(
@@ -177,7 +177,7 @@ class GitAnalyzer:
                     )
                 ) from e
         
-        # Handle absolute dates
+        # Handle absolute dates (always interpreted as UTC)
         try:
             # Try with date and time first
             try:
@@ -189,7 +189,7 @@ class GitAnalyzer:
                         field="date",
                         value=date_str
                     )
-                return parsed
+                return parsed.replace(tzinfo=timezone.utc)
             except ValueError:
                 # Try date only
                 try:
@@ -200,20 +200,26 @@ class GitAnalyzer:
                             field="date",
                             value=date_str
                         )
-                    return parsed
-                except ValueError as e:
-                    # Check for common mistakes in date format
-                    if len(date_str) == 10 and (date_str[4] != '-' or date_str[7] != '-'):
-                        raise DateParseError(
-                            date_str,
-                            format_hint=(
-                                "For absolute dates, please use YYYY-MM-DD or YYYY-MM-DD HH:MM\n"
-                                "Example: '2025-01-15' or '2025-01-15 14:30'"
-                            )
+                    return parsed.replace(tzinfo=timezone.utc)
+                except ValueError:
+                    raise DateParseError(
+                        date_str,
+                        format_hint=(
+                            "Expected format: 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM' (in UTC)\n"
+                            "Examples: '2025-01-15' or '2025-01-15 14:30'"
                         )
-                    raise  # Re-raise the original exception
-                    
-        except (ValueError, ValidationError) as e:
+                    )
+        except Exception as e:
+            if not isinstance(e, DateParseError):
+                raise DateParseError(
+                    date_str,
+                    format_hint=(
+                        "Please use a valid date format (YYYY-MM-DD or YYYY-MM-DD HH:MM) "
+                        "or relative format (e.g., 1d, 2w, 3m, 1y)."
+                    )
+                ) from e
+            raise
+
             # Convert to our custom DateParseError
             if isinstance(e, ValidationError):
                 raise DateParseError(date_str, str(e))
@@ -237,27 +243,26 @@ class GitAnalyzer:
         
         Supported Formats:
             - "YYYY-MM-DD HH:MM:SS +ZZZZ" - Default git log format with timezone
-            - "YYYY-MM-DD HH:MM:SS" - Just the timestamp without timezone
+            - "YYYY-MM-DD HH:MM:SS" - Just the timestamp without timezone (assumed to be UTC)
             
         Examples:
             >>> analyzer._parse_git_date("2025-01-15 14:30:45 +0800")
-            datetime(2025, 1, 15, 14, 30, 45)
+            datetime(2025, 1, 15, 6, 30, 45, tzinfo=timezone.utc)
             
             >>> analyzer._parse_git_date("2025-01-15 14:30:45")
-            datetime(2025, 1, 15, 14, 30, 45)
+            datetime(2025, 1, 15, 14, 30, 45, tzinfo=timezone.utc)
         
         Note:
-            - Timezone information (if present) is currently discarded
-            - If parsing fails, falls back to the current time and logs a warning
-            - This is an internal method primarily used for processing git log output
+            - All dates are converted to UTC for internal use
+            - If no timezone is specified, UTC is assumed
+            - If parsing fails, returns current time in UTC
         
         Args:
             date_str: Date string from git log, typically in the format 
                      "YYYY-MM-DD HH:MM:SS +ZZZZ" or "YYYY-MM-DD HH:MM:SS"
             
         Returns:
-            datetime: Parsed datetime object in local timezone, or current time 
-                     if parsing fails
+            datetime: Parsed datetime object in UTC
             
         Raises:
             DateParseError: If the date string cannot be parsed and strict mode is enabled
@@ -265,9 +270,10 @@ class GitAnalyzer:
         try:
             # Handle git's default format: "YYYY-MM-DD HH:MM:SS +ZZZZ"
             if ' ' in date_str and '+' in date_str:
-                date_part, tz_part = date_str.rsplit('+', 1)
                 try:
-                    return datetime.strptime(date_part.strip(), '%Y-%m-%d %H:%M:%S')
+                    # Parse with timezone and convert to UTC
+                    dt = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S %z')
+                    return dt.astimezone(timezone.utc)
                 except ValueError as e:
                     raise DateParseError(
                         date_str,
@@ -277,9 +283,10 @@ class GitAnalyzer:
                         )
                     ) from e
             
-            # Try parsing without timezone
+            # Try parsing without timezone (assume UTC)
             try:
-                return datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+                dt = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+                return dt.replace(tzinfo=timezone.utc)
             except ValueError as e:
                 raise DateParseError(
                     date_str,
@@ -293,11 +300,11 @@ class GitAnalyzer:
             # to avoid breaking the calling code that expects a datetime
             import warnings
             warnings.warn(
-                f"Failed to parse git date '{date_str}': {str(e)}. Using current time.",
+                f"Failed to parse git date '{date_str}': {str(e)}. Using current UTC time.",
                 RuntimeWarning,
                 stacklevel=2
             )
-            return datetime.now()
+            return datetime.now(timezone.utc)
 
     def get_commit_stats(self, commit_hash: str = "HEAD") -> CommitStats:
         """Get statistics for a single commit.
@@ -517,8 +524,10 @@ class GitAnalyzer:
         """Get analytics for a date range.
 
         Args:
-            start_date: Start date for the range (inclusive) as datetime or string
-            end_date: End date for the range (inclusive) as datetime or string
+            start_date: Start date for the range (inclusive) as datetime or string.
+                       If None, uses the first commit date.
+            end_date: End date for the range (inclusive) as datetime or string.
+                     If None, uses the current time in UTC.
 
         Returns:
             RangeStats: Statistics for the date range
@@ -526,32 +535,23 @@ class GitAnalyzer:
         Raises:
             RuntimeError: If there's an error analyzing the date range
             ValueError: If date strings cannot be parsed or if date range is invalid
+            
+        Note:
+            - All dates are handled in UTC internally
+            - String dates are parsed using _parse_date() which assumes UTC
+            - If no timezone is specified in datetime objects, UTC is assumed
         """
         try:
-            # Convert string dates to datetime objects if needed
+            # Parse string dates to datetime objects if needed
             if start_date and isinstance(start_date, str):
                 start_date = self._parse_date(start_date)
             if end_date and isinstance(end_date, str):
-                end_date = self._parse_date(end_date)
-                
-            # Validate date range
-            if start_date and end_date and end_date < start_date:
-                raise ValueError(
-                    f"Invalid date range: end date ({end_date}) is before start date ({start_date}).\n"
-                    "Please ensure the end date is after the start date."
-                )
-                
-            repo = git.Repo(self.repo_path)
-            
-            # Parse string dates using our unified parser
-            if isinstance(start_date, str):
-                start_date = self._parse_date(start_date)
-            
-            if isinstance(end_date, str):
                 if end_date.lower() in ['now', 'today', '']:
-                    end_date = datetime.now()
+                    end_date = datetime.now(timezone.utc)
                 else:
                     end_date = self._parse_date(end_date)
+            
+            repo = git.Repo(self.repo_path)
             
             # Set default dates if not provided
             if start_date is None:
@@ -561,7 +561,25 @@ class GitAnalyzer:
                 
             if end_date is None:
                 end_date = datetime.now(timezone.utc)
+            
+            # Ensure all dates are timezone-aware and in UTC
+            if not start_date.tzinfo:
+                start_date = start_date.replace(tzinfo=timezone.utc)
+            else:
+                start_date = start_date.astimezone(timezone.utc)
                 
+            if not end_date.tzinfo:
+                end_date = end_date.replace(tzinfo=timezone.utc)
+            else:
+                end_date = end_date.astimezone(timezone.utc)
+            
+            # Validate date range after ensuring timezone awareness
+            if end_date < start_date:
+                raise ValueError(
+                    f"Invalid date range: end date ({end_date}) is before start date ({start_date}).\n"
+                    "Please ensure the end date is after the start date."
+                )
+            
             # Initialize stats
             commits: List[CommitStats] = []
             total_files_changed = 0
@@ -570,24 +588,25 @@ class GitAnalyzer:
             authors: Dict[str, int] = {}
             
             # Convert dates to git's format (without timezone)
-            git_start_date = start_date.strftime('%Y-%m-%d %H:%M')
-            git_end_date = end_date.strftime('%Y-%m-%d %H:%M')
+            git_start_date = start_date.astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M')
+            git_end_date = end_date.astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M')
             
-            # Get commits in the date range using GitPython's native filtering
-            # Convert dates to timezone-aware datetimes for comparison
-            start_dt = start_date if start_date.tzinfo else start_date.replace(tzinfo=timezone.utc)
-            end_dt = (end_date + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
-            if not end_dt.tzinfo:
-                end_dt = end_dt.replace(tzinfo=timezone.utc)
-                
+            # Set end of day for end_date to include the entire end date
+            end_of_day = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
+            
             # Get all commits and filter by date in Python
             for commit in repo.iter_commits(rev='--all', reverse=True):
-                commit_dt = commit.authored_datetime
-                if commit_dt is None:
-                    commit_dt = commit.committed_datetime or datetime.now(timezone.utc)
+                # Get commit datetime, defaulting to current time if not available
+                commit_dt = commit.authored_datetime or commit.committed_datetime or datetime.now(timezone.utc)
+                
+                # Ensure commit datetime is timezone-aware and in UTC
+                if not commit_dt.tzinfo:
+                    commit_dt = commit_dt.replace(tzinfo=timezone.utc)
+                else:
+                    commit_dt = commit_dt.astimezone(timezone.utc)
                     
                 # Skip commits outside our date range
-                if commit_dt < start_dt or commit_dt >= end_dt:
+                if commit_dt < start_date or commit_dt > end_of_day:
                     continue
                 try:
                     # Get commit stats
