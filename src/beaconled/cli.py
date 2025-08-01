@@ -25,9 +25,9 @@ def main() -> None:
             "  # Analyze a specific commit\n"
             "  beaconled abc1234\n\n"
             "  # Analyze changes in the last week\n"
-            "  beaconled --range --since "1w"\n\n"
-            "  # Analyze changes between specific dates\n"
-            "  beaconled --range --since "2025-01-01" --until "2025-01-31"\n\n"
+            '  beaconled --range --since "1w"\n\n'
+            '  # Analyze changes between specific dates\n'
+            '  beaconled --range --since "2025-01-01" --until "2025-01-31"\n\n'
             "  # Output in JSON format\n"
             "  beaconled --format json\n"
         ),

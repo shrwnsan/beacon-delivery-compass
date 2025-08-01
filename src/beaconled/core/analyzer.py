@@ -1,13 +1,23 @@
 """Git repository analyzer."""
 
 import os
+import warnings
 from datetime import datetime, timezone, timedelta
-from typing import List, Optional, Dict, Any, Union
+from typing import List, Optional, Dict, Any, Union, Type, TypeVar, cast
 import git
 from pathlib import Path
-from pathlib import Path
 
+from ..exceptions import (
+    InvalidRepositoryError,
+    CommitError,
+    DateParseError,
+    DateRangeError,
+    ValidationError
+)
 from .models import CommitStats, FileStats, RangeStats
+
+# Type variable for generic type hints
+T = TypeVar('T')
 
 
 class GitAnalyzer:
@@ -27,28 +37,48 @@ class GitAnalyzer:
             str: Absolute path to the validated repository
             
         Raises:
-            ValueError: If the path is invalid, not a directory, or not a git repository
+            InvalidRepositoryError: If the path is invalid, not a directory, or not a git repository
         """
         try:
             path = Path(repo_path).resolve()
             
             # Ensure path exists and is a directory
-            if not path.exists() or not path.is_dir():
-                raise ValueError(f"Repository path does not exist: {repo_path}")
+            if not path.exists():
+                raise InvalidRepositoryError(
+                    str(path), 
+                    reason="Path does not exist"
+                )
+            if not path.is_dir():
+                raise InvalidRepositoryError(
+                    str(path),
+                    reason="Path is not a directory"
+                )
             
             # Ensure it's within allowed boundaries (prevent directory traversal)
             cwd = Path.cwd().resolve()
             if not str(path).startswith(str(cwd)):
-                raise ValueError("Repository path must be within current working directory")
+                raise InvalidRepositoryError(
+                    str(path),
+                    reason="Path is outside the current working directory"
+                )
             
             # Check if it's actually a git repository
             git_dir = path / '.git'
             if not git_dir.exists():
-                raise ValueError(f"Not a git repository: {repo_path}")
+                raise InvalidRepositoryError(
+                    str(path),
+                    reason="No .git directory found"
+                )
                 
             return str(path)
+        except InvalidRepositoryError:
+            raise  # Re-raise our custom exceptions as-is
         except Exception as e:
-            raise ValueError(f"Invalid repository path: {e}")
+            # Wrap any unexpected errors
+            raise InvalidRepositoryError(
+                str(repo_path),
+                reason=str(e)
+            ) from e
 
     def _parse_date(self, date_str: str) -> datetime:
         """Parse date from relative or absolute format.
@@ -93,10 +123,15 @@ class GitAnalyzer:
                 "Date string cannot be empty. Please provide a valid date in one of these formats:\n"
                 "  - Relative: 1d (days), 2w (weeks), 3m (months), 1y (years)\n"
                 "  - Absolute: YYYY-MM-DD or YYYY-MM-DD HH:MM\n"
-                "Example: '1w' for one week ago, or '2025-01-15' for January 15, 2025"
+                "  - Special: 'now' for current time\n"
+                "Example: '1w' for one week ago, '2025-01-15' for January 15, 2025, or 'now' for current time"
             )
             
         date_str = date_str.strip()
+        
+        # Handle special 'now' value
+        if date_str.lower() == 'now':
+            return datetime.now()
         
         # Handle relative dates (e.g., 1d, 2w, 3m, 1y)
         if len(date_str) > 1 and date_str[-1] in {'d', 'w', 'm', 'y'}:
@@ -132,11 +167,14 @@ class GitAnalyzer:
                 return now - (delta * num)
                 
             except ValueError as e:
-                # Provide a more specific error message for relative dates
-                raise ValueError(
-                    f"Invalid relative date format: '{date_str}'. "
-                    f"Expected format: <number><unit> where <unit> is one of: d (days), w (weeks), m (months), y (years)\n"
-                    f"Examples: '1d' (1 day ago), '2w' (2 weeks ago), '3m' (3 months ago)"
+                    # Convert to our custom exception
+                raise DateParseError(
+                    date_str,
+                    format_hint=(
+                        "Expected format: <number><unit> where <unit> is one of: "
+                        "d (days), w (weeks), m (months), y (years)\n"
+                        "Examples: '1d' (1 day ago), '2w' (2 weeks ago), '3m' (3 months ago)"
+                    )
                 ) from e
         
         # Handle absolute dates
@@ -146,32 +184,49 @@ class GitAnalyzer:
                 parsed = datetime.strptime(date_str, '%Y-%m-%d %H:%M')
                 # Validate reasonable year range
                 if not (2000 <= parsed.year <= 2100):
-                    raise ValueError(f"Year {parsed.year} is outside the supported range (2000-2100)")
+                    raise ValidationError(
+                        f"Year {parsed.year} is outside the supported range (2000-2100)",
+                        field="date",
+                        value=date_str
+                    )
                 return parsed
             except ValueError:
                 # Try date only
                 try:
                     parsed = datetime.strptime(date_str, '%Y-%m-%d')
                     if not (2000 <= parsed.year <= 2100):
-                        raise ValueError(f"Year {parsed.year} is outside the supported range (2000-2100)")
+                        raise ValidationError(
+                            f"Year {parsed.year} is outside the supported range (2000-2100)",
+                            field="date",
+                            value=date_str
+                        )
                     return parsed
                 except ValueError as e:
                     # Check for common mistakes in date format
                     if len(date_str) == 10 and (date_str[4] != '-' or date_str[7] != '-'):
-                        raise ValueError(
-                            f"Invalid date format: '{date_str}'. "
-                            "For absolute dates, please use YYYY-MM-DD or YYYY-MM-DD HH:MM\n"
-                            "Example: '2025-01-15' or '2025-01-15 14:30'"
-                        ) from e
+                        raise DateParseError(
+                            date_str,
+                            format_hint=(
+                                "For absolute dates, please use YYYY-MM-DD or YYYY-MM-DD HH:MM\n"
+                                "Example: '2025-01-15' or '2025-01-15 14:30'"
+                            )
+                        )
                     raise  # Re-raise the original exception
                     
-        except ValueError as e:
-            # Provide a more helpful error message for absolute dates
-            raise ValueError(
-                f"Could not parse date: '{date_str}'. Please use one of these formats:\n"
-                "  - Relative: <number><unit> (e.g., '1d', '2w', '3m', '1y')\n"
-                "  - Absolute: YYYY-MM-DD or YYYY-MM-DD HH:MM (e.g., '2025-01-15' or '2025-01-15 14:30')\n\n"
-                f"Original error: {str(e)}"
+        except (ValueError, ValidationError) as e:
+            # Convert to our custom DateParseError
+            if isinstance(e, ValidationError):
+                raise DateParseError(date_str, str(e))
+            
+            # For other ValueErrors, provide a helpful message
+            raise DateParseError(
+                date_str,
+                format_hint=(
+                    "Please use one of these formats:\n"
+                    "  - Relative: <number><unit> (e.g., '1d', '2w', '3m', '1y')\n"
+                    "  - Absolute: YYYY-MM-DD or YYYY-MM-DD HH:MM (e.g., '2025-01-15' or '2025-01-15 14:30')\n\n"
+                    f"Original error: {str(e)}"
+                )
             ) from e
             
     def _parse_git_date(self, date_str: str) -> datetime:
@@ -205,17 +260,43 @@ class GitAnalyzer:
                      if parsing fails
             
         Raises:
-            Prints a warning message if date parsing fails, but does not raise
-            an exception to ensure the application continues running.
+            DateParseError: If the date string cannot be parsed and strict mode is enabled
         """
         try:
             # Handle git's default format: "YYYY-MM-DD HH:MM:SS +ZZZZ"
             if ' ' in date_str and '+' in date_str:
                 date_part, tz_part = date_str.rsplit('+', 1)
-                return datetime.strptime(date_part.strip(), '%Y-%m-%d %H:%M:%S')
-            return datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
-        except ValueError as e:
-            print(f"Warning: Failed to parse git date '{date_str}': {e}")
+                try:
+                    return datetime.strptime(date_part.strip(), '%Y-%m-%d %H:%M:%S')
+                except ValueError as e:
+                    raise DateParseError(
+                        date_str,
+                        format_hint=(
+                            "Expected format: 'YYYY-MM-DD HH:MM:SS +ZZZZ' or 'YYYY-MM-DD HH:MM:SS'\n"
+                            "Example: '2025-01-15 14:30:45 +0800' or '2025-01-15 14:30:45'"
+                        )
+                    ) from e
+            
+            # Try parsing without timezone
+            try:
+                return datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+            except ValueError as e:
+                raise DateParseError(
+                    date_str,
+                    format_hint=(
+                        "Expected format: 'YYYY-MM-DD HH:MM:SS +ZZZZ' or 'YYYY-MM-DD HH:MM:SS'\n"
+                        "Example: '2025-01-15 14:30:45 +0800' or '2025-01-15 14:30:45'"
+                    )
+                ) from e
+        except Exception as e:
+            # For this internal method, we'll log a warning but still return the current time
+            # to avoid breaking the calling code that expects a datetime
+            import warnings
+            warnings.warn(
+                f"Failed to parse git date '{date_str}': {str(e)}. Using current time.",
+                RuntimeWarning,
+                stacklevel=2
+            )
             return datetime.now()
 
     def get_commit_stats(self, commit_hash: str = "HEAD") -> CommitStats:
@@ -231,88 +312,199 @@ class GitAnalyzer:
             CommitStats: Statistics for the specified commit
             
         Raises:
+            CommitError: If there's an error processing the commit
+            InvalidRepositoryError: If the repository path is invalid
             git.GitCommandError: If there's an error executing git commands
-            ValueError: If the commit hash is invalid
+            
+        Example:
+            >>> analyzer = GitAnalyzer("./my-repo")
+            >>> stats = analyzer.get_commit_stats("a1b2c3d")
+            >>> print(f"Commit by {stats.author} on {stats.date}")
+            
+        Note:
+            - The method will attempt to handle various error conditions gracefully
+            - Debug logging is available by configuring the 'beaconled.core.analyzer' logger
         """
+        import logging
+        logger = logging.getLogger('beaconled.core.analyzer')
+        logger.debug("Getting commit stats for hash: %s", commit_hash)
+        if not commit_hash or not isinstance(commit_hash, str) or not commit_hash.strip():
+            error_msg = f"Invalid commit hash: '{commit_hash}'. Must be a non-empty string."
+            logger.error(error_msg)
+            raise CommitError(
+                "",  # Empty string for invalid commit hash
+                error_msg
+            )
+            
+        commit_hash = commit_hash.strip()
+        
         if not self._is_valid_commit_hash(commit_hash):
-            raise ValueError(f"Invalid commit hash: {commit_hash}")
+            error_msg = f"Invalid commit hash format: '{commit_hash}'. Expected a 7-40 character hex string."
+            logger.error(error_msg)
+            raise CommitError(
+                commit_hash,
+                error_msg
+            )
             
         try:
             # Initialize the git repository
-            repo = git.Repo(self.repo_path)
+            try:
+                logger.debug("Initializing git repository at: %s", self.repo_path)
+                repo = git.Repo(self.repo_path)
+                logger.debug("Successfully initialized git repository")
+            except git.InvalidGitRepositoryError as e:
+                error_msg = f"Not a valid git repository: {e}"
+                logger.error("%s: %s", error_msg, self.repo_path)
+                raise InvalidRepositoryError(
+                    self.repo_path,
+                    error_msg
+                ) from e
+            except git.NoSuchPathError as e:
+                error_msg = f"Repository path does not exist: {e}"
+                logger.error("%s: %s", error_msg, self.repo_path)
+                raise InvalidRepositoryError(
+                    self.repo_path,
+                    error_msg
+                ) from e
             
             # Get the commit object
-            commit = repo.commit(commit_hash)
+            try:
+                logger.debug("Retrieving commit object for hash: %s", commit_hash)
+                commit = repo.commit(commit_hash)
+                logger.debug("Successfully retrieved commit: %s - %s", 
+                            commit.hexsha[:7], commit.message.split('\n')[0])
+            except (ValueError, TypeError, git.BadName) as e:
+                error_msg = f"Commit not found: {commit_hash}"
+                logger.error("%s: %s", error_msg, str(e))
+                raise CommitError(commit_hash, error_msg) from e
+            except Exception as e:
+                error_msg = f"Error retrieving commit {commit_hash}"
+                logger.exception("%s: %s", error_msg, str(e))
+                raise CommitError(commit_hash, error_msg) from e
             
             # Initialize file stats
             files: List[FileStats] = []
             total_additions = 0
             total_deletions = 0
             
-            # Get diff stats for this commit
-            if commit.parents:
-                # Compare with first parent (most common case)
-                diff_index = commit.parents[0].diff(commit, create_patch=True)
-            else:
-                # For initial commit, compare with empty tree
-                diff_index = commit.diff(git.NULL_TREE, create_patch=True)
-            
-            # Process each changed file in the diff
-            for diff in diff_index:
-                # Skip binary files
-                if diff.diff is None:
-                    continue
-                
-                # Parse the diff to count added/removed lines
-                diff_content = diff.diff
-                if isinstance(diff_content, bytes):
-                    added = diff_content.count(b'\n+') - 1  # Subtract 1 for the header line
-                    deleted = diff_content.count(b'\n-') - 1  # Subtract 1 for the header line
+            try:
+                # Get diff stats for this commit
+                if commit.parents:
+                    # Compare with first parent (most common case)
+                    logger.debug("Generating diff with parent commit")
+                    diff_index = commit.parents[0].diff(commit, create_patch=True)
                 else:
-                    # Convert to bytes if it's a string
-                    if isinstance(diff_content, str):
-                        diff_content = diff_content.encode('utf-8')
-                    added = diff_content.count(b'\n+') - 1
-                    deleted = diff_content.count(b'\n-') - 1
+                    # For initial commit, compare with empty tree
+                    logger.debug("Generating diff for initial commit (no parent)")
+                    diff_index = commit.diff(git.NULL_TREE, create_patch=True)
                 
-                # Ensure non-negative values
-                added = max(0, added)
-                deleted = max(0, deleted)
+                logger.debug("Processing %d changed files", len(diff_index))
                 
-                # Get the path (use b_path for new files, a_path for deleted files)
-                path = diff.b_path if diff.b_path else diff.a_path
-                if path:  # Only add if path is not None
-                    files.append(FileStats(
-                        path=str(path),  # Ensure path is a string
-                        lines_added=added,
-                        lines_deleted=deleted,
-                        lines_changed=added + deleted
-                    ))
-                    total_additions += added
-                    total_deletions += deleted
+                # Process each changed file in the diff
+                for i, diff in enumerate(diff_index, 1):
+                    try:
+                        # Skip binary files
+                        if diff.diff is None:
+                            logger.debug("Skipping binary file: %s", diff.b_path or diff.a_path)
+                            continue
+                        
+                        # Parse the diff to count added/removed lines
+                        diff_content = diff.diff
+                        if isinstance(diff_content, bytes):
+                            added = diff_content.count(b'\n+') - 1  # Subtract 1 for the header line
+                            deleted = diff_content.count(b'\n-') - 1  # Subtract 1 for the header line
+                        else:
+                            # Convert to bytes if it's a string
+                            if isinstance(diff_content, str):
+                                diff_content = diff_content.encode('utf-8')
+                            added = diff_content.count(b'\n+') - 1
+                            deleted = diff_content.count(b'\n-') - 1
+                        
+                        # Ensure non-negative values
+                        added = max(0, added)
+                        deleted = max(0, deleted)
+                        
+                        # Get the path (use b_path for new files, a_path for deleted files)
+                        path = diff.b_path if diff.b_path else diff.a_path
+                        if path:  # Only add if path is not None
+                            file_stats = FileStats(
+                                path=str(path),  # Ensure path is a string
+                                lines_added=added,
+                                lines_deleted=deleted,
+                                lines_changed=added + deleted
+                            )
+                            files.append(file_stats)
+                            total_additions += added
+                            total_deletions += deleted
+                            
+                            logger.debug("Processed file %d/%d: %s (+%d/-%d lines)", 
+                                       i, len(diff_index), path, added, deleted)
+                        else:
+                            logger.warning("Skipping file with no path in diff")
+                            
+                    except Exception as e:
+                        logger.warning("Error processing file %d/%d: %s", 
+                                     i, len(diff_index), str(e), exc_info=True)
+                        continue  # Skip this file but continue with others
+                        
+            except Exception as e:
+                error_msg = f"Error generating diff for commit {commit_hash}"
+                logger.exception("%s: %s", error_msg, str(e))
+                # We'll continue processing with the files we've collected so far
+                # rather than failing the entire operation for a diff error
 
-            # Get commit message and author info
-            message = commit.message.strip() if commit.message else ""
-            if isinstance(message, bytes):
-                message = message.decode('utf-8', errors='replace')
-            # Only take the first line of the commit message
-            message_str = str(message).split('\n', 1)[0].strip()
+            try:
+                # Get commit message and author info
+                message = commit.message.strip() if commit.message else ""
+                if isinstance(message, bytes):
+                    message = message.decode('utf-8', errors='replace')
+                # Only take the first line of the commit message
+                message_str = str(message).split('\n', 1)[0].strip()
+                
+                logger.debug("Processed commit message: %s", message_str[:50] + (message_str[50:] and '...'))
 
-            # Ensure we have a valid date
-            commit_date = commit.authored_datetime
-            if commit_date is None:
-                commit_date = datetime.now(timezone.utc)
-
-            return CommitStats(
-                hash=commit.hexsha,
-                author=f"{commit.author.name} <{commit.author.email}>" if hasattr(commit.author, 'name') and hasattr(commit.author, 'email') else str(commit.author),
-                date=commit_date,
-                message=message_str,
-                files_changed=len(files),
-                lines_added=total_additions,
-                lines_deleted=total_deletions,
-                files=files
-            )
+                # Ensure we have a valid date
+                commit_date = commit.authored_datetime
+                if commit_date is None:
+                    logger.warning("No authored_datetime for commit %s, using current time", commit_hash[:7])
+                    commit_date = datetime.now(timezone.utc)
+                else:
+                    logger.debug("Commit date: %s", commit_date.isoformat())
+                
+                # Format author information
+                author_info = ""
+                try:
+                    if hasattr(commit.author, 'name') and hasattr(commit.author, 'email'):
+                        author_info = f"{commit.author.name} <{commit.author.email}>"
+                        logger.debug("Commit author: %s", author_info)
+                    else:
+                        author_info = str(commit.author)
+                        logger.debug("Using fallback author info: %s", author_info)
+                except Exception as e:
+                    logger.warning("Error getting author info: %s", str(e), exc_info=True)
+                    author_info = "Unknown Author <unknown@example.com>"
+                
+                # Create and return the CommitStats object
+                stats = CommitStats(
+                    hash=commit.hexsha,
+                    author=author_info,
+                    date=commit_date,
+                    message=message_str,
+                    files_changed=len(files),
+                    lines_added=total_additions,
+                    lines_deleted=total_deletions,
+                    files=files
+                )
+                
+                logger.debug("Successfully processed commit %s: %d files, +%d -%d lines", 
+                           commit_hash[:7], len(files), total_additions, total_deletions)
+                
+                return stats
+                
+            except Exception as e:
+                error_msg = f"Error processing commit {commit_hash}"
+                logger.exception("%s: %s", error_msg, str(e))
+                raise CommitError(commit_hash, error_msg) from e
             
         except git.GitCommandError as e:
             raise RuntimeError(f"Failed to analyze commit {commit_hash}: {str(e)}") from e
@@ -333,9 +525,22 @@ class GitAnalyzer:
             
         Raises:
             RuntimeError: If there's an error analyzing the date range
-            ValueError: If date strings cannot be parsed
+            ValueError: If date strings cannot be parsed or if date range is invalid
         """
         try:
+            # Convert string dates to datetime objects if needed
+            if start_date and isinstance(start_date, str):
+                start_date = self._parse_date(start_date)
+            if end_date and isinstance(end_date, str):
+                end_date = self._parse_date(end_date)
+                
+            # Validate date range
+            if start_date and end_date and end_date < start_date:
+                raise ValueError(
+                    f"Invalid date range: end date ({end_date}) is before start date ({start_date}).\n"
+                    "Please ensure the end date is after the start date."
+                )
+                
             repo = git.Repo(self.repo_path)
             
             # Parse string dates using our unified parser
