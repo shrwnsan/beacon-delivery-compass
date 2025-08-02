@@ -48,10 +48,10 @@ This document outlines potential improvements and enhancements for the Beacon De
 - [x] Test invalid date format scenarios
 - [x] Expand CLI integration tests with various date formats
 
-### Medium Priority
-- [ ] Add property-based testing for date parsing
-- [ ] Test with different timezones and DST transitions
-- [ ] Add performance benchmarks for large repositories
+### Medium Priority ✅
+- [x] Add property-based testing for date parsing
+- [x] Test with different timezones and DST transitions
+- [x] Add performance benchmarks for large repositories
 
 ## 4. Code Quality
 ### High Priority
