@@ -101,8 +101,18 @@ class ExtendedFormatter(BaseFormatter):
         ]
         
     def _get_daily_activity_stats(self, commits: List[CommitStats]) -> List[str]:
-        """Format daily activity statistics."""
-        daily_activity = defaultdict(int)
+        """Format daily activity statistics.
+        
+        Args:
+            commits: List of CommitStats objects to analyze
+            
+        Returns:
+            List of formatted strings showing daily commit activity
+        """
+        if not commits:
+            return ["  No commits in the specified range"]
+            
+        daily_activity: Dict[str, int] = defaultdict(int)
         for commit in commits:
             day = commit.date.strftime("%Y-%m-%d")
             daily_activity[day] += 1
@@ -111,25 +121,3 @@ class ExtendedFormatter(BaseFormatter):
             f"  {day}: {count} commit{'s' if count != 1 else ''}"
             for day, count in sorted(daily_activity.items())
         ]
-            # Create timeline visualization
-            output += (
-                f"\n\n{Fore.MAGENTA}Temporal Analysis - "
-                f"Daily Activity Timeline:{Style.RESET_ALL}"
-            )
-            current_date = start_date.replace(
-                hour=0, minute=0, second=0, microsecond=0
-            )
-            end_date_trunc = end_date.replace(
-                hour=0, minute=0, second=0, microsecond=0
-            )
-            while current_date <= end_date_trunc:
-                date_str = current_date.strftime("%Y-%m-%d")
-                commit_count = daily_activity[date_str]
-                bar = "█" * min(commit_count, 50)  # Limit bar length to 50
-                output += (
-                    f"\n  {Fore.CYAN}{date_str}{Style.RESET_ALL}: "
-                    f"{bar} {commit_count} commit{'s' if commit_count != 1 else ''}"
-                )
-                current_date += timedelta(days=1)
-                
-        return output

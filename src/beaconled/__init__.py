@@ -4,10 +4,16 @@ from .exceptions import (
     BeaconError,
     ConfigurationError,
     ValidationError,
-    DateParseError,
     RepositoryError,
     InvalidRepositoryError,
     CommitError,
+    CommitNotFoundError,
+    CommitParseError
+)
+
+from .core.date_errors import (
+    DateError,
+    DateParseError,
     DateRangeError,
 )
 from .core.analyzer import GitAnalyzer

@@ -14,6 +14,35 @@ Your delivery compass for empowered product builders. A comprehensive toolkit fo
 - Range analysis for teams and sprints
 - Multiple output formats (standard, extended, JSON)
 - Integration with CI/CD pipelines and git hooks
+- Type-safe codebase with full mypy support
+- Comprehensive type hints for better IDE support and maintainability
+
+## Development & Contribution
+
+We welcome contributions! For details on how to contribute, please see our [Contribution Guidelines](CONTRIBUTING.md).
+
+### Project Roadmap
+
+Our development priorities and planned improvements are tracked in the [Enhancement Plan](docs/ENHANCEMENT_PLAN.md). This document provides visibility into:
+- Upcoming features and improvements
+- Current technical debt
+- Performance optimization plans
+- Testing and quality assurance goals
+
+### Code Quality
+
+Beacon is built with a strong focus on code quality and maintainability:
+
+- **Type Safety**: Full static type checking with [mypy](https://mypy-lang.org/)
+- **Code Style**: Consistent code formatting with [Black](https://black.readthedocs.io/)
+- **Linting**: Code quality enforcement with [Flake8](https://flake8.pycqa.org/)
+- **Documentation**: Comprehensive docstrings and API documentation
+
+To run the type checker locally:
+
+```bash
+mypy --ignore-missing-imports src/beaconled
+```
 
 ## Installation
 

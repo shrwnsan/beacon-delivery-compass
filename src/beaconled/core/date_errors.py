@@ -18,8 +18,8 @@ class DateError(ValidationError):
         message: str,
         error_code: Optional[ErrorCode] = None,
         details: Optional[Dict[str, Any]] = None,
-        **kwargs
-    ):
+        **kwargs: Any
+    ) -> None:
         super().__init__(
             message=message,
             field="date",
@@ -40,10 +40,10 @@ class DateParseError(DateError):
     def __init__(
         self, 
         date_str: str, 
-        message: str = None, 
-        format_hint: str = None, 
-        **kwargs
-    ):
+        message: Optional[str] = None, 
+        format_hint: Optional[str] = None, 
+        **kwargs: Any
+    ) -> None:
         self.date_str = date_str
         self.format_hint = format_hint
         
@@ -75,11 +75,11 @@ class DateRangeError(DateError):
     
     def __init__(
         self, 
-        start_date, 
-        end_date, 
-        message: str = None, 
-        **kwargs
-    ):
+        start_date: datetime, 
+        end_date: datetime, 
+        message: Optional[str] = None, 
+        **kwargs: Any
+    ) -> None:
         self.start_date = start_date
         self.end_date = end_date
         
@@ -103,8 +103,8 @@ class DateRangeError(DateError):
         cls, 
         start_date: datetime, 
         end_date: datetime, 
-        reason: str = None,
-        **kwargs
+        reason: Optional[str] = None,
+        **kwargs: Any
     ) -> 'DateRangeError':
         """Create a DateRangeError from datetime objects with an optional reason."""
         message = f"Invalid date range: {start_date} to {end_date}"

@@ -16,7 +16,7 @@ from ..exceptions import (
 )
 from .date_errors import DateParseError, DateRangeError, DateError
 from .models import CommitStats, FileStats, RangeStats
-from .date_utils import GitDateParser
+from ..utils.date_utils import DateParser
 
 # Type variable for generic type hints
 T = TypeVar('T')
@@ -120,7 +120,7 @@ class GitAnalyzer:
         Raises:
             DateParseError: If the date string format is invalid, malformed, or out of range.
         """
-        return GitDateParser.parse_date(date_str)
+        return DateParser.parse_date(date_str)
             
     def _parse_git_date(self, date_str: str) -> datetime:
         """Parse a date string from git log output into a datetime object.
@@ -154,7 +154,7 @@ class GitAnalyzer:
         Raises:
             DateParseError: If the date string cannot be parsed and strict mode is enabled
         """
-        return GitDateParser.parse_git_date(date_str)
+        return DateParser.parse_git_date(date_str)
 
     def get_commit_stats(self, commit_hash: str = "HEAD") -> CommitStats:
         """Get statistics for a single commit.
@@ -199,11 +199,14 @@ class GitAnalyzer:
         if not self._is_valid_commit_hash(commit_hash):
             error_msg = f"Invalid commit hash format: '{commit_hash}'. Expected a 7-40 character hex string."
             logger.error(error_msg)
+            # Create a custom error message without using parse_error
             raise CommitParseError(
                 commit_ref=commit_hash,
-                parse_error=None,
                 message=error_msg,
-                details={"original_error": error_msg}
+                details={
+                    "error_type": "invalid_format",
+                    "original_error": error_msg
+                }
             )
             
         try:
@@ -231,8 +234,13 @@ class GitAnalyzer:
             try:
                 logger.debug("Retrieving commit object for hash: %s", commit_hash)
                 commit = repo.commit(commit_hash)
+                # Safely handle commit message which might be bytes or str
+                message = commit.message
+                if isinstance(message, bytes):
+                    message = message.decode('utf-8', errors='replace')
+                first_line = message.split('\n')[0] if message else ""
                 logger.debug("Successfully retrieved commit: %s - %s", 
-                            commit.hexsha[:7], commit.message.split('\n')[0])
+                            commit.hexsha[:7], first_line)
             except (ValueError, TypeError, git.BadName) as e:
                 error_msg = f"Commit not found: {commit_hash}"
                 logger.error("%s: %s", error_msg, str(e))
@@ -412,7 +420,7 @@ class GitAnalyzer:
         """
         try:
             # Parse and validate the date range
-            start_date, end_date = GitDateParser.validate_date_range(start_date, end_date)
+            start_date, end_date = DateParser.validate_date_range(start_date, end_date)
             
             # Set end of day for end_date to include the entire end date
             end_of_day = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
@@ -499,7 +507,7 @@ class GitAnalyzer:
         Returns:
             bool: True if the commit hash is valid, False otherwise.
         """
-        return GitDateParser.is_valid_commit_hash(commit_hash)
+        return DateParser.is_valid_commit_hash(commit_hash)
 
     def _is_valid_date_string(self, date_str: str) -> bool:
         """Validate date string format to prevent injection."""

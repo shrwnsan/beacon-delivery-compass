@@ -7,7 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **New Date Parser Utility**: Added a dedicated `DateParser` class in `utils.date_utils` for better code organization and maintainability.
+  - Centralized date parsing, validation, and manipulation logic
+  - Improved error handling and validation
+  - Better separation of concerns
+  - More consistent behavior across the codebase
+
 ### Changed
+- **Refactored Date Handling**: Migrated from `GitDateParser` to the new `DateParser` utility:
+  - Moved all date parsing logic to a dedicated utility module
+  - Maintained backward compatibility with `GitDateParser` as a wrapper
+  - Updated all tests to use the new implementation
+  - Improved documentation and type hints
+
 - **Refactored Git Integration**: Migrated from direct subprocess calls to GitPython for:
   - Better error handling and exception management
   - Improved cross-platform compatibility

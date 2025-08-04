@@ -1,7 +1,12 @@
 """Standard output formatter."""
 
 from colorama import Fore, Style
+from typing import TYPE_CHECKING
+
 from .base_formatter import BaseFormatter
+
+if TYPE_CHECKING:
+    from ..core.models import CommitStats, RangeStats
 
 class StandardFormatter(BaseFormatter):
     """Standard text formatter for Beacon delivery analytics output.

@@ -4,7 +4,7 @@ from datetime import datetime, timezone, timedelta
 from unittest.mock import patch, MagicMock
 
 from beaconled.core.analyzer import GitAnalyzer
-from beaconled.core.date_utils import GitDateParser
+from beaconled.utils.date_utils import DateParser
 from beaconled.exceptions import DateParseError, ValidationError
 
 # Timezones to test - including ones with DST changes
@@ -40,7 +40,7 @@ class TestTimezoneHandling:
         local_date_str = local_dt.strftime('%Y-%m-%d %H:%M')
         
         # Parse the date string (which doesn't have timezone info)
-        parsed_dt = GitDateParser.parse_date(local_date_str)
+        parsed_dt = DateParser.parse_date(local_date_str)
         
         # The parsed date should be in UTC
         assert parsed_dt.tzinfo == timezone.utc
@@ -77,7 +77,7 @@ class TestTimezoneHandling:
         # Test parsing times around the transition
         for dt in [before_dt, after_dt]:
             dt_str = dt.strftime('%Y-%m-%d %H:%M')
-            parsed_dt = GitDateParser.parse_date(dt_str)
+            parsed_dt = DateParser.parse_date(dt_str)
             
             # The parsed date should be in UTC
             assert parsed_dt.tzinfo == timezone.utc
@@ -122,4 +122,4 @@ class TestTimezoneHandling:
         
         # Should raise DateParseError because timezone offsets are not supported
         with pytest.raises(DateParseError):
-            GitDateParser.parse_date(dt_str)
+            DateParser.parse_date(dt_str)
