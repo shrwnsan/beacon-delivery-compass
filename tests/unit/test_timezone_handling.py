@@ -4,6 +4,7 @@ from datetime import datetime, timezone, timedelta
 from unittest.mock import patch, MagicMock
 
 from beaconled.core.analyzer import GitAnalyzer
+from beaconled.core.date_utils import GitDateParser
 from beaconled.exceptions import DateParseError, ValidationError
 
 # Timezones to test - including ones with DST changes
@@ -33,21 +34,19 @@ class TestTimezoneHandling:
     @pytest.mark.parametrize("tz", TIMEZONES)
     def test_parse_date_with_different_timezones(self, tz):
         """Test that dates without timezone info are assumed to be in UTC."""
-        analyzer = GitAnalyzer(".")
-        
         # Create a datetime in the target timezone
         local_dt = datetime(2025, 6, 15, 12, 0, tzinfo=tz)
-        # Format without timezone info (as _parse_date expects)
+        # Format without timezone info (as parse_date expects)
         local_date_str = local_dt.strftime('%Y-%m-%d %H:%M')
         
         # Parse the date string (which doesn't have timezone info)
-        parsed_dt = analyzer._parse_date(local_date_str)
+        parsed_dt = GitDateParser.parse_date(local_date_str)
         
         # The parsed date should be in UTC
         assert parsed_dt.tzinfo == timezone.utc
         
         # The parsed date should match the input time exactly
-        # because _parse_date assumes no timezone means UTC
+        # because parse_date assumes no timezone means UTC
         assert parsed_dt.hour == local_dt.hour
         assert parsed_dt.minute == local_dt.minute
         assert parsed_dt.day == local_dt.day
@@ -63,7 +62,6 @@ class TestTimezoneHandling:
         except ImportError:
             pytest.skip(f"pytz not available, skipping DST test for {tz_name}")
         
-        analyzer = GitAnalyzer(".")
         transition_dt = tz.localize(datetime.strptime(transition_time, '%Y-%m-%d %H:%M'))
         
         # Test times around the DST transition
@@ -79,7 +77,7 @@ class TestTimezoneHandling:
         # Test parsing times around the transition
         for dt in [before_dt, after_dt]:
             dt_str = dt.strftime('%Y-%m-%d %H:%M')
-            parsed_dt = analyzer._parse_date(dt_str)
+            parsed_dt = GitDateParser.parse_date(dt_str)
             
             # The parsed date should be in UTC
             assert parsed_dt.tzinfo == timezone.utc
@@ -94,14 +92,12 @@ class TestTimezoneHandling:
     
     def test_naive_datetime_handling(self):
         """Test that naive datetimes are assumed to be in UTC."""
-        analyzer = GitAnalyzer(".")
-        
         # Create a naive datetime (no timezone info)
         naive_dt = datetime(2025, 6, 15, 12, 0)
         dt_str = naive_dt.strftime('%Y-%m-%d %H:%M')
         
         # Parse the date string
-        parsed_dt = analyzer._parse_date(dt_str)
+        parsed_dt = GitDateParser.parse_date(dt_str)
         
         # The parsed date should be in UTC and match the input time exactly
         assert parsed_dt.tzinfo == timezone.utc
@@ -113,14 +109,12 @@ class TestTimezoneHandling:
     
     @pytest.mark.parametrize("offset_hours", [-12, -6, 0, 6, 12])
     def test_utc_offset_handling(self, offset_hours):
-        """Test that _parse_date raises an error for timezone offsets (not supported)."""
-        analyzer = GitAnalyzer(".")
-        
+        """Test that parse_date raises an error for timezone offsets (not supported)."""
         # Create a datetime with a specific UTC offset
         offset = timezone(timedelta(hours=offset_hours))
         dt = datetime(2025, 6, 15, 12, 0, tzinfo=offset)
         
-        # Format with timezone offset (which _parse_date doesn't support)
+        # Format with timezone offset (which parse_date doesn't support)
         if offset_hours >= 0:
             dt_str = dt.strftime(f'%Y-%m-%d %H:%M +{offset_hours:02d}00')
         else:
@@ -128,4 +122,4 @@ class TestTimezoneHandling:
         
         # Should raise DateParseError because timezone offsets are not supported
         with pytest.raises(DateParseError):
-            analyzer._parse_date(dt_str)
+            GitDateParser.parse_date(dt_str)

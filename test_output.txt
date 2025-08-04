@@ -1,0 +1,132 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.5, pytest-8.4.1, pluggy-1.6.0
+rootdir: /Users/karma/Developer/beacon-delivery-compass
+configfile: pyproject.toml
+plugins: anyio-4.9.0, xdist-3.8.0, cov-6.2.1, mock-3.14.1, hypothesis-6.136.6
+collected 5 items
+
+tests/unit/test_date_utils.py FF...                                      [100%]
+
+=================================== FAILURES ===================================
+_________________ TestGitDateParser.test_is_valid_commit_hash __________________
+
+self = <test_date_utils.TestGitDateParser testMethod=test_is_valid_commit_hash>
+
+    def test_is_valid_commit_hash(self):
+        """Test validation of commit hashes."""
+        self.assertTrue(GitDateParser.is_valid_commit_hash("a1b2c3d"))
+        self.assertTrue(GitDateParser.is_valid_commit_hash("abc123" * 6))  # Full hash
+        self.assertTrue(GitDateParser.is_valid_commit_hash("a" * 4))  # Minimum length
+    
+        # Invalid hashes
+        self.assertFalse(GitDateParser.is_valid_commit_hash(""))
+>       self.assertFalse(GitDateParser.is_valid_commit_hash("a" * 3))  # Too short
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: True is not false
+
+tests/unit/test_date_utils.py:99: AssertionError
+_________________ TestGitDateParser.test_parse_absolute_dates __________________
+
+self = <test_date_utils.TestGitDateParser testMethod=test_parse_absolute_dates>
+
+    def test_parse_absolute_dates(self):
+        """Test parsing of valid absolute dates."""
+        test_cases = [
+            ('2025-07-20', datetime(2025, 7, 20, 0, 0, tzinfo=timezone.utc)),
+            ('2025-07-20 14:30', datetime(2025, 7, 20, 14, 30, tzinfo=timezone.utc)),
+            ('2025-07-20T14:30', datetime(2025, 7, 20, 14, 30, tzinfo=timezone.utc)),
+            ('2025-07-20 14:30:45', datetime(2025, 7, 20, 14, 30, 45, tzinfo=timezone.utc)),
+        ]
+    
+        for date_str, expected in test_cases:
+            with self.subTest(date_str=date_str):
+>               result = GitDateParser.parse_date(date_str)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/test_date_utils.py:57: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'beaconled.core.date_utils.GitDateParser'>
+date_str = '2025-07-20T14:30'
+
+    @classmethod
+    def parse_date(cls, date_str: str) -> datetime:
+        """Parse a date string into a timezone-aware datetime in UTC.
+    
+        Supports both relative and absolute date formats:
+        - Relative: 1d (days), 2w (weeks), 3m (months), 1y (years)
+        - Absolute: YYYY-MM-DD or YYYY-MM-DD HH:MM (both in UTC)
+    
+        Args:
+            date_str: The date string to parse.
+    
+        Returns:
+            A timezone-aware datetime in UTC.
+    
+        Raises:
+            DateParseError: If the date string cannot be parsed.
+        """
+        if not date_str or not isinstance(date_str, str) or not date_str.strip():
+            raise DateParseError(
+                date_str or "",
+                "Date string cannot be empty. Please provide a valid date in one of these formats:\n"
+                "  - Relative: 1d (days), 2w (weeks), 3m (months), 1y (years)\n"
+                "  - Absolute: YYYY-MM-DD or YYYY-MM-DD HH:MM (in UTC)\n"
+                "  - Special: 'now' for current time"
+            )
+    
+        date_str = date_str.strip()
+    
+        # Handle special 'now' value
+        if date_str.lower() == 'now':
+            return datetime.now(timezone.utc)
+    
+        # Handle relative dates (e.g., 1d, 2w, 3m, 1y)
+        if cls.RELATIVE_DATE_PATTERN.match(date_str):
+            return cls._parse_relative_date(date_str)
+    
+        # Handle absolute dates
+        if cls.ISO_DATE_PATTERN.match(date_str):
+            return cls._parse_iso_date(date_str)
+    
+        if cls.ISO_DATETIME_PATTERN.match(date_str):
+            return cls._parse_iso_datetime(date_str)
+    
+>       raise DateParseError(
+            date_str,
+            "Invalid date format. Please use one of:\n"
+            "  - Relative: <number><unit> (e.g., '1d', '2w', '3m', '1y')\n"
+            "  - Absolute: YYYY-MM-DD or YYYY-MM-DD HH:MM (in UTC)"
+        )
+E       beaconled.exceptions.DateParseError: Could not parse date: '2025-07-20T14:30'
+E       Expected format: Invalid date format. Please use one of:
+E         - Relative: <number><unit> (e.g., '1d', '2w', '3m', '1y')
+E         - Absolute: YYYY-MM-DD or YYYY-MM-DD HH:MM (in UTC)
+
+src/beaconled/core/date_utils.py:69: DateParseError
+================================ tests coverage ================================
+_______________ coverage: platform darwin, python 3.13.5-final-0 _______________
+
+Name                                      Stmts   Miss  Cover   Missing
+-----------------------------------------------------------------------
+src/beaconled/__init__.py                     7      0   100%
+src/beaconled/cli.py                         51     51     0%   4-139
+src/beaconled/core/__init__.py                0      0   100%
+src/beaconled/core/analyzer.py              195    176    10%   29, 43-79, 122, 156, 184-368, 394-472, 483, 487-505
+src/beaconled/core/date_utils.py            116     32    72%   44, 56, 92, 111-119, 143, 148, 150, 153, 157, 176, 190-191, 196-197, 210, 216-217, 228, 234-235, 255, 262-269
+src/beaconled/core/models.py                 29      0   100%
+src/beaconled/exceptions.py                  77     23    70%   121-132, 144-150, 162-171
+src/beaconled/formatters/__init__.py          0      0   100%
+src/beaconled/formatters/extended.py         48     48     0%   3-105
+src/beaconled/formatters/json_format.py      14     14     0%   3-74
+src/beaconled/formatters/standard.py         41     41     0%   3-98
+src/beaconled/integrations/__init__.py        0      0   100%
+-----------------------------------------------------------------------
+TOTAL                                       578    385    33%
+============================= slowest 10 durations =============================
+
+(10 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ============================
+FAILED tests/unit/test_date_utils.py::TestGitDateParser::test_is_valid_commit_hash
+FAILED tests/unit/test_date_utils.py::TestGitDateParser::test_parse_absolute_dates
+========================= 2 failed, 3 passed in 0.16s ==========================
