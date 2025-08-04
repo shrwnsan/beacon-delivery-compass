@@ -1,86 +1,116 @@
-"""Extended output formatter."""
+"""Extended output formatter with additional analytics."""
 
-import colorama
-from colorama import Fore, Style
 from collections import defaultdict
-from datetime import timedelta
+from datetime import datetime, timedelta
+from colorama import Fore, Style
+from typing import Dict, List, Tuple
 
-from ..core.models import CommitStats, RangeStats
-from .standard import StandardFormatter
+from .base_formatter import BaseFormatter
+from ..core.models import CommitStats, RangeStats, FileStats
 
-# Initialize colorama for cross-platform color support
-colorama.init()
-
-
-class ExtendedFormatter(StandardFormatter):
-    """Extended formatter with additional details including author breakdowns
-    and temporal analysis."""
+class ExtendedFormatter(BaseFormatter):
+    """Extended text formatter with additional analytics.
+    
+    Extends the base formatter with additional statistics including:
+    - File type breakdown
+    - Author contribution details
+    - Daily activity patterns
+    """
 
     def format_commit_stats(self, stats: CommitStats) -> str:
         """Format commit statistics with extended details."""
-        output = super().format_commit_stats(stats)
+        output = [
+            f"{Fore.CYAN}Commit:{Style.RESET_ALL} {stats.hash[:8]}",
+            f"{Fore.CYAN}Author:{Style.RESET_ALL} {stats.author}",
+            f"{Fore.CYAN}Date:{Style.RESET_ALL} {self._format_date(stats.date)}",
+            f"{Fore.CYAN}Message:{Style.RESET_ALL} {stats.message}",
+            "",
+            f"{Fore.YELLOW}Files changed:{Style.RESET_ALL} {stats.files_changed}",
+            f"{Fore.GREEN}Lines added:{Style.RESET_ALL} {stats.lines_added}",
+            f"{Fore.RED}Lines deleted:{Style.RESET_ALL} {stats.lines_deleted}",
+            f"{Fore.YELLOW}Net change:{Style.RESET_ALL} {self._format_net_change(stats.lines_added, stats.lines_deleted)}"
+        ]
 
         if stats.files:
-            # Add file type analysis
-            file_types = {}
-            for file_stat in stats.files:
-                ext = (
-                    file_stat.path.split(".")[-1]
-                    if "." in file_stat.path
-                    else "no-ext"
-                )
-                if ext not in file_types:
-                    file_types[ext] = {
-                        "count": 0,
-                        "added": 0,
-                        "deleted": 0,
-                    }
-                file_types[ext]["count"] += 1
-                file_types[ext]["added"] += file_stat.lines_added
-                file_types[ext]["deleted"] += file_stat.lines_deleted
+            # Add file changes
+            output.extend([
+                "",
+                f"{Fore.MAGENTA}File changes:{Style.RESET_ALL}",
+                *[self._format_file_stats(f) for f in stats.files]
+            ])
+            
+            # Add file type breakdown
+            file_types = self._get_file_type_breakdown(stats.files)
+            output.extend([
+                "",
+                f"{Fore.MAGENTA}File types:{Style.RESET_ALL}",
+                *[f"  {ext}: {counts['count']} files, +{counts['added']}/-{counts['deleted']}"
+                  for ext, counts in sorted(file_types.items())]
+            ])
 
-            output += (
-                f"\n\n{Fore.MAGENTA}File type breakdown:{Style.RESET_ALL}"
-            )
-            for ext, data in sorted(file_types.items()):
-                output += (
-                    f"\n  .{Fore.CYAN}{ext}{Style.RESET_ALL}: "
-                    f"{data['count']} files, "
-                    f"{Fore.GREEN}+{data['added']}{Style.RESET_ALL} "
-                    f"{Fore.RED}-{data['deleted']}{Style.RESET_ALL}"
-                )
-
-        return output
+        return "\n".join(output)
 
     def format_range_stats(self, stats: RangeStats) -> str:
-        """Format range statistics with extended details including author
-        breakdowns and temporal analysis."""
-        output = super().format_range_stats(stats)
-        # Add author contribution breakdown
+        """Format range statistics with extended details."""
+        output = [
+            f"{Fore.CYAN}Range Analysis:{Style.RESET_ALL} "
+            f"{self._format_date(stats.start_date).split()[0]} to "
+            f"{self._format_date(stats.end_date).split()[0]}",
+            "",
+            f"{Fore.YELLOW}Total commits:{Style.RESET_ALL} {stats.total_commits}",
+            f"{Fore.YELLOW}Total files changed:{Style.RESET_ALL} {stats.total_files_changed}",
+            f"{Fore.GREEN}Total lines added:{Style.RESET_ALL} {stats.total_lines_added}",
+            f"{Fore.RED}Total lines deleted:{Style.RESET_ALL} {stats.total_lines_deleted}",
+            f"{Fore.YELLOW}Net change:{Style.RESET_ALL} "
+            f"{self._format_net_change(stats.total_lines_added, stats.total_lines_deleted)}"
+        ]
+
+        # Add authors section
         if stats.authors:
-            output += (
-                f"\n\n{Fore.MAGENTA}Author Contribution "
-                f"Breakdown:{Style.RESET_ALL}"
-            )
-            total_commits = stats.total_commits
-            for author, count in sorted(
-                stats.authors.items(), key=lambda x: x[1], reverse=True
-            ):
-                percentage = (count / total_commits) * 100
-                output += (
-                    f"\n  {Fore.CYAN}{author}{Style.RESET_ALL}: "
-                    f"{count} commits ({percentage:.1f}%)"
-                )
-        # Add temporal analysis visualization
-        if stats.commits:
-            # Daily activity timeline
-            daily_activity: dict[str, int] = defaultdict(int)
-            for commit in stats.commits:
-                day = commit.date.strftime("%Y-%m-%d")
-                daily_activity[day] += 1
-            # Get date range
-            start_date = min(commit.date for commit in stats.commits)
-            end_date = max(commit.date for commit in stats.commits)
+            output.extend([
+                "",
+                f"{Fore.MAGENTA}Contributors:{Style.RESET_ALL}",
+                *[self._format_author_stats(a, c) for a, c in 
+                  sorted(stats.authors.items(), key=lambda x: x[1], reverse=True)]
+            ])
+
+        # Add daily activity if available
+        if hasattr(stats, 'commits_by_day'):
+            output.extend([
+                "",
+                f"{Fore.MAGENTA}Daily activity:{Style.RESET_ALL}",
+                *[f"  {day}: {count} commit{'s' if count != 1 else ''}" 
+                  for day, count in sorted(stats.commits_by_day.items())]
+            ])
+        
+        # Add file type breakdown if available
+        if hasattr(stats, 'file_types'):
+            output.extend([
+                "",
+                f"{Fore.MAGENTA}File type breakdown:{Style.RESET_ALL}",
+                *[f"  {ext}: {counts['count']} files, +{counts['added']}/-{counts['deleted']}"
+                  for ext, counts in sorted(stats.file_types.items())]
+            ])
+
+        return "\n".join(output)
+    def _get_author_contribution_stats(self, authors: Dict[str, int], total_commits: int) -> List[str]:
+        """Format author contribution statistics."""
+        return [
+            f"  {author}: {count} commits ({count/total_commits:.1%})"
+            for author, count in sorted(authors.items(), key=lambda x: x[1], reverse=True)
+        ]
+        
+    def _get_daily_activity_stats(self, commits: List[CommitStats]) -> List[str]:
+        """Format daily activity statistics."""
+        daily_activity = defaultdict(int)
+        for commit in commits:
+            day = commit.date.strftime("%Y-%m-%d")
+            daily_activity[day] += 1
+            
+        return [
+            f"  {day}: {count} commit{'s' if count != 1 else ''}"
+            for day, count in sorted(daily_activity.items())
+        ]
             # Create timeline visualization
             output += (
                 f"\n\n{Fore.MAGENTA}Temporal Analysis - "

@@ -10,11 +10,13 @@ from pathlib import Path
 from ..exceptions import (
     InvalidRepositoryError,
     CommitError,
-    DateParseError,
-    DateRangeError,
+    CommitNotFoundError,
+    CommitParseError,
     ValidationError
 )
+from .date_errors import DateParseError, DateRangeError, DateError
 from .models import CommitStats, FileStats, RangeStats
+from .date_utils import GitDateParser
 
 # Type variable for generic type hints
 T = TypeVar('T')
@@ -116,124 +118,9 @@ class GitAnalyzer:
             datetime: Parsed datetime in UTC timezone.
                     
         Raises:
-            ValueError: If the date string format is invalid, malformed, or out of range.
-                      The error message will provide specific guidance on the issue.
+            DateParseError: If the date string format is invalid, malformed, or out of range.
         """
-        if not date_str or not date_str.strip():
-            raise ValueError(
-                "Date string cannot be empty. Please provide a valid date in one of these formats:\n"
-                "  - Relative: 1d (days), 2w (weeks), 3m (months), 1y (years)\n"
-                "  - Absolute: YYYY-MM-DD or YYYY-MM-DD HH:MM (in UTC)\n"
-                "  - Special: 'now' for current time\n"
-                "Example: '1w' for one week ago, '2025-01-15' for January 15, 2025, or 'now' for current time"
-            )
-            
-        date_str = date_str.strip()
-        
-        # Handle special 'now' value
-        if date_str.lower() == 'now':
-            return datetime.now(timezone.utc)
-        
-        # Handle relative dates (e.g., 1d, 2w, 3m, 1y)
-        if len(date_str) > 1 and date_str[-1] in {'d', 'w', 'm', 'y'}:
-            try:
-                # Extract number and unit
-                num_part = date_str[:-1]
-                if not num_part.isdigit():
-                    raise ValueError("Relative dates must start with a number")
-                    
-                num = int(num_part)
-                if num <= 0:
-                    raise ValueError("Relative date value must be a positive number")
-                    
-                unit = date_str[-1].lower()
-                now = datetime.now(timezone.utc)
-                
-                # Map units to timedelta
-                unit_map = {
-                    'd': ('day', 'days', timedelta(days=1)),
-                    'w': ('week', 'weeks', timedelta(weeks=1)),
-                    'm': ('month', 'months', timedelta(weeks=4)),  # Approximate
-                    'y': ('year', 'years', timedelta(weeks=52))    # Approximate
-                }
-                
-                if unit not in unit_map:
-                    valid_units = ", ".join(f"'{u}'" for u in unit_map.keys())
-                    raise ValueError(
-                        f"Invalid time unit '{unit}'. "
-                        f"Valid units are: {valid_units}"
-                    )
-                
-                unit_singular, unit_plural, delta = unit_map[unit]
-                return now - (delta * num)
-                
-            except ValueError as e:
-                raise DateParseError(
-                    date_str,
-                    format_hint=(
-                        "Expected format: <number><unit> where <unit> is one of: "
-                        "d (days), w (weeks), m (months), y (years)\n"
-                        "Examples: '1d' (1 day ago), '2w' (2 weeks ago), '3m' (3 months ago)"
-                    )
-                ) from e
-        
-        # Handle absolute dates (always interpreted as UTC)
-        try:
-            # Try with date and time first
-            try:
-                parsed = datetime.strptime(date_str, '%Y-%m-%d %H:%M')
-                # Validate reasonable year range
-                if not (2000 <= parsed.year <= 2100):
-                    raise ValidationError(
-                        f"Year {parsed.year} is outside the supported range (2000-2100)",
-                        field="date",
-                        value=date_str
-                    )
-                return parsed.replace(tzinfo=timezone.utc)
-            except ValueError:
-                # Try date only
-                try:
-                    parsed = datetime.strptime(date_str, '%Y-%m-%d')
-                    if not (2000 <= parsed.year <= 2100):
-                        raise ValidationError(
-                            f"Year {parsed.year} is outside the supported range (2000-2100)",
-                            field="date",
-                            value=date_str
-                        )
-                    return parsed.replace(tzinfo=timezone.utc)
-                except ValueError:
-                    raise DateParseError(
-                        date_str,
-                        format_hint=(
-                            "Expected format: 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM' (in UTC)\n"
-                            "Examples: '2025-01-15' or '2025-01-15 14:30'"
-                        )
-                    )
-        except Exception as e:
-            if not isinstance(e, DateParseError):
-                raise DateParseError(
-                    date_str,
-                    format_hint=(
-                        "Please use a valid date format (YYYY-MM-DD or YYYY-MM-DD HH:MM) "
-                        "or relative format (e.g., 1d, 2w, 3m, 1y)."
-                    )
-                ) from e
-            raise
-
-            # Convert to our custom DateParseError
-            if isinstance(e, ValidationError):
-                raise DateParseError(date_str, str(e))
-            
-            # For other ValueErrors, provide a helpful message
-            raise DateParseError(
-                date_str,
-                format_hint=(
-                    "Please use one of these formats:\n"
-                    "  - Relative: <number><unit> (e.g., '1d', '2w', '3m', '1y')\n"
-                    "  - Absolute: YYYY-MM-DD or YYYY-MM-DD HH:MM (e.g., '2025-01-15' or '2025-01-15 14:30')\n\n"
-                    f"Original error: {str(e)}"
-                )
-            ) from e
+        return GitDateParser.parse_date(date_str)
             
     def _parse_git_date(self, date_str: str) -> datetime:
         """Parse a date string from git log output into a datetime object.
@@ -267,44 +154,7 @@ class GitAnalyzer:
         Raises:
             DateParseError: If the date string cannot be parsed and strict mode is enabled
         """
-        try:
-            # Handle git's default format: "YYYY-MM-DD HH:MM:SS +ZZZZ"
-            if ' ' in date_str and '+' in date_str:
-                try:
-                    # Parse with timezone and convert to UTC
-                    dt = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S %z')
-                    return dt.astimezone(timezone.utc)
-                except ValueError as e:
-                    raise DateParseError(
-                        date_str,
-                        format_hint=(
-                            "Expected format: 'YYYY-MM-DD HH:MM:SS +ZZZZ' or 'YYYY-MM-DD HH:MM:SS'\n"
-                            "Example: '2025-01-15 14:30:45 +0800' or '2025-01-15 14:30:45'"
-                        )
-                    ) from e
-            
-            # Try parsing without timezone (assume UTC)
-            try:
-                dt = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
-                return dt.replace(tzinfo=timezone.utc)
-            except ValueError as e:
-                raise DateParseError(
-                    date_str,
-                    format_hint=(
-                        "Expected format: 'YYYY-MM-DD HH:MM:SS +ZZZZ' or 'YYYY-MM-DD HH:MM:SS'\n"
-                        "Example: '2025-01-15 14:30:45 +0800' or '2025-01-15 14:30:45'"
-                    )
-                ) from e
-        except Exception as e:
-            # For this internal method, we'll log a warning but still return the current time
-            # to avoid breaking the calling code that expects a datetime
-            import warnings
-            warnings.warn(
-                f"Failed to parse git date '{date_str}': {str(e)}. Using current UTC time.",
-                RuntimeWarning,
-                stacklevel=2
-            )
-            return datetime.now(timezone.utc)
+        return GitDateParser.parse_git_date(date_str)
 
     def get_commit_stats(self, commit_hash: str = "HEAD") -> CommitStats:
         """Get statistics for a single commit.
@@ -338,9 +188,10 @@ class GitAnalyzer:
         if not commit_hash or not isinstance(commit_hash, str) or not commit_hash.strip():
             error_msg = f"Invalid commit hash: '{commit_hash}'. Must be a non-empty string."
             logger.error(error_msg)
-            raise CommitError(
-                "",  # Empty string for invalid commit hash
-                error_msg
+            raise CommitParseError(
+                commit_ref=commit_hash,
+                message=error_msg,
+                details={"error_type": "invalid_format"}
             )
             
         commit_hash = commit_hash.strip()
@@ -348,9 +199,11 @@ class GitAnalyzer:
         if not self._is_valid_commit_hash(commit_hash):
             error_msg = f"Invalid commit hash format: '{commit_hash}'. Expected a 7-40 character hex string."
             logger.error(error_msg)
-            raise CommitError(
-                commit_hash,
-                error_msg
+            raise CommitParseError(
+                commit_ref=commit_hash,
+                parse_error=None,
+                message=error_msg,
+                details={"original_error": error_msg}
             )
             
         try:
@@ -383,11 +236,21 @@ class GitAnalyzer:
             except (ValueError, TypeError, git.BadName) as e:
                 error_msg = f"Commit not found: {commit_hash}"
                 logger.error("%s: %s", error_msg, str(e))
-                raise CommitError(commit_hash, error_msg) from e
+                raise CommitParseError(
+                    commit_ref=commit_hash,
+                    parse_error=e,
+                    message=error_msg,
+                    details={"original_error": str(e)}
+                ) from e
             except Exception as e:
                 error_msg = f"Error retrieving commit {commit_hash}"
                 logger.exception("%s: %s", error_msg, str(e))
-                raise CommitError(commit_hash, error_msg) from e
+                raise CommitParseError(
+                    commit_ref=commit_hash,
+                    parse_error=e,
+                    message=error_msg,
+                    details={"original_error": str(e)}
+                ) from e
             
             # Initialize file stats
             files: List[FileStats] = []
@@ -511,7 +374,12 @@ class GitAnalyzer:
             except Exception as e:
                 error_msg = f"Error processing commit {commit_hash}"
                 logger.exception("%s: %s", error_msg, str(e))
-                raise CommitError(commit_hash, error_msg) from e
+                raise CommitParseError(
+                    commit_ref=commit_hash,
+                    parse_error=e,
+                    message=error_msg,
+                    details={"original_error": str(e)}
+                ) from e
             
         except git.GitCommandError as e:
             raise RuntimeError(f"Failed to analyze commit {commit_hash}: {str(e)}") from e
@@ -540,45 +408,19 @@ class GitAnalyzer:
             - All dates are handled in UTC internally
             - String dates are parsed using _parse_date() which assumes UTC
             - If no timezone is specified in datetime objects, UTC is assumed
+            - Uses git's built-in date filtering for better performance with large repositories
         """
         try:
-            # Parse string dates to datetime objects if needed
-            if start_date and isinstance(start_date, str):
-                start_date = self._parse_date(start_date)
-            if end_date and isinstance(end_date, str):
-                if end_date.lower() in ['now', 'today', '']:
-                    end_date = datetime.now(timezone.utc)
-                else:
-                    end_date = self._parse_date(end_date)
+            # Parse and validate the date range
+            start_date, end_date = GitDateParser.validate_date_range(start_date, end_date)
             
-            repo = git.Repo(self.repo_path)
+            # Set end of day for end_date to include the entire end date
+            end_of_day = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
             
-            # Set default dates if not provided
-            if start_date is None:
-                # Get date of first commit
-                first_commit = next(repo.iter_commits(rev='--all', reverse=True, max_count=1))
-                start_date = first_commit.authored_datetime or datetime.min.replace(tzinfo=timezone.utc)
-                
-            if end_date is None:
-                end_date = datetime.now(timezone.utc)
-            
-            # Ensure all dates are timezone-aware and in UTC
-            if not start_date.tzinfo:
-                start_date = start_date.replace(tzinfo=timezone.utc)
-            else:
-                start_date = start_date.astimezone(timezone.utc)
-                
-            if not end_date.tzinfo:
-                end_date = end_date.replace(tzinfo=timezone.utc)
-            else:
-                end_date = end_date.astimezone(timezone.utc)
-            
-            # Validate date range after ensuring timezone awareness
-            if end_date < start_date:
-                raise ValueError(
-                    f"Invalid date range: end date ({end_date}) is before start date ({start_date}).\n"
-                    "Please ensure the end date is after the start date."
-                )
+            # Format dates for git log's --since and --until parameters
+            # Using --since/--until with --all to include all branches
+            since_param = f"--since=\"{start_date.isoformat()}\""
+            until_param = f"--until=\"{end_of_day.isoformat()}\""
             
             # Initialize stats
             commits: List[CommitStats] = []
@@ -587,44 +429,49 @@ class GitAnalyzer:
             total_lines_deleted = 0
             authors: Dict[str, int] = {}
             
-            # Convert dates to git's format (without timezone)
-            git_start_date = start_date.astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M')
-            git_end_date = end_date.astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M')
+            # Get the repository
+            repo = git.Repo(self.repo_path)
             
-            # Set end of day for end_date to include the entire end date
-            end_of_day = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
+            # Use git log with date filtering to get only relevant commits
+            # This is more efficient than filtering in Python
+            rev_list = repo.git.log(
+                '--all',  # Include all branches
+                '--reverse',  # Oldest first
+                '--pretty=format:%H',  # Only output commit hashes
+                since=start_date.isoformat(),
+                until=end_of_day.isoformat()
+            ).splitlines()
             
-            # Get all commits and filter by date in Python
-            for commit in repo.iter_commits(rev='--all', reverse=True):
-                # Get commit datetime, defaulting to current time if not available
-                commit_dt = commit.authored_datetime or commit.committed_datetime or datetime.now(timezone.utc)
-                
-                # Ensure commit datetime is timezone-aware and in UTC
-                if not commit_dt.tzinfo:
-                    commit_dt = commit_dt.replace(tzinfo=timezone.utc)
-                else:
-                    commit_dt = commit_dt.astimezone(timezone.utc)
-                    
-                # Skip commits outside our date range
-                if commit_dt < start_date or commit_dt > end_of_day:
+            # Process each commit in the filtered list
+            for commit_hash in rev_list:
+                if not commit_hash.strip():
                     continue
+                    
                 try:
-                    # Get commit stats
-                    commit_stats = self.get_commit_stats(commit.hexsha)
-                    commits.append(commit_stats)
+                    # Get commit stats for this commit
+                    commit_stats = self.get_commit_stats(commit_hash)
                     
-                    # Update totals
-                    total_files_changed += commit_stats.files_changed
-                    total_lines_added += commit_stats.lines_added
-                    total_lines_deleted += commit_stats.lines_deleted
-                    
-                    # Update author stats
-                    author = commit.author.email if hasattr(commit.author, 'email') else str(commit.author)
-                    if author:  # Only add if author is not None or empty
-                        authors[author] = authors.get(author, 0) + 1
+                    # Double-check the commit date is within range (just to be safe)
+                    if (commit_stats.date >= start_date and 
+                        commit_stats.date <= end_of_day):
+                        
+                        commits.append(commit_stats)
+                        
+                        # Update totals
+                        total_files_changed += commit_stats.files_changed
+                        total_lines_added += commit_stats.lines_added
+                        total_lines_deleted += commit_stats.lines_deleted
+                        
+                        # Update author stats
+                        author = commit_stats.author
+                        if author:  # Only add if author is not None or empty
+                            authors[author] = authors.get(author, 0) + 1
+                            
                 except Exception as e:
                     # Log the error but continue with other commits
-                    print(f"Warning: Could not process commit {commit.hexsha}: {e}")
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.warning("Could not process commit %s: %s", commit_hash[:8], str(e))
                     continue
             
             return RangeStats(
@@ -644,26 +491,15 @@ class GitAnalyzer:
             raise RuntimeError(f"Unexpected error analyzing date range: {str(e)}") from e
 
     def _is_valid_commit_hash(self, commit_hash: str) -> bool:
-        """Validate commit hash format to prevent injection."""
-        import re
+        """Validate commit hash format to prevent injection.
         
-        # Reject empty or overly long inputs
-        if not commit_hash or len(commit_hash) > 100:
-            return False
+        Args:
+            commit_hash: The commit hash or reference to validate.
             
-        # Allow HEAD, branch names, and valid commit hashes
-        if commit_hash in {"HEAD", "HEAD~", "HEAD^"}:
-            return True
-        # Allow branch names (alphanumeric, hyphens, underscores, slashes, dots)
-        if re.match(r'^[a-zA-Z0-9\-_/.]+$', commit_hash):
-            return True
-        # Allow full commit hashes (40 hex chars)
-        if re.match(r'^[a-fA-F0-9]{40}$', commit_hash):
-            return True
-        # Allow short commit hashes (7-40 hex chars)
-        if re.match(r'^[a-fA-F0-9]{7,40}$', commit_hash):
-            return True
-        return False
+        Returns:
+            bool: True if the commit hash is valid, False otherwise.
+        """
+        return GitDateParser.is_valid_commit_hash(commit_hash)
 
     def _is_valid_date_string(self, date_str: str) -> bool:
         """Validate date string format to prevent injection."""

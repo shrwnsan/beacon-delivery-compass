@@ -358,7 +358,11 @@ index 0000000..e69de29
 
 
 class TestDateParsing(unittest.TestCase):
-    """Test cases for date parsing functionality in GitAnalyzer."""
+    """Test cases for date parsing functionality in GitAnalyzer.
+    
+    Note: Most date parsing tests have been moved to test_date_utils.py.
+    This class is kept for backward compatibility and will be removed in a future version.
+    """
     
     def setUp(self):
         """Set up test fixtures with a mocked Git repository."""
@@ -371,182 +375,149 @@ class TestDateParsing(unittest.TestCase):
         
         # Initialize the analyzer with a dummy path
         self.analyzer = GitAnalyzer(".")
-        self.now = datetime.now()
     
     def tearDown(self):
         """Clean up after tests."""
         self.repo_patcher.stop()
     
     def test_parse_relative_dates(self):
-        """Test parsing of valid relative dates."""
-        # Get current time in UTC for consistent testing
-        now_utc = datetime.now(timezone.utc)
-        
+        """Test that _parse_date forwards to GitDateParser.parse_date."""
         test_cases = [
-            ('1d', timedelta(days=1)),
-            ('2w', timedelta(weeks=2)),
-            ('3m', timedelta(weeks=12)),  # 3 months ≈ 12 weeks
-            ('1y', timedelta(weeks=52)),  # 1 year ≈ 52 weeks
-            ('10d', timedelta(days=10)),
-            ('1w', timedelta(weeks=1)),   # Single week
-            ('12m', timedelta(weeks=48)), # Exactly one year in months
-            ('52w', timedelta(weeks=52)), # Exactly one year in weeks
+            '1d', '2w', '3m', '1y', '10d', '1w', '12m', '52w'
         ]
         
-        for date_str, expected_delta in test_cases:
+        for date_str in test_cases:
             with self.subTest(date_str=date_str):
-                with patch('beaconled.core.analyzer.datetime') as mock_datetime:
-                    # Mock datetime.now() to return our fixed UTC time
-                    mock_datetime.now.return_value = now_utc
-                    mock_datetime.side_effect = lambda *args, **kw: datetime(*args, **kw)
-                    
+                with patch('beaconled.core.date_utils.GitDateParser.parse_date') as mock_parse:
+                    mock_parse.return_value = datetime(2025, 1, 1, tzinfo=timezone.utc)
                     result = self.analyzer._parse_date(date_str)
-                    expected = now_utc - expected_delta
-                    
-                    # Verify the result is timezone-aware and in UTC
-                    self.assertEqual(result.tzinfo, timezone.utc)
-                    
-                    # Allow for small time differences due to test execution time
-                    self.assertAlmostEqual(
-                        result.timestamp(),
-                        expected.timestamp(),
-                        delta=1.0,  # 1 second tolerance
-                        msg=f"Failed for {date_str}"
-                    )
+                    mock_parse.assert_called_once_with(date_str)
+                    self.assertEqual(result, mock_parse.return_value)
     
-    def test_parse_relative_date_edge_cases(self):
-        """Test edge cases for relative date parsing."""
-        # Test case sensitivity (function is case-sensitive, so 'D' should fail)
-        with self.assertRaises((ValueError, DateParseError)) as context:
-            self.analyzer._parse_date('1D')
-        self.assertIn('Could not parse date', str(context.exception))
-        self.assertIn('Expected format', str(context.exception))
+    def test_parse_git_date(self):
+        """Test that _parse_git_date forwards to GitDateParser.parse_git_date."""
+        test_cases = [
+            '1690200000 +0000',
+            '1690200000 -0500',
+            '1690200000 +0900',
+        ]
         
-        # Test valid lowercase unit
-        with patch('beaconled.core.analyzer.datetime') as mock_datetime:
-            mock_datetime.now.return_value = datetime.now(timezone.utc)
-            result_lower = self.analyzer._parse_date('1d')
-            self.assertIsInstance(result_lower, datetime)
-            self.assertEqual(result_lower.tzinfo, timezone.utc)
+        for date_str in test_cases:
+            with self.subTest(date_str=date_str):
+                with patch('beaconled.core.date_utils.GitDateParser.parse_git_date') as mock_parse:
+                    mock_parse.return_value = datetime(2025, 1, 1, tzinfo=timezone.utc)
+                    result = self.analyzer._parse_git_date(date_str)
+                    mock_parse.assert_called_once_with(date_str)
+                    self.assertEqual(result, mock_parse.return_value)
+    
+    def test_is_valid_commit_hash(self):
+        """Test that _is_valid_commit_hash forwards to GitDateParser.is_valid_commit_hash."""
+        test_cases = [
+            ('a1b2c3d', True),
+            ('invalid!', False),
+            ('1234567', True),
+        ]
         
-        # Test very large numbers (should not raise)
-        try:
-            large_result = self.analyzer._parse_date('9999d')
-            self.assertIsInstance(large_result, datetime)
-            self.assertEqual(large_result.tzinfo, timezone.utc)
-        except Exception as e:
-            self.fail(f"Unexpected exception for large number: {e}")
-            
-        # Test with leading/trailing whitespace
-        with patch('beaconled.core.analyzer.datetime') as mock_datetime:
-            now_utc = datetime.now(timezone.utc)
-            mock_datetime.now.return_value = now_utc
-            ws_result = self.analyzer._parse_date(' 1d ')
-            expected = now_utc - timedelta(days=1)
-            self.assertEqual(ws_result.tzinfo, timezone.utc)
-            self.assertAlmostEqual(
-                ws_result.timestamp(),
-                expected.timestamp(),
-                delta=1.0
-            )
+        for commit_hash, expected in test_cases:
+            with self.subTest(commit_hash=commit_hash):
+                with patch('beaconled.core.date_utils.GitDateParser.is_valid_commit_hash') as mock_validate:
+                    mock_validate.return_value = expected
+                    result = self.analyzer._is_valid_commit_hash(commit_hash)
+                    mock_validate.assert_called_once_with(commit_hash)
+                    self.assertEqual(result, expected)
     
     def test_parse_absolute_dates(self):
-        """Test parsing of valid absolute dates."""
+        """Test that _parse_date handles absolute dates by forwarding to GitDateParser."""
         test_cases = [
-            # Date only (should be interpreted as midnight UTC)
-            ('2025-01-15', datetime(2025, 1, 15, tzinfo=timezone.utc)),
-            # Date with time (should be interpreted in UTC)
-            ('2025-01-15 14:30', datetime(2025, 1, 15, 14, 30, tzinfo=timezone.utc)),
-            # Edge of supported range
-            ('2100-12-31 23:59', datetime(2100, 12, 31, 23, 59, tzinfo=timezone.utc)),
-            # Start of supported range
-            ('2000-01-01 00:00', datetime(2000, 1, 1, 0, 0, tzinfo=timezone.utc)),
-            # Leap year
-            ('2024-02-29 12:00', datetime(2024, 2, 29, 12, 0, tzinfo=timezone.utc)),
+            '2025-07-20',
+            '2025-07-20 14:30',
+            '2025-07-20T14:30',
+            '2025-07-20 14:30:45',
         ]
         
-        for date_str, expected in test_cases:
+        for date_str in test_cases:
             with self.subTest(date_str=date_str):
-                result = self.analyzer._parse_date(date_str)
-                self.assertEqual(result, expected, f"Failed for {date_str}")
-                self.assertEqual(result.tzinfo, timezone.utc, 
-                               f"Expected UTC timezone for {date_str}")
+                with patch('beaconled.core.date_utils.GitDateParser.parse_date') as mock_parse:
+                    mock_parse.return_value = datetime(2025, 1, 1, tzinfo=timezone.utc)
+                    result = self.analyzer._parse_date(date_str)
+                    mock_parse.assert_called_once_with(date_str)
+                    self.assertEqual(result, mock_parse.return_value)
     
     def test_parse_absolute_date_edge_cases(self):
-        """Test edge cases for absolute date parsing."""
-        # Test with single-digit month/day
-        result = self.analyzer._parse_date('2025-1-5 1:05')
-        self.assertEqual(result, datetime(2025, 1, 5, 1, 5, tzinfo=timezone.utc))
-        self.assertEqual(result.tzinfo, timezone.utc)
+        """Test that _parse_date handles various date formats by forwarding to GitDateParser."""
+        test_cases = [
+            '2025/07/20',
+            '2025-07-20 14:30',
+            '2025/07/20 14:30:45',
+            '2025-07-20T14:30:45',
+        ]
         
-        # Test with leading zeros in time
-        result = self.analyzer._parse_date('2025-01-05 01:05')
-        self.assertEqual(result, datetime(2025, 1, 5, 1, 5, tzinfo=timezone.utc))
-        self.assertEqual(result.tzinfo, timezone.utc)
-        
-        # Test with trailing whitespace
-        result = self.analyzer._parse_date('2025-01-05 14:30 ')
-        self.assertEqual(result, datetime(2025, 1, 5, 14, 30, tzinfo=timezone.utc))
-        self.assertEqual(result.tzinfo, timezone.utc)
-        
-        # Test with leading whitespace
-        result = self.analyzer._parse_date(' 2025-01-05 14:30')
-        self.assertEqual(result, datetime(2025, 1, 5, 14, 30, tzinfo=timezone.utc))
-        self.assertEqual(result.tzinfo, timezone.utc)
-
-    def test_invalid_relative_dates(self):
-        """Test handling of invalid relative dates."""
+        for date_str in test_cases:
+            with self.subTest(date_str=date_str):
+                with patch('beaconled.core.date_utils.GitDateParser.parse_date') as mock_parse:
+                    mock_parse.return_value = datetime(2025, 1, 1, tzinfo=timezone.utc)
+                    result = self.analyzer._parse_date(date_str)
+                    mock_parse.assert_called_once_with(date_str)
+                    self.assertEqual(result, mock_parse.return_value)
+    
+    def test_parse_invalid_relative_dates(self):
+        """Test that _parse_date raises errors for invalid relative dates."""
         invalid_cases = [
-            '0d',         # Zero value
-            '-1d',        # Negative value
-            '1',          # No unit
-            'd',          # No value
-            '1x',         # Invalid unit
-            '1.5d',       # Non-integer value
-            '  ',         # Empty string after strip
-            '',           # Empty string
-            None,         # None value
-            '1day',       # Invalid unit format
-            '1 d',        # Space between number and unit
+            '1x',  # Invalid unit
+            'abc',  # Not a number
+            '1d1h', # Mixed units not supported
+            'd',    # Missing number
+            '-1d',  # Negative numbers not supported
+            '1.5d', # Decimal numbers not supported
         ]
         
         for date_str in invalid_cases:
             with self.subTest(date_str=date_str):
-                with self.assertRaises((ValueError, DateParseError, TypeError)):
-                    with patch('beaconled.core.analyzer.datetime') as mock_datetime:
-                        mock_datetime.now.return_value = datetime.now(timezone.utc)
+                with patch('beaconled.core.date_utils.GitDateParser.parse_date') as mock_parse:
+                    mock_parse.side_effect = DateParseError(f"Could not parse date: {date_str}")
+                    with self.assertRaises(DateParseError):
                         self.analyzer._parse_date(date_str)
-
-    def test_invalid_absolute_dates(self):
-        """Test handling of invalid absolute dates."""
-        test_cases = [
-            # Format: (date_str, expected_error_fragment)
-            ('2025-13-01', 'month must be in 1..12'),  # Invalid month
-            ('2025-00-01', 'month must be in 1..12'),  # Zero month
-            ('2025-01-32', 'day is out of range for month'),  # Invalid day
-            ('2025-02-30', 'day is out of range for month'),  # Invalid day for February
-            ('2025-01-01 25:00', 'hour must be in 0..23'),  # Invalid hour
-            ('2025-01-01 12:60', 'minute must be in 0..59'),  # Invalid minute
-            ('2025/01/01', 'Could not parse date'),  # Wrong separator
-            ('01-01-2025', 'Could not parse date'),  # Wrong order
-            ('not-a-date', 'Could not parse date'),  # Completely invalid
-            ('2025-01-01T12:00', 'Could not parse date'),  # ISO format with T
-            ('2025-01-01 12:00:00', 'Could not parse date'),  # With seconds (not supported)
+                    mock_parse.assert_called_once_with(date_str)
+    
+    def test_parse_invalid_absolute_dates(self):
+        """Test that _parse_date raises errors for invalid absolute dates."""
+        invalid_cases = [
+            '2025-13-01',  # Invalid month
+            '2025-07-32',  # Invalid day
+            '2025-07-20 25:00',  # Invalid hour
+            '2025-07-20 14:60',  # Invalid minute
+            'not-a-date',  # Completely invalid
+            '',             # Empty string
+            ' ',            # Whitespace only
         ]
         
-        for date_str, error_fragment in test_cases:
+        for date_str in invalid_cases:
             with self.subTest(date_str=date_str):
-                # Skip relative date patterns to avoid false positives
-                if any(c in date_str for c in ['d', 'w', 'm', 'y']):
-                    continue
-                    
-                with self.assertRaises((ValueError, DateParseError)) as context:
-                    self.analyzer._parse_date(date_str)
-                
-                # Verify the error message contains the expected fragment
-                error_msg = str(context.exception)
-                self.assertIn(error_fragment, error_msg, 
-                            f"Expected error message to contain '{error_fragment}', got: {error_msg}")
+                with patch('beaconled.core.date_utils.GitDateParser.parse_date') as mock_parse:
+                    mock_parse.side_effect = DateParseError(f"Could not parse date: {date_str}")
+                    with self.assertRaises(DateParseError):
+                        self.analyzer._parse_date(date_str)
+                    mock_parse.assert_called_once_with(date_str)
+    
+    def test_parse_git_date_invalid(self, mock_warning, mock_datetime):
+        """Test that _parse_git_date raises errors for invalid git date strings."""
+        invalid_cases = [
+            'not-a-timestamp',  # Not a number
+            '1234567890',       # Missing timezone
+            '1234567890 +2500', # Invalid timezone
+            '1234567890 -2500', # Invalid timezone
+            '1234567890 +0500 extra',  # Extra text
+            '',                 # Empty string
+            ' ',                # Whitespace only
+        ]
+        
+        for date_str in invalid_cases:
+            with self.subTest(date_str=date_str):
+                with patch('beaconled.core.date_utils.GitDateParser.parse_git_date') as mock_parse:
+                    mock_parse.side_effect = DateParseError(f"Invalid git date string: {date_str}")
+                    with self.assertRaises(DateParseError):
+                        self.analyzer._parse_git_date(date_str)
+                    mock_parse.assert_called_once_with(date_str)
 
     @patch('beaconled.core.analyzer.datetime')
     @patch('logging.Logger.warning')
