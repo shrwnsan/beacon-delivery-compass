@@ -3,7 +3,7 @@
 This module defines custom exceptions with error codes for better programmatic handling.
 Each exception includes a unique error code and a human-readable message.
 """
-from typing import Any, Optional, Dict, Type
+from typing import Any, Optional, Dict, Type, Union
 from enum import Enum, auto
 
 class ErrorCode(Enum):
@@ -14,6 +14,7 @@ class ErrorCode(Enum):
     VALIDATION_ERROR = 1002
     
     # Date-related errors (2000-2999)
+    DATE_ERROR = 2000
     DATE_PARSE_ERROR = 2001
     DATE_RANGE_ERROR = 2002
     
@@ -21,6 +22,8 @@ class ErrorCode(Enum):
     REPOSITORY_ERROR = 3000
     INVALID_REPOSITORY = 3001
     COMMIT_ERROR = 3002
+    COMMIT_NOT_FOUND = 3003
+    COMMIT_PARSE_ERROR = 3004
 
 class BeaconError(Exception):
     """Base exception class for all application-specific exceptions.
@@ -79,35 +82,7 @@ class ValidationError(BeaconError):
             details=details
         )
 
-class DateParseError(ValidationError):
-    """Raised when date parsing fails.
-    
-    Attributes:
-        date_str: The date string that could not be parsed
-        format_hint: Suggestion for the expected format (optional)
-    """
-    DEFAULT_ERROR_CODE = ErrorCode.DATE_PARSE_ERROR
-    
-    def __init__(self, date_str: str, format_hint: str = None, **kwargs):
-        self.date_str = date_str
-        self.format_hint = format_hint
-        message = f"Could not parse date: '{date_str}'"
-        if format_hint:
-            message += f"\nExpected format: {format_hint}"
-            
-        details = kwargs.pop('details', {})
-        details['date_string'] = date_str
-        if format_hint:
-            details['format_hint'] = format_hint
-            
-        super().__init__(
-            message=message,
-            field="date",
-            value=date_str,
-            error_code=self.DEFAULT_ERROR_CODE,
-            details=details,
-            **kwargs
-        )
+# Date-related errors have been moved to core.date_errors module
 
 class RepositoryError(BeaconError):
     """Base class for repository-related errors."""
@@ -137,14 +112,26 @@ class InvalidRepositoryError(RepositoryError):
         )
 
 class CommitError(RepositoryError):
-    """Raised when there's an error processing a commit."""
+    """Base class for commit-related errors.
+    
+    Attributes:
+        commit_ref: The commit reference (hash, branch, tag, etc.)
+        message: Human-readable error message
+        details: Additional error context
+    """
     DEFAULT_ERROR_CODE = ErrorCode.COMMIT_ERROR
     
-    def __init__(self, commit_ref: str, message: str = None, **kwargs):
+    def __init__(
+        self, 
+        commit_ref: str, 
+        message: str = None, 
+        details: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ):
         self.commit_ref = commit_ref
         message = message or f"Error processing commit: {commit_ref}"
         
-        details = kwargs.pop('details', {})
+        details = details or {}
         details['commit_ref'] = commit_ref
         
         super().__init__(
@@ -153,25 +140,81 @@ class CommitError(RepositoryError):
             details=details,
             **kwargs
         )
-
-class DateRangeError(ValidationError):
-    """Raised when there's an error with a date range."""
-    DEFAULT_ERROR_CODE = ErrorCode.DATE_RANGE_ERROR
-    
-    def __init__(self, start_date, end_date, message: str = None, **kwargs):
-        self.start_date = start_date
-        self.end_date = end_date
-        if not message:
-            message = f"Invalid date range: {start_date} to {end_date}"
-            
-        details = kwargs.pop('details', {})
-        details['start_date'] = str(start_date)
-        details['end_date'] = str(end_date)
         
+    @classmethod
+    def from_commit(
+        cls, 
+        commit_ref: str, 
+        reason: str = None,
+        **kwargs
+    ) -> 'CommitError':
+        """Create a CommitError with a reason.
+        
+        Args:
+            commit_ref: The commit reference that caused the error
+            reason: Optional reason for the error
+            **kwargs: Additional arguments to pass to the exception
+            
+        Returns:
+            A configured CommitError instance
+        """
+        message = f"Error processing commit {commit_ref}"
+        if reason:
+            message += f": {reason}"
+            
+        return cls(commit_ref=commit_ref, message=message, **kwargs)
+
+
+class CommitNotFoundError(CommitError):
+    """Raised when a commit cannot be found in the repository."""
+    DEFAULT_ERROR_CODE = ErrorCode.COMMIT_NOT_FOUND
+    
+    def __init__(
+        self, 
+        commit_ref: str, 
+        repo_path: str = None,
+        **kwargs
+    ):
+        message = f"Commit not found: {commit_ref}"
+        details = kwargs.pop('details', {})
+        details['commit_ref'] = commit_ref
+        if repo_path:
+            details['repo_path'] = repo_path
+            message += f" in repository {repo_path}"
+            
         super().__init__(
+            commit_ref=commit_ref,
             message=message,
-            field="date_range",
-            error_code=self.DEFAULT_ERROR_CODE,
             details=details,
+            error_code=self.DEFAULT_ERROR_CODE,
             **kwargs
         )
+
+
+class CommitParseError(CommitError):
+    """Raised when there's an error parsing commit data."""
+    DEFAULT_ERROR_CODE = ErrorCode.COMMIT_PARSE_ERROR
+    
+    def __init__(
+        self, 
+        commit_ref: str, 
+        parse_error: Exception = None,
+        **kwargs
+    ):
+        message = f"Failed to parse commit: {commit_ref}"
+        details = kwargs.pop('details', {})
+        details['commit_ref'] = commit_ref
+        
+        if parse_error:
+            details['parse_error'] = str(parse_error)
+            message += f" - {str(parse_error)}"
+            
+        super().__init__(
+            commit_ref=commit_ref,
+            message=message,
+            details=details,
+            error_code=self.DEFAULT_ERROR_CODE,
+            **kwargs
+        )
+
+# DateRangeError has been moved to core.date_errors module
