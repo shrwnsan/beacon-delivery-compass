@@ -1,43 +1,117 @@
-"""Data models for Beacon delivery analytics."""
+"""Data models for Beacon delivery analytics.
 
-from dataclasses import dataclass
+This module defines the core data structures used throughout the application
+for representing git repository statistics and analysis results.
+"""
+
+from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Optional, Any, ClassVar
 
 
 @dataclass
 class FileStats:
-    """Statistics for a single file."""
-
+    """Statistics for a single file in a git commit.
+    
+    Attributes:
+        path: Relative path of the file in the repository
+        lines_added: Number of lines added in this file
+        lines_deleted: Number of lines deleted from this file
+        lines_changed: Total number of lines changed (added + deleted)
+    """
     path: str
-    lines_added: int
-    lines_deleted: int
-    lines_changed: int
+    lines_added: int = 0
+    lines_deleted: int = 0
+    lines_changed: int = 0
+    
+    def __post_init__(self) -> None:
+        """Initialize computed fields after instance creation."""
+        if self.lines_changed == 0:
+            self.lines_changed = self.lines_added + self.lines_deleted
 
 
 @dataclass
 class CommitStats:
-    """Statistics for a single commit."""
-
+    """Statistics for a single git commit.
+    
+    Attributes:
+        hash: Full 40-character SHA-1 hash of the commit
+        author: Name and email of the commit author
+        date: Timestamp when the commit was created (in UTC)
+        message: Commit message (first line)
+        files_changed: Number of files changed in this commit
+        lines_added: Total lines added across all files
+        lines_deleted: Total lines deleted across all files
+        files: List of FileStats objects for each changed file
+    """
+    
     hash: str
     author: str
     date: datetime
     message: str
-    files_changed: int
-    lines_added: int
-    lines_deleted: int
-    files: List[FileStats]
+    files_changed: int = 0
+    lines_added: int = 0
+    lines_deleted: int = 0
+    files: List[FileStats] = field(default_factory=list)
+    
+    def __post_init__(self) -> None:
+        """Validate and compute derived fields after initialization."""
+        if not self.hash or len(self.hash) != 40 or not all(c in '0123456789abcdef' for c in self.hash.lower()):
+            raise ValueError(f"Invalid commit hash: {self.hash}")
+            
+        if not self.files_changed and self.files:
+            self.files_changed = len(self.files)
+            
+        if not (self.lines_added or self.lines_deleted) and self.files:
+            self.lines_added = sum(f.lines_added for f in self.files)
+            self.lines_deleted = sum(f.lines_deleted for f in self.files)
 
 
 @dataclass
 class RangeStats:
-    """Statistics for a range of commits."""
-
+    """Statistics for a range of git commits.
+    
+    Attributes:
+        start_date: Start of the date range (inclusive, UTC)
+        end_date: End of the date range (inclusive, UTC)
+        total_commits: Total number of commits in the range
+        total_files_changed: Total files changed across all commits
+        total_lines_added: Total lines added across all commits
+        total_lines_deleted: Total lines deleted across all commits
+        commits: List of CommitStats objects in chronological order
+        authors: Dictionary mapping author names to commit counts
+    """
+    
     start_date: datetime
     end_date: datetime
-    total_commits: int
-    total_files_changed: int
-    total_lines_added: int
-    total_lines_deleted: int
-    commits: List[CommitStats]
-    authors: Dict[str, int]
+    total_commits: int = 0
+    total_files_changed: int = 0
+    total_lines_added: int = 0
+    total_lines_deleted: int = 0
+    commits: List[CommitStats] = field(default_factory=list)
+    authors: Dict[str, int] = field(default_factory=dict)
+    
+    def __post_init__(self) -> None:
+        """Validate and compute derived fields after initialization."""
+        if self.start_date > self.end_date:
+            raise ValueError("start_date cannot be after end_date")
+            
+        if not self.commits:
+            return
+            
+        # Recalculate totals from commits if not explicitly set
+        if not self.total_commits:
+            self.total_commits = len(self.commits)
+            
+        if not self.authors:
+            from collections import defaultdict
+            from typing import Dict, DefaultDict
+            author_counts: DefaultDict[str, int] = defaultdict(int)
+            for commit in self.commits:
+                author_counts[commit.author] += 1
+            self.authors = dict(author_counts)
+            
+        if not (self.total_files_changed or self.total_lines_added or self.total_lines_deleted):
+            self.total_files_changed = sum(c.files_changed for c in self.commits)
+            self.total_lines_added = sum(c.lines_added for c in self.commits)
+            self.total_lines_deleted = sum(c.lines_deleted for c in self.commits)
