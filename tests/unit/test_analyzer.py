@@ -362,6 +362,7 @@ class TestDateParsing(unittest.TestCase):
     
     Note: Most date parsing tests have been moved to test_date_utils.py.
     This class is kept for backward compatibility and will be removed in a future version.
+    Now uses DateParser instead of GitDateParser.
     """
     
     def setUp(self):
@@ -381,21 +382,21 @@ class TestDateParsing(unittest.TestCase):
         self.repo_patcher.stop()
     
     def test_parse_relative_dates(self):
-        """Test that _parse_date forwards to GitDateParser.parse_date."""
+        """Test that _parse_date forwards to DateParser.parse_date."""
         test_cases = [
             '1d', '2w', '3m', '1y', '10d', '1w', '12m', '52w'
         ]
         
         for date_str in test_cases:
             with self.subTest(date_str=date_str):
-                with patch('beaconled.core.date_utils.GitDateParser.parse_date') as mock_parse:
+                with patch('beaconled.utils.date_utils.DateParser.parse_date') as mock_parse:
                     mock_parse.return_value = datetime(2025, 1, 1, tzinfo=timezone.utc)
                     result = self.analyzer._parse_date(date_str)
                     mock_parse.assert_called_once_with(date_str)
                     self.assertEqual(result, mock_parse.return_value)
     
     def test_parse_git_date(self):
-        """Test that _parse_git_date forwards to GitDateParser.parse_git_date."""
+        """Test that _parse_git_date forwards to DateParser.parse_git_date."""
         test_cases = [
             '1690200000 +0000',
             '1690200000 -0500',
@@ -404,14 +405,14 @@ class TestDateParsing(unittest.TestCase):
         
         for date_str in test_cases:
             with self.subTest(date_str=date_str):
-                with patch('beaconled.core.date_utils.GitDateParser.parse_git_date') as mock_parse:
+                with patch('beaconled.utils.date_utils.DateParser.parse_git_date') as mock_parse:
                     mock_parse.return_value = datetime(2025, 1, 1, tzinfo=timezone.utc)
                     result = self.analyzer._parse_git_date(date_str)
                     mock_parse.assert_called_once_with(date_str)
                     self.assertEqual(result, mock_parse.return_value)
     
     def test_is_valid_commit_hash(self):
-        """Test that _is_valid_commit_hash forwards to GitDateParser.is_valid_commit_hash."""
+        """Test that _is_valid_commit_hash forwards to DateParser.is_valid_commit_hash."""
         test_cases = [
             ('a1b2c3d', True),
             ('invalid!', False),
@@ -420,14 +421,14 @@ class TestDateParsing(unittest.TestCase):
         
         for commit_hash, expected in test_cases:
             with self.subTest(commit_hash=commit_hash):
-                with patch('beaconled.core.date_utils.GitDateParser.is_valid_commit_hash') as mock_validate:
+                with patch('beaconled.utils.date_utils.DateParser.is_valid_commit_hash') as mock_validate:
                     mock_validate.return_value = expected
                     result = self.analyzer._is_valid_commit_hash(commit_hash)
                     mock_validate.assert_called_once_with(commit_hash)
                     self.assertEqual(result, expected)
     
     def test_parse_absolute_dates(self):
-        """Test that _parse_date handles absolute dates by forwarding to GitDateParser."""
+        """Test that _parse_date handles absolute dates by forwarding to DateParser."""
         test_cases = [
             '2025-07-20',
             '2025-07-20 14:30',
@@ -437,14 +438,14 @@ class TestDateParsing(unittest.TestCase):
         
         for date_str in test_cases:
             with self.subTest(date_str=date_str):
-                with patch('beaconled.core.date_utils.GitDateParser.parse_date') as mock_parse:
+                with patch('beaconled.utils.date_utils.DateParser.parse_date') as mock_parse:
                     mock_parse.return_value = datetime(2025, 1, 1, tzinfo=timezone.utc)
                     result = self.analyzer._parse_date(date_str)
                     mock_parse.assert_called_once_with(date_str)
                     self.assertEqual(result, mock_parse.return_value)
     
     def test_parse_absolute_date_edge_cases(self):
-        """Test that _parse_date handles various date formats by forwarding to GitDateParser."""
+        """Test that _parse_date handles various date formats by forwarding to DateParser."""
         test_cases = [
             '2025/07/20',
             '2025-07-20 14:30',
@@ -454,7 +455,7 @@ class TestDateParsing(unittest.TestCase):
         
         for date_str in test_cases:
             with self.subTest(date_str=date_str):
-                with patch('beaconled.core.date_utils.GitDateParser.parse_date') as mock_parse:
+                with patch('beaconled.utils.date_utils.DateParser.parse_date') as mock_parse:
                     mock_parse.return_value = datetime(2025, 1, 1, tzinfo=timezone.utc)
                     result = self.analyzer._parse_date(date_str)
                     mock_parse.assert_called_once_with(date_str)
@@ -473,7 +474,7 @@ class TestDateParsing(unittest.TestCase):
         
         for date_str in invalid_cases:
             with self.subTest(date_str=date_str):
-                with patch('beaconled.core.date_utils.GitDateParser.parse_date') as mock_parse:
+                with patch('beaconled.utils.date_utils.DateParser.parse_date') as mock_parse:
                     mock_parse.side_effect = DateParseError(f"Could not parse date: {date_str}")
                     with self.assertRaises(DateParseError):
                         self.analyzer._parse_date(date_str)
@@ -493,7 +494,7 @@ class TestDateParsing(unittest.TestCase):
         
         for date_str in invalid_cases:
             with self.subTest(date_str=date_str):
-                with patch('beaconled.core.date_utils.GitDateParser.parse_date') as mock_parse:
+                with patch('beaconled.utils.date_utils.DateParser.parse_date') as mock_parse:
                     mock_parse.side_effect = DateParseError(f"Could not parse date: {date_str}")
                     with self.assertRaises(DateParseError):
                         self.analyzer._parse_date(date_str)
@@ -513,7 +514,7 @@ class TestDateParsing(unittest.TestCase):
         
         for date_str in invalid_cases:
             with self.subTest(date_str=date_str):
-                with patch('beaconled.core.date_utils.GitDateParser.parse_git_date') as mock_parse:
+                with patch('beaconled.utils.date_utils.DateParser.parse_git_date') as mock_parse:
                     mock_parse.side_effect = DateParseError(f"Invalid git date string: {date_str}")
                     with self.assertRaises(DateParseError):
                         self.analyzer._parse_git_date(date_str)

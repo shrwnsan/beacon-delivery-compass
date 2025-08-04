@@ -3,12 +3,12 @@ import unittest
 from datetime import datetime, timezone, timedelta
 from unittest.mock import patch, MagicMock
 
-from beaconled.core.date_utils import GitDateParser
+from beaconled.utils.date_utils import DateParser
 from beaconled.exceptions import DateParseError, ValidationError
 
 
-class TestGitDateParser(unittest.TestCase):
-    """Test cases for GitDateParser class."""
+class TestDateParser(unittest.TestCase):
+    """Test cases for DateParser class."""
     
     def setUp(self):
         """Set up test fixtures."""
@@ -33,7 +33,7 @@ class TestGitDateParser(unittest.TestCase):
                     mock_datetime.now.return_value = self.now
                     mock_datetime.side_effect = lambda *args, **kw: datetime(*args, **kw)
                     
-                    result = GitDateParser.parse_date(date_str)
+                    result = DateParser.parse_date(date_str)
                     expected = self.now - expected_delta
                     
                     self.assertEqual(result.tzinfo, timezone.utc)
@@ -68,37 +68,37 @@ class TestGitDateParser(unittest.TestCase):
         
         for date_str, expected in test_cases:
             with self.subTest(date_str=date_str):
-                result = GitDateParser.parse_git_date(date_str)
+                result = DateParser.parse_git_date(date_str)
                 self.assertEqual(result, expected)
                 self.assertEqual(result.tzinfo, timezone.utc)
     
     def test_validate_date_range(self):
         """Test validation of date ranges."""
         # Valid range
-        start, end = GitDateParser.validate_date_range("2025-01-01", "2025-12-31")
+        start, end = DateParser.validate_date_range("2025-01-01", "2025-12-31")
         self.assertEqual(start, datetime(2025, 1, 1, 0, 0, tzinfo=timezone.utc))
         self.assertEqual(end, datetime(2025, 12, 31, 23, 59, 59, 999999, tzinfo=timezone.utc))
         
         # Single day range
-        start, end = GitDateParser.validate_date_range("2025-07-20", "2025-07-20")
+        start, end = DateParser.validate_date_range("2025-07-20", "2025-07-20")
         self.assertEqual(start, datetime(2025, 7, 20, 0, 0, tzinfo=timezone.utc))
         self.assertEqual(end, datetime(2025, 7, 20, 23, 59, 59, 999999, tzinfo=timezone.utc))
         
         # Invalid range (end before start)
         with self.assertRaises(ValueError):
-            GitDateParser.validate_date_range("2025-12-31", "2025-01-01")
+            DateParser.validate_date_range("2025-12-31", "2025-01-01")
     
     def test_is_valid_commit_hash(self):
         """Test validation of commit hashes."""
-        self.assertTrue(GitDateParser.is_valid_commit_hash("a1b2c3d"))
-        self.assertTrue(GitDateParser.is_valid_commit_hash("abc123" * 6))  # Full hash
-        self.assertTrue(GitDateParser.is_valid_commit_hash("a" * 4))  # Minimum length
+        self.assertTrue(DateParser.is_valid_commit_hash("a1b2c3d"))
+        self.assertTrue(DateParser.is_valid_commit_hash("abc123" * 6))  # Full hash
+        self.assertTrue(DateParser.is_valid_commit_hash("a" * 4))  # Minimum length
         
         # Invalid hashes
-        self.assertFalse(GitDateParser.is_valid_commit_hash(""))
-        self.assertFalse(GitDateParser.is_valid_commit_hash("a" * 3))  # Too short
-        self.assertFalse(GitDateParser.is_valid_commit_hash("a!b@c#"))  # Invalid chars
-        self.assertFalse(GitDateParser.is_valid_commit_hash("a b c"))  # Spaces not allowed
+        self.assertFalse(DateParser.is_valid_commit_hash(""))
+        self.assertFalse(DateParser.is_valid_commit_hash("a" * 3))  # Too short
+        self.assertFalse(DateParser.is_valid_commit_hash("a!b@c#"))  # Invalid chars
+        self.assertFalse(DateParser.is_valid_commit_hash("a b c"))  # Spaces not allowed
 
 
 if __name__ == '__main__':

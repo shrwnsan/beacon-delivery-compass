@@ -40,7 +40,7 @@ class BeaconError(Exception):
         message: str,
         error_code: Optional[ErrorCode] = None,
         details: Optional[Dict[str, Any]] = None
-    ):
+    ) -> None:
         self.error_code = error_code or self.DEFAULT_ERROR_CODE
         self.details = details or {}
         super().__init__(message)
@@ -63,15 +63,15 @@ class ValidationError(BeaconError):
     def __init__(
         self,
         message: str,
-        field: str = None,
+        field: Optional[str] = None,
         value: Any = None,
-        error_code: ErrorCode = None,
+        error_code: Optional[ErrorCode] = None,
         details: Optional[Dict[str, Any]] = None
-    ):
+    ) -> None:
         self.field = field
         self.value = value
         details = details or {}
-        if field:
+        if field is not None:
             details['field'] = field
         if value is not None:
             details['value'] = value
@@ -92,7 +92,12 @@ class InvalidRepositoryError(RepositoryError):
     """Raised when the repository path is invalid or not a git repository."""
     DEFAULT_ERROR_CODE = ErrorCode.INVALID_REPOSITORY
     
-    def __init__(self, repo_path: str, reason: str = None, **kwargs):
+    def __init__(
+        self, 
+        repo_path: str, 
+        reason: Optional[str] = None, 
+        **kwargs: Any
+    ) -> None:
         self.repo_path = repo_path
         self.reason = reason
         message = f"Invalid repository: {repo_path}"
@@ -124,10 +129,10 @@ class CommitError(RepositoryError):
     def __init__(
         self, 
         commit_ref: str, 
-        message: str = None, 
+        message: Optional[str] = None, 
         details: Optional[Dict[str, Any]] = None,
-        **kwargs
-    ):
+        **kwargs: Any
+    ) -> None:
         self.commit_ref = commit_ref
         message = message or f"Error processing commit: {commit_ref}"
         
@@ -145,8 +150,8 @@ class CommitError(RepositoryError):
     def from_commit(
         cls, 
         commit_ref: str, 
-        reason: str = None,
-        **kwargs
+        reason: Optional[str] = None,
+        **kwargs: Any
     ) -> 'CommitError':
         """Create a CommitError with a reason.
         
@@ -172,9 +177,9 @@ class CommitNotFoundError(CommitError):
     def __init__(
         self, 
         commit_ref: str, 
-        repo_path: str = None,
-        **kwargs
-    ):
+        repo_path: Optional[str] = None,
+        **kwargs: Any
+    ) -> None:
         message = f"Commit not found: {commit_ref}"
         details = kwargs.pop('details', {})
         details['commit_ref'] = commit_ref
@@ -198,9 +203,9 @@ class CommitParseError(CommitError):
     def __init__(
         self, 
         commit_ref: str, 
-        parse_error: Exception = None,
-        **kwargs
-    ):
+        parse_error: Optional[Exception] = None,
+        **kwargs: Any
+    ) -> None:
         message = f"Failed to parse commit: {commit_ref}"
         details = kwargs.pop('details', {})
         details['commit_ref'] = commit_ref
