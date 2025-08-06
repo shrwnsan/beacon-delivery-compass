@@ -1,7 +1,7 @@
 # Development Analytics
 
 ## Overview
-This document outlines the development analytics and metrics tracking for the Crypto Analysis Dashboard project, providing insights into development velocity, code quality, and team productivity.
+This document outlines the development analytics and metrics tracking for the Beacon Delivery Compass project, providing insights into development velocity, code quality, and team productivity.
 
 ## Commit Analytics
 
