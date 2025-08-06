@@ -94,7 +94,7 @@ pip install --upgrade beaconled
 ### Getting Help
 
 If you encounter any issues:
-1. Check the [Troubleshooting Guide](TROUBLESHOOTING.md)
+1. Check the [Troubleshooting Guide](troubleshooting.md)
 2. Search the [GitHub Issues](https://github.com/shrwnsan/beacon-delivery-compass/issues)
 3. [Open a new issue](https://github.com/shrwnsan/beacon-delivery-compass/issues/new) if your problem isn't documented
 
@@ -115,6 +115,6 @@ rm -rf .venv  # On Windows: rmdir /s /q .venv
 
 ## 📚 Next Steps
 
-- [Getting Started Guide](USAGE.md)
-- [Configuration Options](CONFIGURATION.md)
+- [Getting Started Guide](usage.md)
+- [Configuration Options](configuration.md)
 - [Contributing Guidelines](../CONTRIBUTING.md)
