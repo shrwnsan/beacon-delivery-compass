@@ -30,8 +30,8 @@ beaconled --format json > weekly_report.json
 3) Get a weekly window
 ```bash
 # Last 7 days
-beaconled --range "1w" --format extended > weekly_report.txt
-beaconled --range "1w" --format json > weekly_report.json
+beaconled --range --since "1 week ago" --format extended > weekly_report.txt
+beaconled --range --since "1 week ago" --format json > weekly_report.json
 ```
 
 4) Read the signals (what to look for)
