@@ -8,6 +8,8 @@ from .core.analyzer import GitAnalyzer
 from .formatters.extended import ExtendedFormatter
 from .formatters.json_format import JSONFormatter
 from .formatters.standard import StandardFormatter
+# Domain-specific date errors for clearer CLI messages
+from .core.date_errors import DateParseError, DateRangeError
 
 
 def main() -> None:
@@ -125,6 +127,23 @@ def main() -> None:
             safe_output = output.encode('ascii', 'replace').decode('ascii')
             print(safe_output)
 
+    except DateParseError as e:
+        # Preserve domain-specific parse error messaging expected by tests
+        # Ensure it starts with "Could not parse date" as produced by DateParseError
+        try:
+            print(f"Error: {e}", file=sys.stderr)
+        except UnicodeEncodeError:
+            safe_error = str(e).encode('ascii', 'replace').decode('ascii')
+            print(f"Error: {safe_error}", file=sys.stderr)
+        sys.exit(2)
+    except DateRangeError as e:
+        # Preserve date range validation messaging (tests assert substrings)
+        try:
+            print(f"Error: {e}", file=sys.stderr)
+        except UnicodeEncodeError:
+            safe_error = str(e).encode('ascii', 'replace').decode('ascii')
+            print(f"Error: {safe_error}", file=sys.stderr)
+        sys.exit(2)
     except Exception as e:
         # Ensure error messages are also handled properly
         try:

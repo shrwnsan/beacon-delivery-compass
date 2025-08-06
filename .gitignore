@@ -48,9 +48,12 @@ Thumbs.db
 
 # Testing
 .coverage
+.coverage.*
 .pytest_cache/
 .tox/
 htmlcov/
+.hypothesis/
+.pytest_cache/
 
 # Documentation
 docs/_build/

@@ -4,7 +4,8 @@ import re
 from datetime import datetime, timezone, timedelta
 from unittest.mock import MagicMock, patch, ANY
 
-from beaconled.exceptions import DateParseError, ValidationError
+from beaconled.core.date_errors import DateParseError
+from beaconled.exceptions import ValidationError
 
 import git
 from beaconled.core.analyzer import GitAnalyzer
@@ -163,6 +164,8 @@ index 0000000..e69de29
         
         # Set up the mock to return our test commits
         mock_repo_instance.iter_commits.return_value = mock_commits
+        # Also ensure git.log returns corresponding hashes when analyzer falls back to git.log
+        mock_repo_instance.git.log.return_value = "\n".join([mc.hexsha for mc in mock_commits])
         
         # Mock get_commit_stats to return dummy stats
         self.analyzer.get_commit_stats = MagicMock()
@@ -314,6 +317,10 @@ index 0000000..e69de29
         # Mock get_commit_stats to return a dummy CommitStats object
         self.analyzer.get_commit_stats = MagicMock(return_value=MagicMock(
             spec=CommitStats,
+            hash="abc123",
+            author="Test User <test@example.com>",
+            date=datetime(2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc),
+            message="Test commit",
             files_changed=1,
             lines_added=5,
             lines_deleted=2,
@@ -325,6 +332,8 @@ index 0000000..e69de29
         first_commit.authored_datetime = datetime(2024, 1, 1, tzinfo=timezone.utc)
         first_commit.committed_datetime = datetime(2024, 1, 1, tzinfo=timezone.utc)
         first_commit.hexsha = "first_commit"
+        first_commit.author = MagicMock()
+        first_commit.author.name = "First Author"
         first_commit.author.email = "first@example.com"
         
         # Create a mock for the commit iteration
@@ -332,6 +341,8 @@ index 0000000..e69de29
         mock_commit.authored_datetime = datetime(2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc)
         mock_commit.committed_datetime = datetime(2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc)
         mock_commit.hexsha = "abc123"
+        mock_commit.author = MagicMock()
+        mock_commit.author.name = "Test User"
         mock_commit.author.email = "test@example.com"
         
         # Set up side_effect to return different values based on the call

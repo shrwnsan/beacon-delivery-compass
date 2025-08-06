@@ -39,11 +39,11 @@ class ExtendedFormatter(BaseFormatter):
                 *[self._format_file_stats(f) for f in stats.files]
             ])
             
-            # Add file type breakdown
+            # Add file type breakdown (match test expectation wording)
             file_types = self._get_file_type_breakdown(stats.files)
             output.extend([
                 "",
-                f"{Fore.MAGENTA}File types:{Style.RESET_ALL}",
+                f"{Fore.MAGENTA}File type breakdown:{Style.RESET_ALL}",
                 *[f"  {ext}: {counts['count']} files, +{counts['added']}/-{counts['deleted']}"
                   for ext, counts in sorted(file_types.items())]
             ])
@@ -78,8 +78,8 @@ class ExtendedFormatter(BaseFormatter):
         if hasattr(stats, 'commits_by_day'):
             output.extend([
                 "",
-                f"{Fore.MAGENTA}Daily activity:{Style.RESET_ALL}",
-                *[f"  {day}: {count} commit{'s' if count != 1 else ''}" 
+                f"{Fore.MAGENTA}Temporal Analysis - Daily Activity Timeline:{Style.RESET_ALL}",
+                *[f"  {day}: {count} commit{'s' if count != 1 else ''}"
                   for day, count in sorted(stats.commits_by_day.items())]
             ])
         

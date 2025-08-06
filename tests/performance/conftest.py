@@ -8,15 +8,14 @@ def pytest_configure(config):
     """Register performance marker."""
     config.addinivalue_line(
         "markers",
-        "performance: mark test as a performance test (deselect with '-m "not performance"')",
+        "performance: mark test as a performance test (deselect with -m 'not performance')",
     )
 
 
 @pytest.fixture(scope="function")
 def benchmark():
-    ""
-    Simple benchmark fixture for performance testing.
-    
+    """Simple benchmark fixture for performance testing.
+
     Example:
         def test_something(benchmark):
             result = benchmark(lambda: some_function(arg1, arg2))
@@ -28,14 +27,14 @@ def benchmark():
             start_time = time.perf_counter()
             result = func(*args, **kwargs)
             end_time = time.perf_counter()
-            
+
             # Store timing information
             self.duration = end_time - start_time
             self.start_time = start_time
             self.end_time = end_time
-            
+
             return result
-    
+
     return Benchmark()
 
 

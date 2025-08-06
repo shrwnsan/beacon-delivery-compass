@@ -26,6 +26,7 @@ class DateParser:
     GIT_DATE_PATTERN = re.compile(
         r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}( [+-]\d{4})?$'
     )
+    COMMIT_HASH_PATTERN = re.compile(r'^[0-9a-fA-F]{7,40}$')
     
     @classmethod
     def parse_date(cls, date_str: str) -> datetime:
@@ -73,7 +74,7 @@ class DateParser:
             
         raise DateParseError(
             date_str,
-            "Invalid date format. Please use one of:\n"
+            "Could not parse date. Please use one of:\n"
             "  - Relative: <number><unit> (e.g., '1d', '2w', '3m', '1y')\n"
             "  - Absolute: YYYY-MM-DD or YYYY-MM-DD HH:MM (in UTC)"
         )
@@ -170,15 +171,14 @@ class DateParser:
         else:
             end_date = end_date.astimezone(timezone.utc)
             
-        # Always normalize end_date to end of day
-        end_date = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
-        
-        # Validate
+        # Validate BEFORE normalizing end_date to end of day so error message matches expected timestamp
         if end_date < start_date:
             raise ValueError(
-                f"Invalid date range: end date ({end_date}) is before start date ({start_date}).\n"
-                "Please ensure the end date is after the start date."
+                f"Invalid date range: end date ({end_date}) is before start date ({start_date})"
             )
+        
+        # Always normalize end_date to end of day after validation
+        end_date = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
             
         return start_date, end_date
     
@@ -211,7 +211,7 @@ class DateParser:
         except (ValueError, IndexError) as e:
             raise DateParseError(
                 date_str,
-                f"Invalid relative date format: {str(e)}. "
+                f"Could not parse date: Invalid relative date format: {str(e)}. "
                 "Expected format: <number><unit> where <unit> is one of: "
                 "d (days), w (weeks), m (months), y (years)"
             ) from e
@@ -231,7 +231,7 @@ class DateParser:
         except ValueError as e:
             raise DateParseError(
                 date_str,
-                f"Invalid date format. Expected YYYY-MM-DD: {str(e)}"
+                f"Could not parse date: Invalid date format. Expected YYYY-MM-DD: {str(e)}"
             ) from e
     
     @classmethod
@@ -249,5 +249,18 @@ class DateParser:
         except ValueError as e:
             raise DateParseError(
                 datetime_str,
-                f"Invalid datetime format. Expected YYYY-MM-DD HH:MM: {str(e)}"
+                f"Could not parse date: Invalid datetime format. Expected YYYY-MM-DD HH:MM: {str(e)}"
             ) from e
+
+    @classmethod
+    def is_valid_commit_hash(cls, commit_hash: str) -> bool:
+        """Validate a git commit hash or reference.
+
+        Accepts 7-40 hex chars which matches short/full SHA-1 forms.
+        """
+        if not isinstance(commit_hash, str):
+            return False
+        commit_hash = commit_hash.strip()
+        if not commit_hash:
+            return False
+        return bool(cls.COMMIT_HASH_PATTERN.match(commit_hash))
