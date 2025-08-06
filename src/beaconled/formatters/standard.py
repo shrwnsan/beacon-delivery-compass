@@ -1,12 +1,16 @@
 """Standard output formatter."""
+from __future__ import annotations
 
 from colorama import Fore, Style
 from typing import TYPE_CHECKING
 
 from .base_formatter import BaseFormatter
+# Runtime imports to ensure names exist during execution
+from ..core.models import CommitStats, RangeStats
 
 if TYPE_CHECKING:
-    from ..core.models import CommitStats, RangeStats
+    # Explicit aliases for static analyzers
+    from ..core.models import CommitStats as _CommitStats, RangeStats as _RangeStats
 
 class StandardFormatter(BaseFormatter):
     """Standard text formatter for Beacon delivery analytics output.

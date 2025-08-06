@@ -82,7 +82,14 @@ class ValidationError(BeaconError):
             details=details
         )
 
-# Date-related errors have been moved to core.date_errors module
+# Re-export date-related errors for backward compatibility.
+# Prefer importing from beaconled.core.date_errors in new code.
+from .core.date_errors import DateParseError, DateRangeError
+
+__all__ = [
+    "DateParseError",
+    "DateRangeError",
+]
 
 class RepositoryError(BeaconError):
     """Base class for repository-related errors."""
@@ -109,9 +116,9 @@ class InvalidRepositoryError(RepositoryError):
         if reason:
             details['reason'] = reason
             
+        # Do not pass error_code twice; allow base to use DEFAULT_ERROR_CODE via its own logic
         super().__init__(
             message=message,
-            error_code=self.DEFAULT_ERROR_CODE,
             details=details,
             **kwargs
         )
@@ -139,9 +146,9 @@ class CommitError(RepositoryError):
         details = details or {}
         details['commit_ref'] = commit_ref
         
+        # Avoid passing error_code explicitly to prevent duplicate keyword issues
         super().__init__(
             message=message,
-            error_code=self.DEFAULT_ERROR_CODE,
             details=details,
             **kwargs
         )
@@ -187,11 +194,11 @@ class CommitNotFoundError(CommitError):
             details['repo_path'] = repo_path
             message += f" in repository {repo_path}"
             
+        # CommitError parent will handle DEFAULT_ERROR_CODE; avoid duplicating error_code
         super().__init__(
             commit_ref=commit_ref,
             message=message,
             details=details,
-            error_code=self.DEFAULT_ERROR_CODE,
             **kwargs
         )
 
@@ -214,11 +221,11 @@ class CommitParseError(CommitError):
             details['parse_error'] = str(parse_error)
             message += f" - {str(parse_error)}"
             
+        # CommitError parent provides error_code behavior; do not pass error_code again
         super().__init__(
             commit_ref=commit_ref,
             message=message,
             details=details,
-            error_code=self.DEFAULT_ERROR_CODE,
             **kwargs
         )
 

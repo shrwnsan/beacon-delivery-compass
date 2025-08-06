@@ -77,8 +77,20 @@ def create_test_repo(path, num_commits, num_files, num_branches, num_tags):
         if commit_num % (num_commits // num_tags) == 0 and commit_num > 0:
             repo.create_tag(f'v{commit_num//(num_commits//num_tags)}')
     
-    # Return to main branch
-    repo.heads.master.checkout()
+    # Return to a default branch (support both 'master' and 'main')
+    try:
+        default_head = getattr(repo.heads, "master")
+    except AttributeError:
+        # Prefer 'main' if present; otherwise, use the current head's reference
+        default_head = getattr(repo.heads, "main", None)
+        if default_head is None:
+            try:
+                default_head = repo.head.reference
+            except Exception:
+                # Fallback: pick the first available head if any exist
+                default_head = repo.heads[0] if len(repo.heads) > 0 else None
+    if default_head is not None:
+        default_head.checkout()
     
     return repo
 

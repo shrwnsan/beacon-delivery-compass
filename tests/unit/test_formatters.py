@@ -5,10 +5,10 @@ from datetime import datetime
 import pytest
 from freezegun import freeze_time
 
-from src.beaconled.core.models import CommitStats, FileStats, RangeStats
-from src.beaconled.formatters.extended import ExtendedFormatter
-from src.beaconled.formatters.json_format import JSONFormatter
-from src.beaconled.formatters.standard import StandardFormatter
+from beaconled.core.models import CommitStats, FileStats, RangeStats
+from beaconled.formatters.extended import ExtendedFormatter
+from beaconled.formatters.json_format import JSONFormatter
+from beaconled.formatters.standard import StandardFormatter
 
 
 @pytest.fixture
