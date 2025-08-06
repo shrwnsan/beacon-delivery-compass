@@ -1,3 +1,39 @@
+# Beacon Delivery Compass — For Product Leaders
+
+Drive outcomes with engineering reality. Beacon turns Git activity into actionable insights you can use to run weekly product reviews, align roadmaps, and forecast delivery.
+
+Who this is for:
+- Product Managers and Leads
+- Heads of Engineering / CTOs
+- Program Managers and Analytics Leads
+
+What you get in 10 minutes:
+- Clear delivery signals (velocity, scope churn, impact)
+- Weekly-ready product review report
+- KPIs that tie engineering activity to product outcomes
+
+Start here:
+- Quickstart: ./quickstart.md
+- Weekly Product Review: ./playbooks/weekly-product-review.md
+- Full Usage: ./usage.md
+- Installation: ./installation.md
+
+Why Beacon
+- Truth from source: uses your Git history—no manual status collecting
+- Weekly cadence by default: equips product rituals, not replaces them
+- Lightweight: single binary CLI, JSON output for BI/automation
+
+Core Outcomes
+- Visibility: changes, impact, and risk movement per week
+- Predictability: trend lines for planning and capacity
+- Accountability: decisions anchored in code reality
+
+Key Concepts
+- Commit Analytics: who/what/how much changed
+- Impact: file/component-level influence scoring
+- Range Analytics: period-based metrics (e.g., sprint, week)
+
+Next: ./quickstart.md
 # Beacon Documentation
 
 Welcome to the Beacon documentation! This is your delivery compass for empowered product builders.
