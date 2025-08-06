@@ -8,7 +8,8 @@ from hypothesis import given, assume, strategies as st, settings, HealthCheck
 from hypothesis.strategies import composite, SearchStrategy, one_of
 
 from beaconled.core.analyzer import GitAnalyzer
-from beaconled.exceptions import DateParseError, ValidationError
+from beaconled.core.date_errors import DateParseError
+from beaconled.exceptions import ValidationError
 
 
 class TestPropertyBasedDateParsing:

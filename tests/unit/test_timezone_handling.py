@@ -5,7 +5,8 @@ from unittest.mock import patch, MagicMock
 
 from beaconled.core.analyzer import GitAnalyzer
 from beaconled.utils.date_utils import DateParser
-from beaconled.exceptions import DateParseError, ValidationError
+from beaconled.core.date_errors import DateParseError
+from beaconled.exceptions import ValidationError
 
 # Timezones to test - including ones with DST changes
 TIMEZONES = [

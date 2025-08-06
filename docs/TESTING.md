@@ -36,6 +36,18 @@ tests/
 
 ## Running Tests
 
+### Quickstart
+```bash
+# 1. Ensure virtual environment is active
+source .venv/bin/activate
+
+# 2. Install dependencies (if not already done)
+pip install -r requirements.txt -r test_requirements.txt
+
+# 3. Run tests
+pytest -q --maxfail=1 --disable-warnings
+```
+
 ### Prerequisites
 ```bash
 # Install development dependencies
@@ -201,6 +213,7 @@ def test_large_repo_analysis(benchmark):
 1. **Import Errors**: Make sure the package is installed in development mode: `pip install -e .`
 2. **Test Failures**: Check for environment-specific issues or timing-related problems.
 3. **Performance Test Timeouts**: Adjust the timeout in `pyproject.toml` if needed.
+4. **Virtual Environment Confusion**: Ensure `.venv` is active and remove any stray `./venv` directory.
 
 ### Debugging Tests
 

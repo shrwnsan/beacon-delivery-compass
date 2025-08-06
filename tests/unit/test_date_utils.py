@@ -4,7 +4,8 @@ from datetime import datetime, timezone, timedelta
 from unittest.mock import patch, MagicMock
 
 from beaconled.utils.date_utils import DateParser
-from beaconled.exceptions import DateParseError, ValidationError
+from beaconled.core.date_errors import DateParseError
+from beaconled.exceptions import ValidationError
 
 
 class TestDateParser(unittest.TestCase):
