@@ -15,8 +15,7 @@ What you get in 10 minutes:
 Start here:
 - View a sample Weekly Report (no install): ./samples/weekly_report.txt and ./samples/weekly_report.json
 - Interpret the signals (PM guide): ./ANALYTICS_DASHBOARD.md
-- Ask an engineer to generate a live report: ./delivery/quickstart.md
-- Full Usage (engineers): ./delivery/usage.md
+- Engineers: quick examples: ./examples/basic-usage.md and ./examples/advanced-usage.md
 - Installation: ./installation.md
 
 Why Beacon
@@ -34,7 +33,7 @@ Key Concepts
 - Impact: file/component-level influence scoring
 - Range Analytics: period-based metrics (e.g., sprint, week)
 
-Next: ./delivery/pm-quickstart.md
+Next: ./ANALYTICS_DASHBOARD.md
 
 # Beacon Documentation
 
@@ -44,22 +43,21 @@ Welcome to the Beacon documentation! This is your delivery compass for empowered
 
 ### Getting Started
 - **[Installation Guide](installation.md)** - Set up Beacon in your environment
-- **[Usage Guide](usage.md)** - Learn how to use Beacon effectively
 - **[Basic Examples](examples/basic-usage.md)** - Quick start examples and common workflows
 - **[Advanced Examples](examples/advanced-usage.md)** - Custom metrics and automation
 
 ### Core Documentation
 - **[System Architecture](architecture.md)** - High-level system design and component relationships
-- **[API Reference](api/api-reference.md)** - Complete command-line and Python API reference
+- **[API](api/api.md)** - Python/CLI concepts and stability
 - **[Analytics Dashboard](ANALYTICS_DASHBOARD.md)** - Understanding your development metrics
 - **[Configuration Guide](configuration.md)** - Customizing Beacon's behavior
 
 ### Integration & Automation
-- **[Integration Guide](delivery/integrations.md)** - CI/CD, Git hooks, and team workflows
-- **[Scripts Documentation](scripts-readme.md)** - Using the provided analytics scripts
+- **[Integration Guide](integrations.md)** - CI/CD, Git hooks, and team workflows
+- **[Scripts Documentation](development/scripts.md)** - Using the provided analytics scripts
 
 ### Troubleshooting
-- **[Troubleshooting Guide](delivery/troubleshooting.md)** - Common issues and solutions
+- **[Troubleshooting Guide](troubleshooting.md)** - Common issues and solutions
 
 ## 🚀 Quick Start
 
@@ -149,29 +147,24 @@ Welcome to the Beacon documentation! This is your delivery compass for empowered
 
 | Document | Purpose |
 |----------|---------|
-| [PM Quickstart](delivery/pm-quickstart.md) | View a sample report and learn the signals |
-| [Interpretation Guide](delivery/interpretation.md) | What the metrics mean for decisions |
-| [Engineer Quickstart](delivery/quickstart.md) | Generate a weekly report from a repo |
-| [Usage (Engineers)](delivery/usage.md) | Complete CLI usage guide |
+| [Analytics Dashboard](ANALYTICS_DASHBOARD.md) | PM interpretation of signals |
 | [Installation](installation.md) | Setup and installation guide |
-| [System Architecture](architecture.md) | High-level system design |
-| [API Reference](api/api-reference.md) | Command-line and Python API |
-| [Analytics Dashboard](ANALYTICS_DASHBOARD.md) | Understanding metrics |
-| [Configuration Guide](configuration.md) | Customizing Beacon's behavior |
-| [Integrations](delivery/integrations.md) | CI/CD and workflow integration |
-| [Troubleshooting](delivery/troubleshooting.md) | Common issues and solutions |
 | [Basic Examples](examples/basic-usage.md) | Practical usage examples |
 | [Advanced Examples](examples/advanced-usage.md) | Custom metrics and automation |
-| [Scripts](scripts-readme.md) | Analytics scripts documentation |
+| [Integrations](integrations.md) | CI/CD and workflow integration |
+| [Troubleshooting](troubleshooting.md) | Common issues and solutions |
+| [API](api/api.md) | API concepts and usage |
+| [Configuration Guide](configuration.md) | Customizing Beacon's behavior |
+| [Architecture](architecture.md) | System design overview |
+| [Scripts (dev)](development/scripts.md) | Analytics scripts (developer/internal) |
 
 ## 💡 Next Steps
 
 1. Start with [Installation](installation.md) to get Beacon running
-2. Read the [Usage Guide](usage.md) for comprehensive instructions
-3. Try the [Basic Examples](examples/basic-usage.md) for hands-on learning
-4. Explore [Advanced Examples](examples/advanced-usage.md) for custom workflows
-5. Set up [Integrations](integrations.md) for team workflows
-6. Check [Troubleshooting](troubleshooting.md) if you encounter issues
+2. Try the [Basic Examples](examples/basic-usage.md) for hands-on learning
+3. Explore [Advanced Examples](examples/advanced-usage.md) for custom workflows
+4. Set up [Integrations](integrations.md) for team workflows
+5. Check [Troubleshooting](troubleshooting.md) if you encounter issues
 
 ---
 
