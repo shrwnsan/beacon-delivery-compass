@@ -1,6 +1,8 @@
-# Quickstart — 10 Minutes to Weekly Product Signals
+# Engineer Quickstart — Generate a Weekly Report
 
-Audience: Product leaders and PMs who want an executive-ready delivery readout from real code changes.
+Audience: Engineers asked to produce a weekly report for Product/PM stakeholders.
+
+PMs: To view a sample report and learn how to read it without installation, see PM Quickstart: ./pm-quickstart.md and Interpretation: ./interpretation.md.
 
 Outcome after this guide:
 - Weekly product review report you can run every Friday
@@ -52,5 +54,5 @@ Recommended cadence
 
 Next steps
 - Playbook: ./playbooks/weekly-product-review.md
-- Full usage: ./usage.md
-- Installation details: ./installation.md
+- Full usage (engineers): ./usage.md
+- Installation details: ../installation.md

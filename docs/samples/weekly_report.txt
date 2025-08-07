@@ -1,0 +1,47 @@
+📊 Range Analysis: 2025-07-28 to 2025-08-03
+
+Summary
+- Total commits: 32
+- Files changed: 86
+- Lines added: 4,218
+- Lines deleted: 1,973
+- Net change: +2,245
+
+Component Impact
+- Core Logic: 41 files (high impact)
+- Tests: 27 files (medium impact)
+- Documentation: 9 files (low impact)
+- Configuration: 9 files (medium impact)
+
+Top Contributors
+- Alice Chen — 12 commits
+- Ravi Patel — 9 commits
+- Mei Wong — 6 commits
+- Other — 5 commits
+
+File Type Breakdown
+- .py: 58 files, +3,642 / -1,705
+- .md: 9 files, +204 / -58
+- .yml/.yaml: 7 files, +132 / -88
+- other: 12 files, +240 / -122
+
+Hotspots (frequently changed)
+- src/beaconled/core/analyzer.py (+312 / -97)
+- src/beaconled/formatters/extended.py (+188 / -34)
+- tests/unit/test_analyzer.py (+145 / -12)
+
+Signals to Note
+- Velocity: Consistent with prior week (±8%). Healthy cadence.
+- Impact: Core changes accompanied by tests (3:2 ratio) — good balance.
+- Risk Movement: Large diffs in analyzer.py; verify coverage and regression checks.
+- Scope Churn: Net positive change suggests feature work progressed; confirm completed scope vs carry-overs.
+
+Highlights
+- Introduced extended formatter options for range analytics
+- Refactored analyzer to reduce I/O overhead
+- Added unit tests for date handling and timezone edge cases
+
+Next Review Prompts
+- Any high-impact core changes without corresponding tests?
+- Any single-owner files in the hotspot list?
+- Align this week’s changes with planned roadmap items

@@ -1,5 +1,8 @@
 # Usage Guide
 
+Note:
+- For reading and interpreting the signals, see the Interpretation Guide: [../ANALYTICS_DASHBOARD.md](../ANALYTICS_DASHBOARD.md).
+
 This guide covers how to use Beacon effectively for analyzing your git repositories and development metrics.
 
 ## Before You Start
@@ -553,6 +556,6 @@ To add screenshots to this documentation:
 ## Next Steps
 
 - [Integration Guide](integrations.md) - Set up Beacon in your workflow
-- [API Reference](api-reference.md) - Complete command reference
+- [API Reference](api/api-reference.md) - Complete command reference
 - [Contributing](../CONTRIBUTING.md) - Help improve Beacon
 - [Analytics Dashboard](ANALYTICS_DASHBOARD.md) - Interpret metrics and visualizations

@@ -1,0 +1,52 @@
+{
+  "period": {
+    "start": "2025-07-28",
+    "end": "2025-08-03"
+  },
+  "summary": {
+    "total_commits": 32,
+    "files_changed": 86,
+    "lines_added": 4218,
+    "lines_deleted": 1973,
+    "net_change": 2245
+  },
+  "components": [
+    {"name": "Core Logic", "files": 41, "impact": "high"},
+    {"name": "Tests", "files": 27, "impact": "medium"},
+    {"name": "Documentation", "files": 9, "impact": "low"},
+    {"name": "Configuration", "files": 9, "impact": "medium"}
+  ],
+  "contributors": [
+    {"name": "Alice Chen", "commits": 12},
+    {"name": "Ravi Patel", "commits": 9},
+    {"name": "Mei Wong", "commits": 6},
+    {"name": "Other", "commits": 5}
+  ],
+  "file_types": [
+    {"extension": ".py", "files": 58, "added": 3642, "deleted": 1705},
+    {"extension": ".md", "files": 9, "added": 204, "deleted": 58},
+    {"extension": ".yml/.yaml", "files": 7, "added": 132, "deleted": 88},
+    {"extension": "other", "files": 12, "added": 240, "deleted": 122}
+  ],
+  "hotspots": [
+    {"path": "src/beaconled/core/analyzer.py", "lines_added": 312, "lines_deleted": 97},
+    {"path": "src/beaconled/formatters/extended.py", "lines_added": 188, "lines_deleted": 34},
+    {"path": "tests/unit/test_analyzer.py", "lines_added": 145, "lines_deleted": 12}
+  ],
+  "signals": {
+    "velocity_note": "Consistent with prior week (±8%)",
+    "impact_note": "Core changes accompanied by tests (3:2 ratio)",
+    "risk_note": "Large diffs in analyzer.py; verify coverage and regression checks",
+    "scope_churn_note": "Net positive change suggests feature work progressed"
+  },
+  "highlights": [
+    "Introduced extended formatter options for range analytics",
+    "Refactored analyzer to reduce I/O overhead",
+    "Added unit tests for date handling and timezone edge cases"
+  ],
+  "review_prompts": [
+    "Any high-impact core changes without corresponding tests?",
+    "Any single-owner files in the hotspot list?",
+    "Align this week’s changes with planned roadmap items"
+  ]
+}
