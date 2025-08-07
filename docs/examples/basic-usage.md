@@ -2,6 +2,10 @@
 
 This document provides practical examples for getting started with Beacon.
 
+Note:
+- For setup and core commands, see [Engineer Usage](../delivery/usage.md).
+- For how to read the report signals, see [Interpretation Guide](../ANALYTICS_DASHBOARD.md).
+
 ## Quick Start Examples
 
 ### 1. Analyze Latest Commit

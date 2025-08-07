@@ -13,9 +13,10 @@ What you get in 10 minutes:
 - KPIs that tie engineering activity to product outcomes
 
 Start here:
-- Quickstart: ./quickstart.md
-- Weekly Product Review: ./playbooks/weekly-product-review.md
-- Full Usage: ./usage.md
+- View a sample Weekly Report (no install): ./samples/weekly_report.txt and ./samples/weekly_report.json
+- Interpret the signals (PM guide): ./ANALYTICS_DASHBOARD.md
+- Ask an engineer to generate a live report: ./delivery/quickstart.md
+- Full Usage (engineers): ./delivery/usage.md
 - Installation: ./installation.md
 
 Why Beacon
@@ -33,7 +34,8 @@ Key Concepts
 - Impact: file/component-level influence scoring
 - Range Analytics: period-based metrics (e.g., sprint, week)
 
-Next: ./quickstart.md
+Next: ./delivery/pm-quickstart.md
+
 # Beacon Documentation
 
 Welcome to the Beacon documentation! This is your delivery compass for empowered product builders.
@@ -48,19 +50,16 @@ Welcome to the Beacon documentation! This is your delivery compass for empowered
 
 ### Core Documentation
 - **[System Architecture](architecture.md)** - High-level system design and component relationships
-- **[API Reference](api-reference.md)** - Complete command-line and Python API reference
+- **[API Reference](api/api-reference.md)** - Complete command-line and Python API reference
 - **[Analytics Dashboard](ANALYTICS_DASHBOARD.md)** - Understanding your development metrics
-- **[Development Analytics](DEVELOPMENT_ANALYTICS.md)** - Deep dive into development patterns
-- **[Product Analytics](PRODUCT_ANALYTICS.md)** - Measuring product impact metrics
 - **[Configuration Guide](configuration.md)** - Customizing Beacon's behavior
-- **[Performance and Usability Plan](PERFORMANCE_AND_USABILITY_PLAN.md)** - Strategy for performance optimization and user experience improvements
 
 ### Integration & Automation
-- **[Integration Guide](integrations.md)** - CI/CD, Git hooks, and team workflows
+- **[Integration Guide](delivery/integrations.md)** - CI/CD, Git hooks, and team workflows
 - **[Scripts Documentation](scripts-readme.md)** - Using the provided analytics scripts
 
 ### Troubleshooting
-- **[Troubleshooting Guide](troubleshooting.md)** - Common issues and solutions
+- **[Troubleshooting Guide](delivery/troubleshooting.md)** - Common issues and solutions
 
 ## 🚀 Quick Start
 
@@ -119,9 +118,9 @@ Welcome to the Beacon documentation! This is your delivery compass for empowered
    ```
 
 3. **Explore Examples**
-   - Check out [basic usage examples](examples/basic-usage.md)
-   - Explore [advanced usage examples](examples/advanced-usage.md)
-   - Try the [analytics scripts](../scripts/)
+- View a sample weekly report: [samples/weekly_report.txt](samples/weekly_report.txt) and [samples/weekly_report.json](samples/weekly_report.json)
+- PM Signal interpretation: [delivery/interpretation.md](delivery/interpretation.md)
+- Engineers: [basic usage examples](examples/basic-usage.md), [advanced usage examples](examples/advanced-usage.md), and [analytics scripts](../scripts/)
 
 ## 📊 Key Features
 
@@ -150,15 +149,17 @@ Welcome to the Beacon documentation! This is your delivery compass for empowered
 
 | Document | Purpose |
 |----------|---------|
+| [PM Quickstart](delivery/pm-quickstart.md) | View a sample report and learn the signals |
+| [Interpretation Guide](delivery/interpretation.md) | What the metrics mean for decisions |
+| [Engineer Quickstart](delivery/quickstart.md) | Generate a weekly report from a repo |
+| [Usage (Engineers)](delivery/usage.md) | Complete CLI usage guide |
 | [Installation](installation.md) | Setup and installation guide |
-| [Usage](usage.md) | Complete usage guide |
 | [System Architecture](architecture.md) | High-level system design |
-| [API Reference](api-reference.md) | Command-line and Python API |
+| [API Reference](api/api-reference.md) | Command-line and Python API |
 | [Analytics Dashboard](ANALYTICS_DASHBOARD.md) | Understanding metrics |
-| [Product Analytics](PRODUCT_ANALYTICS.md) | Product impact measurement |
 | [Configuration Guide](configuration.md) | Customizing Beacon's behavior |
-| [Integrations](integrations.md) | CI/CD and workflow integration |
-| [Troubleshooting](troubleshooting.md) | Common issues and solutions |
+| [Integrations](delivery/integrations.md) | CI/CD and workflow integration |
+| [Troubleshooting](delivery/troubleshooting.md) | Common issues and solutions |
 | [Basic Examples](examples/basic-usage.md) | Practical usage examples |
 | [Advanced Examples](examples/advanced-usage.md) | Custom metrics and automation |
 | [Scripts](scripts-readme.md) | Analytics scripts documentation |

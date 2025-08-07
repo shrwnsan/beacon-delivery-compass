@@ -1,5 +1,9 @@
 # Advanced Usage Examples
 
+Note:
+- For setup and core commands, see [Engineer Usage](../delivery/usage.md).
+- For how to read the report signals, see [Interpretation Guide](../ANALYTICS_DASHBOARD.md).
+
 ## Custom Metric Configurations
 
 ### Defining Custom Metrics
@@ -224,6 +228,6 @@ jq -r '"# Release Notes\n",
 5. **Visualization**: Use Grafana or similar tools for dynamic dashboards
 
 ## Next Steps
-- [API Reference](../api-reference.md) - Complete command reference
+- [API Reference](../api/api-reference.md) - Complete command reference
 - [Analytics Dashboard](../ANALYTICS_DASHBOARD.md) - Metric interpretation guide
 - [Integrations](../integrations.md) - CI/CD and team workflow integration
