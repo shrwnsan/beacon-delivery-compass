@@ -151,7 +151,7 @@ Welcome to the Beacon documentation! This is your delivery compass for empowered
 | [Installation](installation.md) | Setup and installation guide |
 | [Basic Examples](examples/basic-usage.md) | Practical usage examples |
 | [Advanced Examples](examples/advanced-usage.md) | Custom metrics and automation |
-| [Integrations](integrations.md) | CI/CD and workflow integration |
+| [Integrations](delivery/integrations.md) | CI/CD and workflow integration |
 | [Troubleshooting](troubleshooting.md) | Common issues and solutions |
 | [API](api/api.md) | API concepts and usage |
 | [Configuration Guide](configuration.md) | Customizing Beacon's behavior |
@@ -163,7 +163,7 @@ Welcome to the Beacon documentation! This is your delivery compass for empowered
 1. Start with [Installation](installation.md) to get Beacon running
 2. Try the [Basic Examples](examples/basic-usage.md) for hands-on learning
 3. Explore [Advanced Examples](examples/advanced-usage.md) for custom workflows
-4. Set up [Integrations](integrations.md) for team workflows
+4. Set up [Integrations](delivery/integrations.md) for team workflows
 5. Check [Troubleshooting](troubleshooting.md) if you encounter issues
 
 ---

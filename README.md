@@ -23,7 +23,7 @@ We welcome contributions! For details on how to contribute, please see our [Cont
 
 ### Project Roadmap
 
-Our development priorities and planned improvements are tracked in the [Enhancement Plan](docs/ENHANCEMENT_PLAN.md). This document provides visibility into:
+Our development priorities and planned improvements are tracked in the [Enhancement Plan](docs/development/roadmap.md). This document provides visibility into:
 - Upcoming features and improvements
 - Current technical debt
 - Performance optimization plans
@@ -115,7 +115,7 @@ Analyze changes between specific dates:
 beaconled --range --since "2025-01-01" --until "2025-01-31"
 ```
 
-For more detailed usage examples, please refer to the [Usage Examples](docs/usage.md).
+For more detailed usage examples, please refer to the [Usage Examples](docs/examples/basic-usage.md).
 
 ## Sample Outputs
 
@@ -229,10 +229,10 @@ Most Changed Components:
 ## Documentation
 
 - [Installation Guide](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/installation.md) - Detailed setup instructions and troubleshooting
-- [Usage Guide](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/USAGE.md) - Comprehensive usage documentation
+- [Usage Guide](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/examples/basic-usage.md) - Comprehensive usage documentation
 - [Roadmap](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/ROADMAP.md) - Development plans and upcoming features
-- [Integration Guide](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/integrations.md) - Instructions for integrating with CI/CD pipelines and git hooks
-- [API Reference](docs/api-reference.md) - Detailed API documentation
+- [Integration Guide](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/delivery/integrations.md) - Instructions for integrating with CI/CD pipelines and git hooks
+- [API Reference](docs/api/api.md) - Detailed API documentation
 - [Changelog](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/CHANGELOG.md) - Release notes and version history
 
 ## Contributing
