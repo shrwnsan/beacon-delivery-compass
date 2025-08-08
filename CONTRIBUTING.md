@@ -47,6 +47,10 @@ pytest
 
 # Run tests with coverage
 pytest --cov=beacon --cov-report=term-missing
+
+# Coverage reports are stored in the ./tmp directory
+# To clean up coverage data:
+rm -f tmp/.coverage*
 ```
 
 ### Making Changes

@@ -212,36 +212,41 @@ index 0000000..e69de29
         mock_repo_instance = MagicMock()
         mock_repo.return_value = mock_repo_instance
         
-        # Create a mock commit with a datetime
+        # Create a mock commit with a datetime and author
         mock_commit = MagicMock()
         mock_commit.authored_datetime = datetime(2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc)
         mock_commit.committed_datetime = datetime(2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc)
         mock_commit.hexsha = "abc123"
+        mock_commit.author = MagicMock()
+        mock_commit.author.name = "Test User"
         mock_commit.author.email = "test@example.com"
+        mock_commit.message = "Test commit message"
+        mock_commit.parents = []
         
         # Set up the mock to return our test commit
         mock_repo_instance.iter_commits.return_value = [mock_commit]
         
-        # Mock get_commit_stats to return a dummy CommitStats object
-        self.analyzer.get_commit_stats = MagicMock(return_value=MagicMock(
-            spec=CommitStats,
-            files_changed=1,
-            lines_added=5,
-            lines_deleted=2,
-            files=[FileStats(path="test.txt", lines_added=5, lines_deleted=2, lines_changed=7)]
-        ))
+        # Mock get_commit_stats to return a dummy CommitStats object with author
+        commit_stats = MagicMock(spec=CommitStats)
+        commit_stats.files_changed = 1
+        commit_stats.lines_added = 5
+        commit_stats.lines_deleted = 2
+        commit_stats.files = [FileStats(path="test.txt", lines_added=5, lines_deleted=2, lines_changed=7)]
+        commit_stats.author = "Test User <test@example.com>"
+        commit_stats.date = datetime(2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc)
+        self.analyzer.get_commit_stats = MagicMock(return_value=commit_stats)
         
         # Test with string dates
         result = self.analyzer.get_range_analytics("2025-01-01", "2025-12-31")
         self.assertEqual(result.start_date, datetime(2025, 1, 1, tzinfo=timezone.utc))
-        self.assertEqual(result.end_date, datetime(2025, 12, 31, tzinfo=timezone.utc))
+        self.assertEqual(result.end_date, datetime(2025, 12, 31, 23, 59, 59, 999999, tzinfo=timezone.utc))
         
         # Test with datetime objects
         start = datetime(2025, 1, 1, tzinfo=timezone.utc)
         end = datetime(2025, 12, 31, tzinfo=timezone.utc)
         result = self.analyzer.get_range_analytics(start, end)
         self.assertEqual(result.start_date, start)
-        self.assertEqual(result.end_date, end)
+        self.assertEqual(result.end_date, end.replace(hour=23, minute=59, second=59, microsecond=999999))
     
     @patch('git.Repo')
     def test_get_range_analytics_single_day_range(self, mock_repo):
@@ -250,24 +255,29 @@ index 0000000..e69de29
         mock_repo_instance = MagicMock()
         mock_repo.return_value = mock_repo_instance
         
-        # Create a mock commit with a datetime
+        # Create a mock commit with a datetime and author
         mock_commit = MagicMock()
         mock_commit.authored_datetime = datetime(2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc)
         mock_commit.committed_datetime = datetime(2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc)
         mock_commit.hexsha = "abc123"
+        mock_commit.author = MagicMock()
+        mock_commit.author.name = "Test User"
         mock_commit.author.email = "test@example.com"
+        mock_commit.message = "Test commit message"
+        mock_commit.parents = []
         
         # Set up the mock to return our test commit
         mock_repo_instance.iter_commits.return_value = [mock_commit]
         
-        # Mock get_commit_stats to return a dummy CommitStats object
-        self.analyzer.get_commit_stats = MagicMock(return_value=MagicMock(
-            spec=CommitStats,
-            files_changed=1,
-            lines_added=5,
-            lines_deleted=2,
-            files=[FileStats(path="test.txt", lines_added=5, lines_deleted=2, lines_changed=7)]
-        ))
+        # Mock get_commit_stats to return a dummy CommitStats object with author
+        commit_stats = MagicMock(spec=CommitStats)
+        commit_stats.files_changed = 1
+        commit_stats.lines_added = 5
+        commit_stats.lines_deleted = 2
+        commit_stats.files = [FileStats(path="test.txt", lines_added=5, lines_deleted=2, lines_changed=7)]
+        commit_stats.author = "Test User <test@example.com>"
+        commit_stats.date = datetime(2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc)
+        self.analyzer.get_commit_stats = MagicMock(return_value=commit_stats)
         
         # Test with same start and end date
         result = self.analyzer.get_range_analytics("2025-07-20", "2025-07-20")
@@ -304,12 +314,16 @@ index 0000000..e69de29
         mock_repo_instance = MagicMock()
         mock_repo.return_value = mock_repo_instance
         
-        # Create a mock commit with a datetime
+        # Create a mock commit with a datetime and author
         mock_commit = MagicMock()
         mock_commit.authored_datetime = datetime(2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc)
         mock_commit.committed_datetime = datetime(2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc)
         mock_commit.hexsha = "abc123"
+        mock_commit.author = MagicMock()
+        mock_commit.author.name = "Test User"
         mock_commit.author.email = "test@example.com"
+        mock_commit.message = "Test commit message"
+        mock_commit.parents = []
         
         # Set up the mock to return our test commit
         mock_repo_instance.iter_commits.return_value = [mock_commit]
@@ -335,6 +349,8 @@ index 0000000..e69de29
         first_commit.author = MagicMock()
         first_commit.author.name = "First Author"
         first_commit.author.email = "first@example.com"
+        first_commit.message = "First commit message"
+        first_commit.parents = []
         
         # Create a mock for the commit iteration
         mock_commit = MagicMock()
@@ -344,6 +360,8 @@ index 0000000..e69de29
         mock_commit.author = MagicMock()
         mock_commit.author.name = "Test User"
         mock_commit.author.email = "test@example.com"
+        mock_commit.message = "Test commit message"
+        mock_commit.parents = []
         
         # Set up side_effect to return different values based on the call
         def iter_commits_side_effect(*args, **kwargs):
@@ -511,26 +529,6 @@ class TestDateParsing(unittest.TestCase):
                         self.analyzer._parse_date(date_str)
                     mock_parse.assert_called_once_with(date_str)
     
-    def test_parse_git_date_invalid(self, mock_warning, mock_datetime):
-        """Test that _parse_git_date raises errors for invalid git date strings."""
-        invalid_cases = [
-            'not-a-timestamp',  # Not a number
-            '1234567890',       # Missing timezone
-            '1234567890 +2500', # Invalid timezone
-            '1234567890 -2500', # Invalid timezone
-            '1234567890 +0500 extra',  # Extra text
-            '',                 # Empty string
-            ' ',                # Whitespace only
-        ]
-        
-        for date_str in invalid_cases:
-            with self.subTest(date_str=date_str):
-                with patch('beaconled.utils.date_utils.DateParser.parse_git_date') as mock_parse:
-                    mock_parse.side_effect = DateParseError(f"Invalid git date string: {date_str}")
-                    with self.assertRaises(DateParseError):
-                        self.analyzer._parse_git_date(date_str)
-                    mock_parse.assert_called_once_with(date_str)
-
     @patch('beaconled.core.analyzer.datetime')
     @patch('logging.Logger.warning')
     def test_parse_git_date_invalid(self, mock_warning, mock_datetime):

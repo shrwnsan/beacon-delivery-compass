@@ -106,13 +106,12 @@ class RangeStats:
         if not self.total_commits:
             self.total_commits = len(self.commits)
             
-        if not self.authors:
-            from collections import defaultdict
-            from typing import Dict, DefaultDict
-            author_counts: DefaultDict[str, int] = defaultdict(int)
-            for commit in self.commits:
-                author_counts[commit.author] += 1
-            self.authors = dict(author_counts)
+        from collections import defaultdict
+        from typing import Dict, DefaultDict
+        author_counts: DefaultDict[str, int] = defaultdict(int)
+        for commit in self.commits:
+            author_counts[commit.author] += 1
+        self.authors = dict(author_counts)
             
         if not (self.total_files_changed or self.total_lines_added or self.total_lines_deleted):
             self.total_files_changed = sum(c.files_changed for c in self.commits)

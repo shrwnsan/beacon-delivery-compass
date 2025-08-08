@@ -44,6 +44,50 @@ To run the type checker locally:
 mypy --ignore-missing-imports src/beaconled
 ```
 
+## Testing
+
+Beacon includes a comprehensive test suite with a user-friendly test runner. The test runner provides several options for running tests:
+
+### Running Tests
+
+Run the test suite with the interactive menu:
+
+```bash
+python run_tests.py
+```
+
+### Test Runner Options
+
+1. **Simple Environment Test**
+   - Verifies the basic test environment is set up correctly
+
+2. **Run All Tests**
+   - Executes all test cases across all categories (unit, integration, performance)
+
+3. **Run Specific Test Category**
+   - Select from available test categories:
+     - Unit Tests: Core functionality tests
+     - Integration Tests: Component interaction tests
+     - Performance Tests: Benchmark and performance tests
+
+4. **Show Environment Info**
+   - Displays detailed information about the test environment
+
+### Running Specific Tests
+
+You can also run specific test files or directories directly:
+
+```bash
+# Run all unit tests
+python -m pytest tests/unit/
+
+# Run a specific test file
+python -m pytest tests/unit/test_analyzer.py
+
+# Run tests with coverage report
+python -m pytest --cov=src tests/
+```
+
 ## Installation
 
 Beacon requires:
