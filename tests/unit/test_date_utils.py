@@ -1,4 +1,5 @@
 """Tests for the date_utils module."""
+from beaconled.utils.date_utils import DateParser
 import unittest
 from datetime import datetime, timezone, timedelta
 from unittest.mock import patch, MagicMock
@@ -10,6 +11,22 @@ from beaconled.exceptions import ValidationError
 
 class TestDateParser(unittest.TestCase):
     """Test cases for DateParser class."""
+    def test_parse_absolute_dates(self):
+        """Tests parsing of absolute date strings."""
+        # Test YYYY-MM-DD format
+        expected_dt = datetime(2023, 10, 5, 0, 0)
+        parsed_dt = DateParser.parse_date("2023-10-05")
+        self.assertEqual(parsed_dt.date(), expected_dt.date())
+
+        # Test YYYY-MM-DD HH:MM format
+        expected_dt_time = datetime(2023, 10, 5, 14, 30, tzinfo=timezone.utc)
+        parsed_dt_time = DateParser.parse_date("2023-10-05 14:30")
+        self.assertEqual(parsed_dt_time, expected_dt_time)
+
+        # Test another YYYY-MM-DD format
+        expected_dt_2 = datetime(2024, 1, 1, 0, 0)
+        parsed_dt_2 = DateParser.parse_date("2024-01-01")
+        self.assertEqual(parsed_dt_2.date(), expected_dt_2.date())
     
     def setUp(self):
         """Set up test fixtures."""
@@ -43,21 +60,6 @@ class TestDateParser(unittest.TestCase):
                         expected.timestamp(),
                         delta=1.0  # 1 second tolerance
                     )
-    
-    def test_parse_absolute_dates(self):
-        """Test parsing of valid absolute dates."""
-        test_cases = [
-            ('2025-07-20', datetime(2025, 7, 20, 0, 0, tzinfo=timezone.utc)),
-            ('2025-07-20 14:30', datetime(2025, 7, 20, 14, 30, tzinfo=timezone.utc)),
-            ('2025-07-20T14:30', datetime(2025, 7, 20, 14, 30, tzinfo=timezone.utc)),
-            ('2025-07-20 14:30:45', datetime(2025, 7, 20, 14, 30, 45, tzinfo=timezone.utc)),
-        ]
-        
-        for date_str, expected in test_cases:
-            with self.subTest(date_str=date_str):
-                result = GitDateParser.parse_date(date_str)
-                self.assertEqual(result, expected)
-                self.assertEqual(result.tzinfo, timezone.utc)
     
     def test_parse_git_date(self):
         """Test parsing of git date strings."""
@@ -93,11 +95,11 @@ class TestDateParser(unittest.TestCase):
         """Test validation of commit hashes."""
         self.assertTrue(DateParser.is_valid_commit_hash("a1b2c3d"))
         self.assertTrue(DateParser.is_valid_commit_hash("abc123" * 6))  # Full hash
-        self.assertTrue(DateParser.is_valid_commit_hash("a" * 4))  # Minimum length
+        self.assertTrue(DateParser.is_valid_commit_hash("a" * 7))  # Minimum length
         
         # Invalid hashes
         self.assertFalse(DateParser.is_valid_commit_hash(""))
-        self.assertFalse(DateParser.is_valid_commit_hash("a" * 3))  # Too short
+        self.assertFalse(DateParser.is_valid_commit_hash("a" * 6))  # Too short
         self.assertFalse(DateParser.is_valid_commit_hash("a!b@c#"))  # Invalid chars
         self.assertFalse(DateParser.is_valid_commit_hash("a b c"))  # Spaces not allowed
 

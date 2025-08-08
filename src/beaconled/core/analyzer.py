@@ -145,12 +145,16 @@ class GitAnalyzer:
                      "YYYY-MM-DD HH:MM:SS +ZZZZ" or "YYYY-MM-DD HH:MM:SS"
             
         Returns:
-            datetime: Parsed datetime object in UTC
-            
-        Raises:
-            DateParseError: If the date string cannot be parsed and strict mode is enabled
+            datetime: Parsed datetime object in UTC, or current time if parsing fails
         """
-        return DateParser.parse_git_date(date_str)
+        try:
+            return DateParser.parse_git_date(date_str)
+        except DateParseError as e:
+            # Log the error but continue with current time in UTC
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning("Could not parse git date '%s': %s", date_str, str(e))
+            return datetime.now(timezone.utc)
 
     def get_commit_stats(self, commit_hash: str = "HEAD") -> CommitStats:
         """Get statistics for a single commit.
