@@ -1,0 +1,16 @@
+[run]
+data_file = ./tmp/.coverage
+parallel = true
+branch = true
+source = src
+omit =
+    */tests/*
+    */__pycache__/*
+    */_vendor/*
+    */_version.py
+    */setup.py
+
+[report]
+show_missing = true
+skip_covered = true
+fail_under = 80
