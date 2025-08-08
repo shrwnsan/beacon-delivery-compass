@@ -50,6 +50,16 @@ tmp/
 # Testing
 .coverage
 .coverage.*
+coverage.xml
+*.cover
+*.py,cover
+.pytest_cache/
+.mypy_cache/
+.pytest_cache/
+htmlcov/
+
+.coverage
+.coverage.*
 .pytest_cache/
 .tox/
 htmlcov/
