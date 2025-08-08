@@ -32,27 +32,30 @@ class DateParser:
     def parse_date(cls, date_str: str) -> datetime:
         """Parse a date string into a timezone-aware datetime in UTC.
         
-        Supports both relative and absolute date formats:
+        All dates are interpreted as UTC. Timezone information in the input
+        is not supported - please convert to UTC before passing to this function.
+        
+        Supported formats:
         - Relative: 1d (days), 2w (weeks), 3m (months), 1y (years)
         - Absolute: YYYY-MM-DD or YYYY-MM-DD HH:MM (both in UTC)
-        - Special: 'now' for current time
+        - Special: 'now' for current time in UTC
         
         Args:
-            date_str: The date string to parse.
+            date_str: The date string to parse, must be in UTC
             
         Returns:
             A timezone-aware datetime in UTC.
             
         Raises:
-            DateParseError: If the date string cannot be parsed.
+            DateParseError: If the date string cannot be parsed or contains timezone info.
         """
         if not date_str or not isinstance(date_str, str) or not date_str.strip():
             raise DateParseError(
                 date_str or "",
-                "Date string cannot be empty. Please provide a valid date in one of these formats:\n"
+                "Date string cannot be empty. Please provide a valid date in one of these formats (all times must be in UTC):\n"
                 "  - Relative: 1d (days), 2w (weeks), 3m (months), 1y (years)\n"
-                "  - Absolute: YYYY-MM-DD or YYYY-MM-DD HH:MM (in UTC)\n"
-                "  - Special: 'now' for current time"
+                "  - Absolute: YYYY-MM-DD or YYYY-MM-DD HH:MM (interpreted as UTC)\n"
+                "  - Special: 'now' for current time in UTC"
             )
             
         date_str = date_str.strip()
@@ -61,23 +64,35 @@ class DateParser:
         if date_str.lower() == 'now':
             return datetime.now(timezone.utc)
         
+        dt = None
         # Handle relative dates (e.g., 1d, 2w, 3m, 1y)
         if cls.RELATIVE_DATE_PATTERN.match(date_str):
-            return cls._parse_relative_date(date_str)
-            
+            dt = cls._parse_relative_date(date_str)
         # Handle absolute dates
-        if cls.ISO_DATE_PATTERN.match(date_str):
-            return cls._parse_iso_date(date_str)
-            
-        if cls.ISO_DATETIME_PATTERN.match(date_str):
-            return cls._parse_iso_datetime(date_str)
-            
-        raise DateParseError(
-            date_str,
-            "Could not parse date. Please use one of:\n"
-            "  - Relative: <number><unit> (e.g., '1d', '2w', '3m', '1y')\n"
-            "  - Absolute: YYYY-MM-DD or YYYY-MM-DD HH:MM (in UTC)"
-        )
+        elif cls.ISO_DATE_PATTERN.match(date_str):
+            dt = cls._parse_iso_date(date_str)
+        elif cls.ISO_DATETIME_PATTERN.match(date_str):
+            dt = cls._parse_iso_datetime(date_str)
+        else:
+            raise DateParseError(
+                date_str,
+                "Could not parse date. Please use one of (all times must be in UTC):\n"
+                "  - Relative: <number><unit> (e.g., '1d', '2w', '3m', '1y')\n"
+                "  - Absolute: YYYY-MM-DD or YYYY-MM-DD HH:MM (interpreted as UTC)\n"
+                "  - 'now' for current time in UTC"
+            )
+
+        # Ensure the final datetime is in UTC
+        if dt:
+            if dt.tzinfo is not None and dt.tzinfo != timezone.utc:
+                raise DateParseError(
+                    date_str,
+                    "Timezone information is not supported. Please convert to UTC before passing to this function."
+                )
+            return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt.astimezone(timezone.utc)
+
+        # This path should not be reached if parsing is successful.
+        raise DateParseError(date_str, "Failed to produce a valid datetime object.")
     
     @classmethod
     def parse_git_date(cls, date_str: str) -> datetime:
@@ -215,10 +230,23 @@ class DateParser:
                 "Expected format: <number><unit> where <unit> is one of: "
                 "d (days), w (weeks), m (months), y (years)"
             ) from e
-    
+
     @classmethod
     def _parse_iso_date(cls, date_str: str) -> datetime:
-        """Parse an ISO date string (YYYY-MM-DD)."""
+        """Parse an ISO date string (YYYY-MM-DD).
+        
+        Returns a naive datetime object that will be treated as UTC.
+        The date is interpreted as midnight in UTC.
+        
+        Args:
+            date_str: The date string to parse (YYYY-MM-DD)
+            
+        Returns:
+            A naive datetime object representing the date at midnight UTC.
+            
+        Raises:
+            DateParseError: If the date string is invalid.
+        """
         try:
             dt = datetime.strptime(date_str, '%Y-%m-%d')
             if not (2000 <= dt.year <= 2100):
@@ -227,7 +255,7 @@ class DateParser:
                     field="date",
                     value=date_str
                 )
-            return dt.replace(tzinfo=timezone.utc)
+            return dt
         except ValueError as e:
             raise DateParseError(
                 date_str,
@@ -236,7 +264,19 @@ class DateParser:
     
     @classmethod
     def _parse_iso_datetime(cls, datetime_str: str) -> datetime:
-        """Parse an ISO datetime string (YYYY-MM-DD HH:MM)."""
+        """Parse an ISO datetime string (YYYY-MM-DD HH:MM).
+        
+        Returns a naive datetime object that will be treated as UTC.
+        
+        Args:
+            datetime_str: The datetime string to parse (YYYY-MM-DD HH:MM)
+            
+        Returns:
+            A naive datetime object representing the datetime in UTC.
+            
+        Raises:
+            DateParseError: If the datetime string is invalid.
+        """
         try:
             dt = datetime.strptime(datetime_str, '%Y-%m-%d %H:%M')
             if not (2000 <= dt.year <= 2100):
@@ -245,11 +285,11 @@ class DateParser:
                     field="datetime",
                     value=datetime_str
                 )
-            return dt.replace(tzinfo=timezone.utc)
+            return dt
         except ValueError as e:
             raise DateParseError(
                 datetime_str,
-                f"Could not parse date: Invalid datetime format. Expected YYYY-MM-DD HH:MM: {str(e)}"
+                f"Could not parse datetime: Invalid format. Expected YYYY-MM-DD HH:MM: {str(e)}"
             ) from e
 
     @classmethod

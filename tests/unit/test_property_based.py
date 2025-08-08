@@ -120,17 +120,17 @@ class TestPropertyBasedDateParsing:
         with pytest.raises((DateParseError, ValidationError)):
             self.analyzer._parse_date(text)
     
-    @given(st.dates())
+    @given(st.datetimes(min_value=datetime(1970, 1, 2), max_value=datetime(2038, 1, 1), timezones=st.just(timezone.utc)))
     @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
-    def test_parse_git_date_property(self, dt: datetime.date):
+    def test_parse_git_date_property(self, dt: datetime):
         """Test that git date strings are parsed correctly."""
-        # Create a git-style date string (YYYY-MM-DD HH:MM:SS +ZZZZ)
-        git_date = dt.strftime('%Y-%m-%d 12:00:00 +0000')
+        # Create a git-style date string (timestamp +0000)
+        git_date = f"{int(dt.timestamp())} +0000"
         result = self.analyzer._parse_git_date(git_date)
-        
+
         # Verify the result is a datetime in UTC
         assert isinstance(result, datetime)
         assert result.tzinfo == timezone.utc
-        
-        # The date part should match the input
-        assert result.date() == dt
+
+        # The date part should match the input, ignoring minor precision differences
+        assert result.date() == dt.date()

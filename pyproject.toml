@@ -7,7 +7,7 @@ name = "beaconled"
 version = "0.2.0-dev"  # Development version with GitPython migration
 description = "Your delivery compass for empowered product builders. A comprehensive toolkit for analyzing git repository statistics and development metrics."
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
     {name = "shrwnsan"},
@@ -22,9 +22,6 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -57,6 +54,7 @@ dev = [
     "pytest-xdist>=3.0.0",
     "hypothesis>=6.0.0",
     "freezegun>=1.0.0",
+    "pytz>=2023.3",
     
     # Code style and formatting
     "black>=23.0.0",
