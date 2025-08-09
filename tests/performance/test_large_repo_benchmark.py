@@ -3,7 +3,7 @@ import os
 import tempfile
 import pytest
 import git
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 # Skip these tests by default as they're performance benchmarks
 pytestmark = pytest.mark.performance
@@ -61,7 +61,7 @@ def create_test_repo(path, num_commits, num_files, num_branches, num_tags):
         for file_num in range(1, num_files + 1):
             file_path = os.path.join(path, f'file_{file_num}.txt')
             with open(file_path, 'a') as f:
-                f.write(f"Commit {commit_num} - {datetime.utcnow().isoformat()}\n")
+                f.write(f"Commit {commit_num} - {datetime.now(timezone.utc).isoformat()}\n")
                 f.write(generate_test_file())
             
             repo.index.add([file_path])
@@ -115,7 +115,7 @@ def test_benchmark_large_repo_analysis(benchmark):
         # Define the function to benchmark
         def analyze():
             # Get analytics for different time ranges
-            end_date = datetime.utcnow()
+            end_date = datetime.now(timezone.utc)
             start_date = end_date - timedelta(days=30)
             
             # Run analytics
