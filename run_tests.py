@@ -15,7 +15,7 @@ import argparse
 import os
 import sys
 import unittest
-from typing import Dict, List, Optional, Tuple
+from typing import List
 
 import pytest
 

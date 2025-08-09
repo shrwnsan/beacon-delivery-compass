@@ -10,7 +10,7 @@ from ..core.models import CommitStats, RangeStats
 
 if TYPE_CHECKING:
     # Explicit aliases for static analyzers
-    from ..core.models import CommitStats as _CommitStats, RangeStats as _RangeStats
+    pass
 
 class StandardFormatter(BaseFormatter):
     """Standard text formatter for Beacon delivery analytics output.

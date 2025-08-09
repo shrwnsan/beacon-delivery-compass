@@ -7,7 +7,6 @@ One-time setup to configure the product-led analytics system.
 import os
 import json
 from pathlib import Path
-import subprocess
 
 class ProductAnalyticsSetup:
     """Handles one-time setup for product analytics system."""

@@ -68,16 +68,6 @@ class TestEndToEnd(unittest.TestCase):
         except json.JSONDecodeError as e:
             self.fail(f"Output is not valid JSON: {e}")
 
-    def test_beaconled_extended_output(self):
-        """Test extended output format."""
-        result = subprocess.run(
-            self.beacon_cmd + ["--format", "json"],
-            capture_output=True,
-            text=True
-        )
-        self.assertEqual(result.returncode, 0)
-
-        # Verify it's valid JSON
         try:
             data = json.loads(result.stdout)
             self.assertIn("hash", data)

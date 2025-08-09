@@ -4,11 +4,10 @@ This module provides a compatibility layer for the new DateParser utility.
 New code should import directly from beaconled.utils.date_utils instead.
 """
 
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional, Union, Tuple
 
 from ..utils.date_utils import DateParser
-from .date_errors import DateParseError, DateRangeError, DateError
 
 
 class GitDateParser:
