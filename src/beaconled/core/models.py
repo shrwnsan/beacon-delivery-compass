@@ -6,7 +6,7 @@ for representing git repository statistics and analysis results.
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, List, Optional, Any, ClassVar
+from typing import Dict, List
 
 
 @dataclass
@@ -107,7 +107,7 @@ class RangeStats:
             self.total_commits = len(self.commits)
             
         from collections import defaultdict
-        from typing import Dict, DefaultDict
+        from typing import DefaultDict
         author_counts: DefaultDict[str, int] = defaultdict(int)
         for commit in self.commits:
             author_counts[commit.author] += 1

@@ -1,15 +1,13 @@
 """Tests for the analyzer module."""
 import unittest
-import re
-from datetime import datetime, timezone, timedelta
-from unittest.mock import MagicMock, patch, ANY
+from datetime import datetime, timezone
+from unittest.mock import MagicMock, patch
 
 from beaconled.core.date_errors import DateParseError
-from beaconled.exceptions import ValidationError
 
 import git
 from beaconled.core.analyzer import GitAnalyzer
-from beaconled.core.models import CommitStats, FileStats, RangeStats
+from beaconled.core.models import CommitStats, FileStats
 
 
 class TestGitAnalyzer(unittest.TestCase):

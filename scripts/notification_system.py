@@ -5,10 +5,11 @@ Automated notifications for product insights and alerts.
 """
 
 import json
+from pathlib import Path
 import smtplib
 import os
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import requests

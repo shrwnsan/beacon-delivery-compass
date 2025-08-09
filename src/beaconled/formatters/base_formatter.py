@@ -2,7 +2,7 @@
 
 import colorama
 from colorama import Fore, Style
-from typing import List, Dict, Any
+from typing import List, Dict
 from datetime import datetime
 from ..core.models import FileStats, CommitStats, RangeStats
 

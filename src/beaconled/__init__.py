@@ -6,13 +6,9 @@ from .exceptions import (
     ValidationError,
     RepositoryError,
     InvalidRepositoryError,
-    CommitError,
-    CommitNotFoundError,
-    CommitParseError
 )
 
 from .core.date_errors import (
-    DateError,
     DateParseError,
     DateRangeError,
 )

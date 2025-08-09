@@ -1,10 +1,11 @@
 """Custom exceptions for the Beacon Delivery Compass application.
 
 This module defines custom exceptions with error codes for better programmatic handling.
+from .core.date_errors import DateParseError, DateRangeError
 Each exception includes a unique error code and a human-readable message.
 """
-from typing import Any, Optional, Dict, Type, Union
-from enum import Enum, auto
+from typing import Any, Optional, Dict
+from enum import Enum
 
 class ErrorCode(Enum):
     """Error codes for different types of exceptions."""
@@ -84,11 +85,8 @@ class ValidationError(BeaconError):
 
 # Re-export date-related errors for backward compatibility.
 # Prefer importing from beaconled.core.date_errors in new code.
-from .core.date_errors import DateParseError, DateRangeError
 
 __all__ = [
-    "DateParseError",
-    "DateRangeError",
 ]
 
 class RepositoryError(BeaconError):

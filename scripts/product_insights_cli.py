@@ -164,15 +164,15 @@ def main():
                 print("📊 Executive Summary")
                 print("=" * 30)
                 print(f"Period: {summary['period']}")
-                print(f"\n🎯 Key Metrics:")
+                print("\n🎯 Key Metrics:")
                 for key, value in summary['executive_summary'].items():
                     print(f"   • {key.replace('_', ' ').title()}: {value}")
                 
-                print(f"\n💼 Business Impact:")
+                print("\n💼 Business Impact:")
                 for key, value in summary['business_impact'].items():
                     print(f"   • {key.replace('_', ' ').title()}: {value}")
                 
-                print(f"\n🚀 Next Actions:")
+                print("\n🚀 Next Actions:")
                 for i, action in enumerate(summary['next_actions'], 1):
                     print(f"   {i}. {action}")
                     
