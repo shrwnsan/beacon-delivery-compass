@@ -274,6 +274,7 @@ Most Changed Components:
 
 - [Installation Guide](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/installation.md) - Detailed setup instructions and troubleshooting
 - [Usage Guide](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/examples/basic-usage.md) - Comprehensive usage documentation
+- [System Architecture](docs/development/architecture/overview.md) - High-level system design and component relationships
 - [Roadmap](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/ROADMAP.md) - Development plans and upcoming features
 - [Integration Guide](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/delivery/integrations.md) - Instructions for integrating with CI/CD pipelines and git hooks
 - [API Reference](docs/api/api.md) - Detailed API documentation
