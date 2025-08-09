@@ -148,8 +148,8 @@ pip install beaconled
 If you've tried the solutions above and are still having issues:
 
 1. **Check the documentation**:
-   - [Installation Guide](installation.md)
-   - [Usage Guide](USAGE.md)
+   - [Installation Guide](../installation.md)
+   - [Basic Usage Guide](../examples/basic-usage.md)
 
 2. **Search existing issues**:
    [GitHub Issues](https://github.com/shrwnsan/beacon-delivery-compass/issues)
@@ -163,5 +163,5 @@ If you've tried the solutions above and are still having issues:
 ## 🔄 Still Stuck?
 
 - Join our [Discussions](https://github.com/shrwnsan/beacon-delivery-compass/discussions)
-- Check the [FAQ](FAQ.md)
+- Check the [Documentation](../README.md)
 - Review the [changelog](../CHANGELOG.md) for known issues in your version
