@@ -1,11 +1,8 @@
 """Performance benchmarks for large repository analysis."""
 import os
-import time
 import tempfile
-import shutil
 import pytest
 import git
-from pathlib import Path
 from datetime import datetime, timedelta
 
 # Skip these tests by default as they're performance benchmarks
@@ -52,7 +49,7 @@ def create_test_repo(path, num_commits, num_files, num_branches, num_tags):
     for commit_num in range(1, num_commits + 1):
         # Switch to a random branch
         branch_num = (commit_num % num_branches) + 1
-        branch_name = f'feature-1' if num_branches == 0 else f'feature-{branch_num}'
+        branch_name = 'feature-1' if num_branches == 0 else f'feature-{branch_num}'
         
         if branch_name in repo.heads:
             repo.heads[branch_name].checkout()
@@ -144,7 +141,6 @@ def test_benchmark_large_repo_analysis(benchmark):
 if __name__ == '__main__':
     # This is for manual testing of the benchmark
     import sys
-    from pathlib import Path
     
     if len(sys.argv) > 1 and sys.argv[1] == '--create-test-repo':
         repo_path = sys.argv[2] if len(sys.argv) > 2 else 'test-repo-large'

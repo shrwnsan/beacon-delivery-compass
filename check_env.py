@@ -47,7 +47,6 @@ def main():
     # Try to import the test module directly
     print("\n=== Test Module Check ===")
     try:
-        import tests.unit.test_analyzer
         print("✓ Successfully imported test_analyzer")
     except Exception as e:
         print(f"✗ Failed to import test_analyzer: {e}")

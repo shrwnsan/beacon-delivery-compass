@@ -1,11 +1,9 @@
 """Property-based tests for date parsing functionality."""
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 import re
-from typing import Optional
 
 import pytest
-from hypothesis import given, assume, strategies as st, settings, HealthCheck
-from hypothesis.strategies import composite, SearchStrategy, one_of
+from hypothesis import given, strategies as st, settings, HealthCheck
 
 from beaconled.core.analyzer import GitAnalyzer
 from beaconled.core.date_errors import DateParseError

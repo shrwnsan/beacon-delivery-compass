@@ -3,12 +3,9 @@
 All dates are now treated as UTC. Timezone conversion is the responsibility of the caller.
 """
 import pytest
-from datetime import datetime, timezone, timedelta
-from unittest.mock import patch, MagicMock
+from datetime import datetime, timezone
 
-from beaconled.core.analyzer import GitAnalyzer
 from beaconled.core.date_errors import DateParseError
-from beaconled.exceptions import ValidationError
 from beaconled.utils.date_utils import DateParser
 
 class TestUTCOnlyHandling:
