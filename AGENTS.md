@@ -16,16 +16,43 @@ This document outlines the development guidelines for agents operating within th
 
 ## 2. Code Style Guidelines
 
-*   **Imports:** Use standard library imports first, followed by third-party imports, and then local imports. Use `isort` to maintain order.
-*   **Formatting:** Adhere to PEP 8 standards. Use `black` for automatic formatting.
+### General
+*   **Imports:** 
+    - Group imports in this order: standard library, third-party, local
+    - Use `isort` to maintain order
+*   **Formatting:** 
+    - Follow PEP 8 standards
+    - Use `black` for automatic formatting
 *   **Naming Conventions:**
-    *   Variables and functions: `snake_case`
-    *   Classes: `CamelCase`
-    *   Constants: `UPPER_SNAKE_CASE`
-*   **Type Hinting:** Use Python type hints for all functions, methods, and variables.
-*   **Error Handling:** Implement robust error handling using try-except blocks. Raise specific exceptions where appropriate.
-*   **Docstrings:** Use Google-style docstrings for all public modules, classes, and functions.
-*   **Commits:** Follow Conventional Commits (e.g., `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `chore:`).
+    - Variables and functions: `snake_case`
+    - Classes: `CamelCase`
+    - Constants: `UPPER_SNAKE_CASE`
+
+### Code Structure
+*   **Function Design:**
+    - Keep functionality in a single function unless reusable or composable
+    - Avoid unnecessary destructuring of variables
+*   **Control Flow:**
+    - Prefer early returns over nested conditionals
+    - Avoid `else` statements unless absolutely necessary
+*   **Variable Declarations:**
+    - Prefer `const` over `let`
+    - Use single word variable names where clear and unambiguous
+
+### Type Safety
+*   Use Python type hints for all functions, methods, and variables
+*   Avoid using `any` type
+*   Be explicit with type definitions
+
+### Error Handling
+*   Implement robust error handling
+*   Only catch exceptions you can meaningfully handle
+*   Raise specific exceptions where appropriate
+*   Avoid `try/catch` blocks where possible
+
+### Documentation
+*   **Docstrings:** Use Google-style docstrings for all public modules, classes, and functions
+*   **Commits:** Follow Conventional Commits (e.g., `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `chore:`)
 
 ## 3. Cursor/Copilot Rules
 
