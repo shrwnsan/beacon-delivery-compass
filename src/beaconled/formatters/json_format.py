@@ -10,13 +10,13 @@ class JSONFormatter:
 
     def _serialize_datetime(self, obj: object) -> str:
         """JSON serializer for datetime objects.
-        
+
         Args:
             obj: Object to serialize
-            
+
         Returns:
             str: ISO formatted datetime string
-            
+
         Raises:
             TypeError: If the object is not a datetime
         """
