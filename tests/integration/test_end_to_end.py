@@ -2,6 +2,7 @@
 
 import json
 import unittest
+
 from tests.test_utils import run_beaconled
 
 

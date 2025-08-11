@@ -1,9 +1,8 @@
 """Tests for date-related functionality in the GitAnalyzer class."""
 
 import unittest
-from datetime import datetime, timezone, timedelta
-from unittest.mock import patch, MagicMock, PropertyMock, call
-import pytest
+from datetime import datetime, timezone
+from unittest.mock import patch
 
 from beaconled.core.analyzer import GitAnalyzer
 from beaconled.core.date_errors import DateParseError
@@ -16,7 +15,7 @@ class TestGitAnalyzerDates(unittest.TestCase):
         """Set up test fixtures."""
         # Create a mock for the GitAnalyzer class that bypasses repository validation
         with patch.object(
-            GitAnalyzer, "_validate_repo_path", return_value="/valid/repo/path"
+            GitAnalyzer, "_validate_repo_path", return_value="/valid/repo/path",
         ):
             self.analyzer = GitAnalyzer("dummy_path")
 
@@ -39,7 +38,7 @@ class TestGitAnalyzerDates(unittest.TestCase):
         date_str2 = "2025-01-15 14:30:45 -0500"
         result2 = self.analyzer._parse_git_date(date_str2)
         self.assertEqual(
-            result2, datetime(2025, 1, 15, 19, 30, 45, tzinfo=timezone.utc)
+            result2, datetime(2025, 1, 15, 19, 30, 45, tzinfo=timezone.utc),
         )
         mock_date_parser.parse_git_date.assert_called_with(date_str2)
 
@@ -61,7 +60,7 @@ class TestGitAnalyzerDates(unittest.TestCase):
         """Test parsing invalid git date formats."""
         # Setup mock to raise DateParseError for invalid formats
         mock_date_parser.parse_git_date.side_effect = DateParseError(
-            "Invalid date format"
+            "Invalid date format",
         )
 
         # The actual implementation catches DateParseError and returns current time
@@ -125,10 +124,10 @@ class TestGitAnalyzerDates(unittest.TestCase):
 
         # Edge cases with valid but unusual inputs
         self.assertTrue(
-            self.analyzer._is_valid_date_string("9999-12-31 23:59:59")
+            self.analyzer._is_valid_date_string("9999-12-31 23:59:59"),
         )  # Far future date
         self.assertTrue(
-            self.analyzer._is_valid_date_string("1970-01-01 00:00:00")
+            self.analyzer._is_valid_date_string("1970-01-01 00:00:00"),
         )  # Unix epoch
 
         # Test case insensitivity for relative dates
@@ -142,44 +141,44 @@ class TestGitAnalyzerDates(unittest.TestCase):
         self.assertFalse(self.analyzer._is_valid_date_string("\t"))
         self.assertFalse(self.analyzer._is_valid_date_string("\n"))
         self.assertFalse(
-            self.analyzer._is_valid_date_string("2025/01/15")
+            self.analyzer._is_valid_date_string("2025/01/15"),
         )  # Wrong format
         self.assertFalse(
-            self.analyzer._is_valid_date_string("15-01-2025")
+            self.analyzer._is_valid_date_string("15-01-2025"),
         )  # Wrong format
 
         # Note: The current implementation only checks the format, not the semantic validity
         # of the date values. So these should actually pass the format check.
         self.assertTrue(
-            self.analyzer._is_valid_date_string("2025-13-01")
+            self.analyzer._is_valid_date_string("2025-13-01"),
         )  # Invalid month, but correct format
         self.assertTrue(
-            self.analyzer._is_valid_date_string("2025-01-32")
+            self.analyzer._is_valid_date_string("2025-01-32"),
         )  # Invalid day, but correct format
         self.assertTrue(
-            self.analyzer._is_valid_date_string("2025-01-15 25:00:00")
+            self.analyzer._is_valid_date_string("2025-01-15 25:00:00"),
         )  # Invalid hour, but correct format
         self.assertTrue(
-            self.analyzer._is_valid_date_string("2025-01-15 14:60:00")
+            self.analyzer._is_valid_date_string("2025-01-15 14:60:00"),
         )  # Invalid minute, but correct format
         self.assertTrue(
-            self.analyzer._is_valid_date_string("2025-01-15 14:30:60")
+            self.analyzer._is_valid_date_string("2025-01-15 14:30:60"),
         )  # Invalid second, but correct format
 
         # These should still fail as they don't match any valid pattern
         self.assertFalse(self.analyzer._is_valid_date_string("1x"))  # Invalid unit
         self.assertFalse(
-            self.analyzer._is_valid_date_string("1.5 days ago")
+            self.analyzer._is_valid_date_string("1.5 days ago"),
         )  # Non-integer value
         self.assertFalse(
-            self.analyzer._is_valid_date_string("one day ago")
+            self.analyzer._is_valid_date_string("one day ago"),
         )  # Non-numeric value
         self.assertFalse(self.analyzer._is_valid_date_string("1 day"))  # Missing 'ago'
         self.assertFalse(
-            self.analyzer._is_valid_date_string("1 day before")
+            self.analyzer._is_valid_date_string("1 day before"),
         )  # Wrong keyword
         self.assertFalse(
-            self.analyzer._is_valid_date_string("HEAD2")
+            self.analyzer._is_valid_date_string("HEAD2"),
         )  # Invalid HEAD reference
 
         # Test length limit (50 characters)
@@ -187,7 +186,7 @@ class TestGitAnalyzerDates(unittest.TestCase):
         # Add 31 more characters to reach exactly 50 characters
         long_valid_date = "2025-01-01 12:00:00" + "x" * 31  # 19 + 31 = 50 chars
         self.assertEqual(
-            len(long_valid_date), 50, f"Expected length 50, got {len(long_valid_date)}"
+            len(long_valid_date), 50, f"Expected length 50, got {len(long_valid_date)}",
         )
 
         # Debug: Print the string and its length
@@ -209,7 +208,7 @@ class TestGitAnalyzerDates(unittest.TestCase):
             f"Expected length 51, got {len(long_invalid_date)}",
         )
         self.assertFalse(
-            self.analyzer._is_valid_date_string(long_invalid_date)
+            self.analyzer._is_valid_date_string(long_invalid_date),
         )  # Over the limit
 
         # Test with None input (should not raise, just return False)

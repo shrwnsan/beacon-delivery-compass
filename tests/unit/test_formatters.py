@@ -1,11 +1,12 @@
-import pytest
 from datetime import datetime
 from unittest.mock import MagicMock
+
+import pytest
 from freezegun import freeze_time
 
 from beaconled.core.models import CommitStats, FileStats, RangeStats
-from beaconled.formatters.standard import StandardFormatter
 from beaconled.formatters.extended import ExtendedFormatter
+from beaconled.formatters.standard import StandardFormatter
 
 
 @pytest.fixture
@@ -18,7 +19,7 @@ def sample_commit_stats():
         message="Add new feature implementation",
         files=[
             FileStats(
-                path="src/main.py", lines_added=30, lines_deleted=5, lines_changed=35
+                path="src/main.py", lines_added=30, lines_deleted=5, lines_changed=35,
             ),
             FileStats(
                 path="tests/test_main.py",
@@ -27,7 +28,7 @@ def sample_commit_stats():
                 lines_changed=15,
             ),
             FileStats(
-                path="docs/README.md", lines_added=5, lines_deleted=2, lines_changed=7
+                path="docs/README.md", lines_added=5, lines_deleted=2, lines_changed=7,
             ),
         ],
     )

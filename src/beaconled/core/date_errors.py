@@ -3,9 +3,9 @@
 This module contains exceptions specific to date parsing and validation.
 """
 
-from typing import Any, Dict, Optional
 from datetime import datetime
-from ..exceptions import ValidationError, ErrorCode
+
+from beaconled.exceptions import ErrorCode, ValidationError
 
 
 class DateError(ValidationError):
@@ -19,9 +19,9 @@ class DateError(ValidationError):
     def __init__(
         self,
         message: str,
-        error_code: Optional[ErrorCode] = None,
-        details: Optional[Dict[str, Any]] = None,
-        **kwargs: Any,
+        error_code: ErrorCode | None = None,
+        details: dict[str, object] | None = None,
+        **kwargs: object,
     ) -> None:
         super().__init__(
             message=message,
@@ -45,9 +45,9 @@ class DateParseError(DateError):
     def __init__(
         self,
         date_str: str,
-        message: Optional[str] = None,
-        format_hint: Optional[str] = None,
-        **kwargs: Any,
+        message: str | None = None,
+        format_hint: str | None = None,
+        **kwargs: object,
     ) -> None:
         self.date_str = date_str
         self.format_hint = format_hint
@@ -84,8 +84,8 @@ class DateRangeError(DateError):
         self,
         start_date: datetime,
         end_date: datetime,
-        message: Optional[str] = None,
-        **kwargs: Any,
+        message: str | None = None,
+        **kwargs: object,
     ) -> None:
         self.start_date = start_date
         self.end_date = end_date
@@ -115,8 +115,8 @@ class DateRangeError(DateError):
         cls,
         start_date: datetime,
         end_date: datetime,
-        reason: Optional[str] = None,
-        **kwargs: Any,
+        reason: str | None = None,
+        **kwargs: object,
     ) -> "DateRangeError":
         """Create a DateRangeError from datetime objects with an optional reason."""
         message = f"Invalid date range: {start_date} to {end_date}"

@@ -4,9 +4,9 @@ This module defines the core data structures used throughout the application
 for representing git repository statistics and analysis results.
 """
 
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, List
 
 
 @dataclass
@@ -53,7 +53,7 @@ class CommitStats:
     files_changed: int = 0
     lines_added: int = 0
     lines_deleted: int = 0
-    files: List[FileStats] = field(default_factory=list)
+    files: list[FileStats] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         """Validate and compute derived fields after initialization."""
@@ -92,8 +92,8 @@ class RangeStats:
     total_files_changed: int = 0
     total_lines_added: int = 0
     total_lines_deleted: int = 0
-    commits: List[CommitStats] = field(default_factory=list)
-    authors: Dict[str, int] = field(default_factory=dict)
+    commits: list[CommitStats] = field(default_factory=list)
+    authors: dict[str, int] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         """Validate and compute derived fields after initialization."""
@@ -107,10 +107,7 @@ class RangeStats:
         if not self.total_commits:
             self.total_commits = len(self.commits)
 
-        from collections import defaultdict
-        from typing import DefaultDict
-
-        author_counts: DefaultDict[str, int] = defaultdict(int)
+        author_counts: dict[str, int] = defaultdict(int)
         for commit in self.commits:
             author_counts[commit.author] += 1
         self.authors = dict(author_counts)
