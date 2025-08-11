@@ -1,13 +1,12 @@
 """Date parsing and validation utilities for GitAnalyzer.
 
 This module provides a compatibility layer for the new DateParser utility.
-New code should import directly from beaconled.utils.date_utils instead.
+New code should import directly from ``beaconled.utils.date_utils`` instead.
 """
 
 from datetime import datetime
-from typing import Optional, Union, Tuple
 
-from ..utils.date_utils import DateParser
+from beaconled.utils.date_utils import DateParser
 
 
 class GitDateParser:
@@ -60,9 +59,9 @@ class GitDateParser:
     @classmethod
     def validate_date_range(
         cls,
-        start_date: Optional[Union[datetime, str]] = None,
-        end_date: Optional[Union[datetime, str]] = None,
-    ) -> Tuple[datetime, datetime]:
+        start_date: datetime | str | None = None,
+        end_date: datetime | str | None = None,
+    ) -> tuple[datetime, datetime]:
         """Validate and normalize a date range, returning UTC datetimes.
 
         This is a compatibility wrapper around DateParser.validate_date_range().

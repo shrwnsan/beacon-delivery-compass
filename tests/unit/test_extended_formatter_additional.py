@@ -1,10 +1,8 @@
 """Additional tests for ExtendedFormatter to improve coverage."""
 
-import pytest
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch
 
-from beaconled.core.models import CommitStats, FileStats, RangeStats
+from beaconled.core.models import CommitStats, RangeStats
 from beaconled.formatters.extended import ExtendedFormatter
 
 

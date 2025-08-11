@@ -1,11 +1,10 @@
 """Custom exceptions for the Beacon Delivery Compass application.
 
-This module defines custom exceptions with error codes for better programmatic handling.
-from .core.date_errors import DateParseError, DateRangeError
-Each exception includes a unique error code and a human-readable message.
+This module defines custom exceptions with error codes for better programmatic
+handling. Each exception includes a unique error code and a human-readable
+message.
 """
 
-from typing import Any, Optional, Dict
 from enum import Enum
 
 
@@ -44,8 +43,8 @@ class BeaconError(Exception):
     def __init__(
         self,
         message: str,
-        error_code: Optional[ErrorCode] = None,
-        details: Optional[Dict[str, Any]] = None,
+        error_code: ErrorCode | None = None,
+        details: dict[str, object] | None = None,
     ) -> None:
         self.error_code = error_code or self.DEFAULT_ERROR_CODE
         self.details = details or {}
@@ -73,10 +72,10 @@ class ValidationError(BeaconError):
     def __init__(
         self,
         message: str,
-        field: Optional[str] = None,
-        value: Any = None,
-        error_code: Optional[ErrorCode] = None,
-        details: Optional[Dict[str, Any]] = None,
+        field: str | None = None,
+        value: object | None = None,
+        error_code: ErrorCode | None = None,
+        details: dict[str, object] | None = None,
     ) -> None:
         self.field = field
         self.value = value
@@ -111,7 +110,7 @@ class InvalidRepositoryError(RepositoryError):
     DEFAULT_ERROR_CODE = ErrorCode.INVALID_REPOSITORY
 
     def __init__(
-        self, repo_path: str, reason: Optional[str] = None, **kwargs: Any
+        self, repo_path: str, reason: str | None = None, **kwargs: object,
     ) -> None:
         self.repo_path = repo_path
         self.reason = reason
@@ -124,7 +123,8 @@ class InvalidRepositoryError(RepositoryError):
         if reason:
             details["reason"] = reason
 
-        # Do not pass error_code twice; allow base to use DEFAULT_ERROR_CODE via its own logic
+        # Do not pass error_code twice; allow base to use DEFAULT_ERROR_CODE
+        # via its own logic.
         super().__init__(message=message, details=details, **kwargs)
 
 
@@ -142,9 +142,9 @@ class CommitError(RepositoryError):
     def __init__(
         self,
         commit_ref: str,
-        message: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
-        **kwargs: Any,
+        message: str | None = None,
+        details: dict[str, object] | None = None,
+        **kwargs: object,
     ) -> None:
         self.commit_ref = commit_ref
         message = message or f"Error processing commit: {commit_ref}"
@@ -157,7 +157,7 @@ class CommitError(RepositoryError):
 
     @classmethod
     def from_commit(
-        cls, commit_ref: str, reason: Optional[str] = None, **kwargs: Any
+        cls, commit_ref: str, reason: str | None = None, **kwargs: object,
     ) -> "CommitError":
         """Create a CommitError with a reason.
 
@@ -182,7 +182,7 @@ class CommitNotFoundError(CommitError):
     DEFAULT_ERROR_CODE = ErrorCode.COMMIT_NOT_FOUND
 
     def __init__(
-        self, commit_ref: str, repo_path: Optional[str] = None, **kwargs: Any
+        self, commit_ref: str, repo_path: str | None = None, **kwargs: object,
     ) -> None:
         message = f"Commit not found: {commit_ref}"
         details = kwargs.pop("details", {})
@@ -191,9 +191,10 @@ class CommitNotFoundError(CommitError):
             details["repo_path"] = repo_path
             message += f" in repository {repo_path}"
 
-        # CommitError parent will handle DEFAULT_ERROR_CODE; avoid duplicating error_code
+        # CommitError parent will handle DEFAULT_ERROR_CODE; avoid duplicating
+        # error_code.
         super().__init__(
-            commit_ref=commit_ref, message=message, details=details, **kwargs
+            commit_ref=commit_ref, message=message, details=details, **kwargs,
         )
 
 
@@ -203,7 +204,7 @@ class CommitParseError(CommitError):
     DEFAULT_ERROR_CODE = ErrorCode.COMMIT_PARSE_ERROR
 
     def __init__(
-        self, commit_ref: str, parse_error: Optional[Exception] = None, **kwargs: Any
+        self, commit_ref: str, parse_error: Exception | None = None, **kwargs: object,
     ) -> None:
         message = f"Failed to parse commit: {commit_ref}"
         details = kwargs.pop("details", {})
@@ -211,11 +212,12 @@ class CommitParseError(CommitError):
 
         if parse_error:
             details["parse_error"] = str(parse_error)
-            message += f" - {str(parse_error)}"
+            message += f" - {parse_error!s}"
 
-        # CommitError parent provides error_code behavior; do not pass error_code again
+        # CommitError parent provides error_code behavior; do not pass error_code
+        # again.
         super().__init__(
-            commit_ref=commit_ref, message=message, details=details, **kwargs
+            commit_ref=commit_ref, message=message, details=details, **kwargs,
         )
 
 

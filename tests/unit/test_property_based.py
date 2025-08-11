@@ -1,10 +1,11 @@
 """Property-based tests for date parsing functionality."""
 
-from datetime import datetime, timezone
 import re
+from datetime import datetime, timezone
 
 import pytest
-from hypothesis import given, strategies as st, settings, HealthCheck
+from hypothesis import HealthCheck, given, settings
+from hypothesis import strategies as st
 
 from beaconled.core.analyzer import GitAnalyzer
 from beaconled.core.date_errors import DateParseError
@@ -71,7 +72,7 @@ class TestPropertyBasedDateParsing:
             if " " in date_str:
                 # Datetime with time
                 expected = datetime.strptime(date_str, "%Y-%m-%d %H:%M").replace(
-                    tzinfo=timezone.utc
+                    tzinfo=timezone.utc,
                 )
                 assert result == expected
             else:
@@ -91,7 +92,7 @@ class TestPropertyBasedDateParsing:
             min_value=datetime(2000, 1, 1),
             max_value=datetime(2100, 12, 31, 23, 59, 59),
             timezones=st.just(timezone.utc),
-        )
+        ),
     )
     @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
     def test_roundtrip_datetime(self, dt: datetime):
@@ -102,7 +103,7 @@ class TestPropertyBasedDateParsing:
 
         # The parsed datetime should be the same as the input (to the minute)
         assert parsed.replace(second=0, microsecond=0) == dt.replace(
-            second=0, microsecond=0
+            second=0, microsecond=0,
         )
 
     @given(st.text())
@@ -130,7 +131,7 @@ class TestPropertyBasedDateParsing:
             min_value=datetime(1970, 1, 2),
             max_value=datetime(2038, 1, 1),
             timezones=st.just(timezone.utc),
-        )
+        ),
     )
     @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
     def test_parse_git_date_property(self, dt: datetime):

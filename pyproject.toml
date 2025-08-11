@@ -146,6 +146,184 @@ select = [
     "FURB",# flake8-functions
 ]
 
+# Relax rules for tests where pragmatic assertions and long lines are acceptable
+[tool.ruff.per-file-ignores]
+"tests/**" = [
+  "S101",  # allow bare assert in tests
+  "E501",  # ignore line-length in tests
+  "ANN201",# missing return type on test functions
+  "ANN001",# missing type annotations for function arguments in tests
+  "ANN202",# missing return type on private helpers in tests
+  "ANN002",# *args annotation not needed in tests
+  "ANN003",# **kwargs annotation not needed in tests
+  "ANN204",# __init__ return type in tests
+  "C901",  # complexity in helper methods
+  "INP001", # implicit namespace package
+  "PLR2004", # magic numbers are fine in tests
+  "PLC0415", # allow local imports in tests
+  "ERA001",  # allow commented-out code in tests
+  "T201",    # allow print in tests for debug
+  "I001",    # ignore import sorting in tests
+  "N805",    # first arg name in class methods (used by Hypothesis composites)
+  "N818",    # exception naming in tests
+  "PTH103",  # os.makedirs in tests is OK
+  "PTH117",  # os.path.isabs in tests is OK
+  "PTH118",  # os.path.join in tests is OK
+  "PTH121",  # os.path.samefile in tests is OK
+  "PTH100",  # os.path.abspath in tests is OK
+  "PTH109",  # os.getcwd in tests is OK
+  "PTH110",  # os.path.exists in tests is OK
+  "PTH123",  # open() in tests is OK
+  "PLW1510", # explicit check kw in subprocess wrappers in tests
+  "F841",    # allow assigned-but-unused in tests (e.g., captured stdout)
+  "FBT003",  # boolean positional in asserts in tests
+  "S311",    # use of random for non-crypto in tests
+  "S603",    # subprocess usage in tests
+  "ANN401"   # allow Any in tests
+]
+"src/beaconled/utils/date_utils.py" = [
+  "TRY003", # long messages are fine in this validated module
+  "TRY300", # allow return before except
+  "TRY301", # allow direct raise instead of inner function
+]
+"src/beaconled/formatters/json_format.py" = [
+  "TRY003", # custom message in TypeError acceptable
+]
+"src/beaconled/core/models.py" = [
+  "TRY003", # data model ValueError messages are acceptable here
+]
+"src/beaconled/core/analyzer.py" = [
+  "C901",     # complex but tested methods
+  "PLR0912",  # too many branches in analytics
+  "PLR0915",  # too many statements in analytics
+  "TRY003",   # long RuntimeError messages for user clarity
+]
+"src/beaconled/cli.py" = [
+  "T201",    # CLI intentionally prints
+  "EXE001",  # shebang allowed for CLI entry
+  "I001",    # import layout acceptable for readability
+  "E501",    # long help/description text
+  "COM812",  # trailing commas in argparse style
+  "C901",    # CLI main is complex but acceptable
+  "PLR0912", # too many branches in CLI
+  "PLR0915", # too many statements in CLI
+]
+"scripts/setup_product_analytics.py" = [
+  "T201",    # script intentionally prints instructions
+  "EXE001",  # shebang allowed for scripts
+  "I001",    # import layout acceptable
+  "ANN202",  # private helpers without explicit return annotations
+  "ANN201",  # public function annotations optional in scripts
+  "ANN204",  # __init__ annotation optional in scripts
+  "PTH123",  # using built-in open() is acceptable here
+  "PTH101",  # using os.chmod for simplicity
+  "S103",    # permissive chmod in a local script
+  "E501",    # long embedded script/text blocks
+]
+"scripts/product_insights_cli.py" = [
+  "T201",    # CLI intentionally prints
+  "EXE001",  # shebang allowed for CLI entry
+  "I001",    # import layout acceptable for readability
+  "UP006",   # legacy typing annotations acceptable
+  "UP035",   # typing.Dict allowed in script
+  "ANN201",  # return type on main optional
+  "ANN204",  # __init__ annotation optional in scripts
+  "COM812",  # trailing comma suggestions
+  "C901",    # complexity acceptable in CLI main
+  "PLR0912", # branching acceptable in CLI main
+]
+"scripts/product_analytics.py" = [
+  "T201",    # script prints allowed
+  "UP006",   # legacy typing in annotations acceptable
+  "UP035",   # typing.Dict import allowed
+  "PERF401", # minor perf suggestions ignored in scripts
+  "COM812",  # trailing comma suggestions in argparse style
+  "I001",    # import layout acceptable
+  "PLR2004", # magic numbers acceptable in heuristics
+  "PLR0911", # multiple returns acceptable in classifier
+]
+"scripts/**/*.py" = [
+  "T201",   # intentional prints in CLIs/scripts
+  "EXE001", # shebangs allowed
+  "I001",   # import layout flexibility
+  "E501",   # long embedded text/strings
+  "COM812", # trailing commas suggestions
+  "ANN201", # return annotations optional
+  "ANN202", # private return annotations optional
+  "ANN204", # __init__ annotation optional
+  "UP006",  # legacy typing in annotations
+  "UP035",  # typing.* imports acceptable
+  "PERF401",# minor perf hints
+  "PLR0911",# multiple returns
+  "PLR0912",# branches
+  "PLR2004",# magic numbers
+  "TRY003", # long exception messages
+  "TRY301", # abstract raise suggestion
+  "PTH123", # built-in open()
+  "PTH101", # os.chmod
+  "S103",   # chmod mask
+  "C901",   # complexity
+  "S603",   # subprocess shell/args in scripts
+  "RUF005", # list concat suggestions
+  "PLW2901",# loop var overwritten
+  "PLR0915",# too many statements
+  "UP015",  # unnecessary mode argument
+  "B904",   # raise from suggestion
+]
+
+"run_tests.py" = [
+  "T201",   # intentional prints in helper
+  "C901",   # complexity
+  "PLR0911",# multiple returns
+  "PLR0912",# branches
+  "ANN201", # return annotations optional
+  "COM812", # trailing commas suggestions
+  "E501",   # long lines in help/menu
+  "FBT003", # boolean positional in helper
+  "EXE001", # shebang not executable
+  "UP035",  # typing.List import
+  "UP006",  # legacy typing alias
+  "PTH100", # os.path.abspath
+  "PTH118", # os.path.join
+  "PTH120", # os.path.dirname
+  "PTH109", # os.getcwd
+  "PTH119", # os.path.basename
+  "PTH123", # open()
+  "UP015",  # unnecessary mode arg
+  "TRY300", # return outside else
+  "FBT001", # bool positional in def
+  "FBT002", # bool default positional
+]
+
+"run_test.py" = [
+  "I001",   # import sort not required
+  "ANN201", # return annotation optional
+  "T201",   # prints allowed
+]
+
+"check_env_imports.py" = [
+  "T201",   # prints allowed in env checker
+  "EXE001", # shebang not executable
+  "I001",   # import sorting not required
+  "ANN201", # return type optional
+  "ANN001", # missing arg annotation
+  "E501",   # long lines
+  "COM812", # trailing commas
+  "TRY300", # return outside else
+  "PTH109", # os.getcwd in helper
+]
+
+"check_env.py" = [
+  "T201",   # prints allowed
+  "ANN201", # return type optional
+  "PTH109", # os.getcwd
+  "EXE001", # shebang not executable
+  "I001",   # import sorting not required
+  "ANN001", # arg annotations optional
+  "TRY300", # return outside else
+  "PLC0415",# local import in except
+]
+
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = "-ra -q --strict-markers --cov=beaconled --cov-report=term-missing --durations=10"

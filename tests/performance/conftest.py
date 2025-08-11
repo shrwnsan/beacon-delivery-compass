@@ -1,8 +1,10 @@
 """Configuration for performance tests."""
 
-import pytest
 import time
-from typing import Callable, Any
+from collections.abc import Callable
+from typing import Any
+
+import pytest
 
 
 def pytest_configure(config):
@@ -45,5 +47,5 @@ def skip_slow_tests(request):
     """Skip performance tests unless explicitly requested with --runslow."""
     if "performance" in request.keywords and not request.config.getoption("--runslow"):
         pytest.skip(
-            "performance tests are skipped by default (use --runslow to run them)"
+            "performance tests are skipped by default (use --runslow to run them)",
         )

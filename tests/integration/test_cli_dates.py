@@ -1,20 +1,21 @@
 """Integration tests for CLI date format handling."""
 
 import json
-import subprocess
 import unittest
 from datetime import datetime, timedelta
+
 from tests.test_utils import run_beaconled
 
 
 class TestCLIDateFormats(unittest.TestCase):
     """Test CLI handling of various date formats."""
 
-    def run_cli(self, args, expect_success=True):
+    def run_cli(self, args, *, expect_success: bool = True):
         """Run CLI command and return result."""
         result = run_beaconled(args, capture_output=True, text=True)
         if expect_success and result.returncode != 0:
-            print(f"\nCommand failed: {' '.join(cmd)}")
+            # Print the arguments we attempted to run for easier debugging
+            print(f"\nCommand failed: {' '.join(str(a) for a in args)}")
             print(f"Return code: {result.returncode}")
             print("=== STDOUT ===")
             print(result.stdout)
@@ -48,7 +49,7 @@ class TestCLIDateFormats(unittest.TestCase):
 
         # Test with time component
         result = self.run_cli(
-            ["--range", "--since", f"{yesterday} 00:00", "--until", f"{today} 23:59"]
+            ["--range", "--since", f"{yesterday} 00:00", "--until", f"{today} 23:59"],
         )
         self.assertEqual(result.returncode, 0)
         self.assertIn("Range Analysis:", result.stdout)
@@ -71,7 +72,7 @@ class TestCLIDateFormats(unittest.TestCase):
         for date_str, error_pattern in test_cases:
             with self.subTest(invalid_format=date_str):
                 result = self.run_cli(
-                    ["--range", "--since", date_str], expect_success=False
+                    ["--range", "--since", date_str], expect_success=False,
                 )
                 self.assertNotEqual(
                     result.returncode,
@@ -126,7 +127,7 @@ class TestCLIDateFormats(unittest.TestCase):
 
         # Test with end date before start date
         result = self.run_cli(
-            ["--range", "--since", today, "--until", yesterday], expect_success=False
+            ["--range", "--since", today, "--until", yesterday], expect_success=False,
         )
 
         self.assertNotEqual(result.returncode, 0)
