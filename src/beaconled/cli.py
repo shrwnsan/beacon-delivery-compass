@@ -8,13 +8,14 @@ from .core.analyzer import GitAnalyzer
 from .formatters.extended import ExtendedFormatter
 from .formatters.json_format import JSONFormatter
 from .formatters.standard import StandardFormatter
+
 # Domain-specific date errors for clearer CLI messages
 from .core.date_errors import DateParseError, DateRangeError
 
 
 def main() -> None:
     """Main CLI entry point for Beacon - Your delivery compass for empowered product builders.
-    
+
     Beacon provides comprehensive git repository analysis with support for single commit
     and date range analysis with flexible date formatting options.
     """
@@ -29,20 +30,20 @@ def main() -> None:
             "  beaconled abc1234\n\n"
             "  # Analyze changes in the last week (UTC)\n"
             '  beaconled --range --since "1w"\n\n'
-            '  # Analyze changes between specific dates (UTC)\n'
+            "  # Analyze changes between specific dates (UTC)\n"
             '  beaconled --range --since "2025-01-01" --until "2025-01-31 23:59:59"\n\n'
-            '  # Analyze changes with explicit UTC times\n'
+            "  # Analyze changes with explicit UTC times\n"
             '  beaconled --range --since "2025-01-01 00:00:00" --until "2025-01-31 23:59:59"\n\n'
             "  # Output in JSON format\n"
             "  beaconled --format json"
         ),
-        formatter_class=argparse.RawDescriptionHelpFormatter
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
         "--version",
         action="version",
         version="beaconled 0.2.0",
-        help="Show program's version number and exit"
+        help="Show program's version number and exit",
     )
     parser.add_argument(
         "commit",
@@ -63,33 +64,37 @@ def main() -> None:
     parser.add_argument(
         "--since",
         default="7d",
-        help=("Start date for range analysis (interpreted as UTC).\n"
-              "\n"
-              "Relative formats (relative to current UTC time):\n"
-              "  1d    - 1 day ago\n"
-              "  2w    - 2 weeks ago\n"
-              "  3m    - 3 months ago\n"
-              "  1y    - 1 year ago\n"
-              "\n"
-              "Absolute formats (interpreted as UTC):\n"
-              "  YYYY-MM-DD                  - Date only (midnight UTC)\n"
-              "  YYYY-MM-DD HH:MM            - Date and time\n"
-              "  YYYY-MM-DDTHH:MM:SS        - ISO 8601 format\n"
-              "  YYYY-MM-DDTHH:MM:SS+00:00  - Explicit UTC timezone\n"
-              "\n"
-              "Note: All times must be in UTC. Convert local times to UTC before use.\n"
-              "Default: 7d (last 7 days in UTC)"),
+        help=(
+            "Start date for range analysis (interpreted as UTC).\n"
+            "\n"
+            "Relative formats (relative to current UTC time):\n"
+            "  1d    - 1 day ago\n"
+            "  2w    - 2 weeks ago\n"
+            "  3m    - 3 months ago\n"
+            "  1y    - 1 year ago\n"
+            "\n"
+            "Absolute formats (interpreted as UTC):\n"
+            "  YYYY-MM-DD                  - Date only (midnight UTC)\n"
+            "  YYYY-MM-DD HH:MM            - Date and time\n"
+            "  YYYY-MM-DDTHH:MM:SS        - ISO 8601 format\n"
+            "  YYYY-MM-DDTHH:MM:SS+00:00  - Explicit UTC timezone\n"
+            "\n"
+            "Note: All times must be in UTC. Convert local times to UTC before use.\n"
+            "Default: 7d (last 7 days in UTC)"
+        ),
     )
     parser.add_argument(
         "--until",
         default="now",
-        help=("End date for range analysis (interpreted as UTC).\n"
-              "\n"
-              "Uses same formats as --since, plus:\n"
-              "  now   - Current UTC time\n"
-              "\n"
-              "Note: All times must be in UTC. Convert local times to UTC before use.\n"
-              "Default: now (current UTC time)"),
+        help=(
+            "End date for range analysis (interpreted as UTC).\n"
+            "\n"
+            "Uses same formats as --since, plus:\n"
+            "  now   - Current UTC time\n"
+            "\n"
+            "Note: All times must be in UTC. Convert local times to UTC before use.\n"
+            "Default: now (current UTC time)"
+        ),
     )
     parser.add_argument(
         "--repo",
@@ -135,30 +140,30 @@ def main() -> None:
         except UnicodeEncodeError:
             # Fallback for systems with limited encoding support
             # Replace problematic characters with ASCII alternatives
-            safe_output = output.encode('ascii', 'replace').decode('ascii')
+            safe_output = output.encode("ascii", "replace").decode("ascii")
             print(safe_output)
 
     except DateParseError as e:
         # Preserve domain-specific parse error messaging expected by tests
         error_msg = str(e)
-        if 'timezone' in error_msg.lower():
+        if "timezone" in error_msg.lower():
             error_msg += "\nNote: All dates must be in UTC. Please convert local times to UTC before use."
         try:
             print(f"Error: {error_msg}", file=sys.stderr)
         except UnicodeEncodeError:
-            safe_error = error_msg.encode('ascii', 'replace').decode('ascii')
+            safe_error = error_msg.encode("ascii", "replace").decode("ascii")
             print(f"Error: {safe_error}", file=sys.stderr)
         sys.exit(2)
     except DateRangeError as e:
         # Preserve date range validation messaging (tests assert substrings)
         error_msg = str(e)
-        if 'timezone' in error_msg.lower() or 'range' in error_msg.lower():
+        if "timezone" in error_msg.lower() or "range" in error_msg.lower():
             error_msg += "\nNote: All date ranges must be specified in UTC. "
             error_msg += "Please ensure both start and end times are in UTC."
         try:
             print(f"Error: {error_msg}", file=sys.stderr)
         except UnicodeEncodeError:
-            safe_error = error_msg.encode('ascii', 'replace').decode('ascii')
+            safe_error = error_msg.encode("ascii", "replace").decode("ascii")
             print(f"Error: {safe_error}", file=sys.stderr)
         sys.exit(2)
     except Exception as e:
@@ -166,7 +171,7 @@ def main() -> None:
         try:
             print(f"Error: {e}", file=sys.stderr)
         except UnicodeEncodeError:
-            safe_error = str(e).encode('ascii', 'replace').decode('ascii')
+            safe_error = str(e).encode("ascii", "replace").decode("ascii")
             print(f"Error: {safe_error}", file=sys.stderr)
         sys.exit(1)
 
