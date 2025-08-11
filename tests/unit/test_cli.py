@@ -2,8 +2,8 @@
 
 import sys
 import unittest
-from io import StringIO, TextIOWrapper, BytesIO
-from unittest.mock import MagicMock, patch, mock_open
+from io import StringIO
+from unittest.mock import MagicMock, patch
 
 from beaconled.cli import main
 from beaconled.core.date_errors import DateParseError, DateRangeError
@@ -130,8 +130,9 @@ class TestCLI(unittest.TestCase):
         mock_analyzer_class.return_value = mock_analyzer
 
         # Mock commit stats
-        from beaconled.core.models import CommitStats, FileStats
         from datetime import datetime
+
+        from beaconled.core.models import CommitStats, FileStats
 
         mock_stats = CommitStats(
             hash="abc123",
@@ -162,8 +163,9 @@ class TestCLI(unittest.TestCase):
     def test_custom_repo_path(self, mock_formatter, mock_analyzer):
         """Test custom repository path."""
         # Create a more complete mock commit stats object
-        from beaconled.core.models import CommitStats, FileStats
         from datetime import datetime, timezone
+
+        from beaconled.core.models import CommitStats, FileStats
 
         mock_commit = CommitStats(
             hash="abc123",
@@ -188,7 +190,7 @@ class TestCLI(unittest.TestCase):
             mock_analyzer.assert_called_once_with("/custom/repo/path")
             # Verify the formatter was called with our mock commit
             mock_formatter.return_value.format_commit_stats.assert_called_once_with(
-                mock_commit
+                mock_commit,
             )
 
     @patch("beaconled.cli.GitAnalyzer")
@@ -211,7 +213,7 @@ class TestCLI(unittest.TestCase):
             self.assertEqual(args[1], "now")  # until
             # Verify the formatter was called with the stats
             mock_formatter.return_value.format_range_stats.assert_called_once_with(
-                mock_stats
+                mock_stats,
             )
 
     @patch("beaconled.cli.GitAnalyzer")
@@ -222,8 +224,9 @@ class TestCLI(unittest.TestCase):
     )
     def test_range_with_absolute_dates(self, mock_formatter, mock_analyzer):
         """Test range analysis with absolute dates."""
-        from beaconled.core.models import RangeStats, CommitStats
         from datetime import datetime, timezone
+
+        from beaconled.core.models import RangeStats
 
         # Create a mock range stats object
         mock_stats = RangeStats(
@@ -254,7 +257,7 @@ class TestCLI(unittest.TestCase):
 
             # Verify the formatter was called with our mock stats
             mock_formatter.return_value.format_range_stats.assert_called_once_with(
-                mock_stats
+                mock_stats,
             )
 
             # Verify the output contains our formatted result
@@ -266,7 +269,7 @@ class TestCLI(unittest.TestCase):
         """Test handling of invalid date format."""
         # Mock the analyzer to raise DateParseError
         mock_analyzer.return_value.get_range_analytics.side_effect = DateParseError(
-            "Invalid date format"
+            "Invalid date format",
         )
 
         with patch("sys.stderr", new_callable=StringIO) as mock_stderr:
@@ -305,8 +308,9 @@ class TestCLI(unittest.TestCase):
     @patch("sys.argv", ["beaconled"])  # No arguments, should use defaults
     def test_default_arguments(self, mock_formatter, mock_analyzer):
         """Test CLI with default arguments."""
-        from beaconled.core.models import CommitStats, FileStats
         from datetime import datetime, timezone
+
+        from beaconled.core.models import CommitStats, FileStats
 
         # Create a more complete mock commit stats object
         mock_commit = CommitStats(
@@ -335,7 +339,7 @@ class TestCLI(unittest.TestCase):
 
             # Verify the formatter was called with our mock commit
             mock_formatter.return_value.format_commit_stats.assert_called_once_with(
-                mock_commit
+                mock_commit,
             )
 
             # Verify the output contains our formatted result
@@ -404,7 +408,7 @@ class TestCLI(unittest.TestCase):
             # The raw output should contain the properly escaped Unicode sequences
             self.assertIn("T\\u00e9st Us\\u00e9r", output)  # Escaped Unicode in JSON
             self.assertIn(
-                "sp\\u00e9ci\\u00e1l ch\\u00e0racters", output
+                "sp\\u00e9ci\\u00e1l ch\\u00e0racters", output,
             )  # Escaped Unicode in JSON
 
     @patch("beaconled.cli.GitAnalyzer")
@@ -414,7 +418,7 @@ class TestCLI(unittest.TestCase):
         # Mock the analyzer to raise an exception
         error_msg = "Failed to analyze repository: Permission denied"
         mock_analyzer.return_value.get_range_analytics.side_effect = Exception(
-            error_msg
+            error_msg,
         )
 
         with patch("sys.stderr", new_callable=StringIO) as mock_stderr:

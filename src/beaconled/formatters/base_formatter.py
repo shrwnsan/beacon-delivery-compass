@@ -1,10 +1,11 @@
 """Base formatter with shared functionality for all formatters."""
 
+from datetime import datetime
+
 import colorama
 from colorama import Fore, Style
-from typing import List, Dict
-from datetime import datetime
-from ..core.models import FileStats, CommitStats, RangeStats
+
+from beaconled.core.models import CommitStats, FileStats, RangeStats
 
 # Initialize colorama for cross-platform color support
 colorama.init()
@@ -36,10 +37,10 @@ class BaseFormatter:
         return f"{net_color}{net_change}{Style.RESET_ALL}"
 
     def _get_file_type_breakdown(
-        self, files: List[FileStats]
-    ) -> Dict[str, Dict[str, int]]:
+        self, files: list[FileStats],
+    ) -> dict[str, dict[str, int]]:
         """Group file statistics by file extension."""
-        file_types = {}
+        file_types: dict[str, dict[str, int]] = {}
         for file_stat in files:
             ext = file_stat.path.split(".")[-1] if "." in file_stat.path else "no-ext"
             if ext not in file_types:

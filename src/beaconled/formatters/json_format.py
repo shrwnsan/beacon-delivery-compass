@@ -2,7 +2,8 @@
 
 import json
 from datetime import datetime
-from ..core.models import CommitStats, RangeStats
+
+from beaconled.core.models import CommitStats, RangeStats
 
 
 class JSONFormatter:
@@ -22,7 +23,8 @@ class JSONFormatter:
         """
         if isinstance(obj, datetime):
             return obj.isoformat()
-        raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+        # Fallback to TypeError without a custom message to satisfy TRY003
+        raise TypeError
 
     def format_commit_stats(self, stats: CommitStats) -> str:
         """Format commit statistics as JSON."""

@@ -1,16 +1,13 @@
 """Additional test cases to improve coverage for analyzer.py."""
 
 import unittest
-from unittest.mock import patch, MagicMock, ANY, PropertyMock, mock_open
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from pathlib import Path
-import os
-import sys
-import pytest
+from unittest.mock import MagicMock, patch
 
 # Import the actual git module for exception classes
 try:
-    from git.exc import GitCommandError, BadName, InvalidGitRepositoryError
+    from git.exc import BadName, GitCommandError, InvalidGitRepositoryError
 
     GIT_AVAILABLE = True
 except ImportError:
@@ -34,9 +31,7 @@ except ImportError:
 from beaconled.core.analyzer import (
     GitAnalyzer,
     InvalidRepositoryError,
-    CommitParseError,
 )
-from beaconled.core.date_errors import DateParseError, DateRangeError
 
 
 class TestGitAnalyzerCoverage(unittest.TestCase):
@@ -154,7 +149,7 @@ class TestGitAnalyzerCoverage(unittest.TestCase):
         mock_repo = MagicMock()
         # GitCommandError(command, status, stderr=None, stdout=None)
         mock_repo.commit.side_effect = GitCommandError(
-            ["log"], 128, stderr="fatal: bad object HEAD"
+            ["log"], 128, stderr="fatal: bad object HEAD",
         )
 
         # Patch Path so constructor validation passes, and patch Repo
@@ -184,8 +179,7 @@ class TestGitAnalyzerCoverage(unittest.TestCase):
 
     def test_get_range_analytics_empty_repo(self):
         """Test get_range_analytics with an empty repository."""
-        from unittest.mock import patch, MagicMock
-        from datetime import datetime, timezone
+        from unittest.mock import MagicMock, patch
 
         # Create a mock repository with no commits
         mock_repo = MagicMock()
@@ -230,13 +224,12 @@ class TestGitAnalyzerCoverage(unittest.TestCase):
     def test_get_range_analytics_git_command_error(self):
         """Test get_range_analytics with GitCommandError."""
         from git.exc import GitCommandError
-        from datetime import datetime, timezone
 
         # Create a mock repository
         mock_repo = MagicMock()
         # Simulate git failing to iterate commits due to bad revision
         mock_repo.iter_commits.side_effect = GitCommandError(
-            ["log"], 128, stderr="fatal: bad revision"
+            ["log"], 128, stderr="fatal: bad revision",
         )
 
         # Patch the GitAnalyzer to use our mock repository and mock datetime
@@ -277,7 +270,6 @@ class TestGitAnalyzerCoverage(unittest.TestCase):
 
     def test_get_range_analytics_invalid_date_range(self):
         """Test get_range_analytics with invalid date range."""
-        from datetime import datetime, timezone
 
         # Create a mock repository
         mock_repo = MagicMock()

@@ -4,12 +4,11 @@ This module provides comprehensive date handling functionality, including parsin
 various date formats, relative date calculations, and timezone management.
 """
 
-from datetime import datetime, timezone, timedelta
-from typing import Optional, Union, Tuple
 import re
+from datetime import datetime, timedelta, timezone
 
-from ..exceptions import ValidationError
-from ..core.date_errors import DateParseError
+from beaconled.core.date_errors import DateParseError
+from beaconled.exceptions import ValidationError
 
 
 class DateParser:
@@ -25,6 +24,9 @@ class DateParser:
     ISO_DATETIME_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$")
     GIT_DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}( [+-]\d{4})?$")
     COMMIT_HASH_PATTERN = re.compile(r"^[0-9a-fA-F]{7,40}$")
+    # Supported absolute date year bounds
+    YEAR_MIN = 2000
+    YEAR_MAX = 2100
 
     @classmethod
     def parse_date(cls, date_str: str) -> datetime:
@@ -45,15 +47,22 @@ class DateParser:
             A timezone-aware datetime in UTC.
 
         Raises:
-            DateParseError: If the date string cannot be parsed or contains timezone info.
+            DateParseError: If the date string cannot be parsed or
+            contains timezone info.
         """
         if not date_str or not isinstance(date_str, str) or not date_str.strip():
             raise DateParseError(
                 date_str or "",
-                "Date string cannot be empty. Please provide a valid date in one of these formats (all times must be in UTC):\n"
-                "  - Relative: 1d (days), 2w (weeks), 3m (months), 1y (years)\n"
-                "  - Absolute: YYYY-MM-DD or YYYY-MM-DD HH:MM (interpreted as UTC)\n"
-                "  - Special: 'now' for current time in UTC",
+                (
+                    "Date string cannot be empty. Please provide a valid "
+                    "date in one of these formats (all times must be in "
+                    "UTC):\n"
+                    "  - Relative: 1d (days), 2w (weeks), 3m (months), 1y "
+                    "(years)\n"
+                    "  - Absolute: YYYY-MM-DD or YYYY-MM-DD HH:MM "
+                    "(interpreted as UTC)\n"
+                    "  - Special: 'now' for current time in UTC"
+                ),
             )
 
         date_str = date_str.strip()
@@ -74,10 +83,15 @@ class DateParser:
         else:
             raise DateParseError(
                 date_str,
-                "Could not parse date. Please use one of (all times must be in UTC):\n"
-                "  - Relative: <number><unit> (e.g., '1d', '2w', '3m', '1y')\n"
-                "  - Absolute: YYYY-MM-DD or YYYY-MM-DD HH:MM (interpreted as UTC)\n"
-                "  - 'now' for current time in UTC",
+                (
+                    "Could not parse date. Please use one of (all times must "
+                    "be in UTC):\n"
+                    "  - Relative: <number><unit> (e.g., '1d', '2w', '3m', "
+                    "'1y')\n"
+                    "  - Absolute: YYYY-MM-DD or YYYY-MM-DD HH:MM "
+                    "(interpreted as UTC)\n"
+                    "  - 'now' for current time in UTC"
+                ),
             )
 
         # Ensure the final datetime is in UTC
@@ -85,7 +99,10 @@ class DateParser:
             if dt.tzinfo is not None and dt.tzinfo != timezone.utc:
                 raise DateParseError(
                     date_str,
-                    "Timezone information is not supported. Please convert to UTC before passing to this function.",
+                    (
+                        "Timezone information is not supported. Please "
+                        "convert to UTC before passing to this function."
+                    ),
                 )
             return (
                 dt.replace(tzinfo=timezone.utc)
@@ -122,7 +139,9 @@ class DateParser:
         date_str = date_str.strip()
         try:
             parts = date_str.split()
-            if len(parts) == 2:
+            # Expected formats: "<unix_timestamp>" or "<unix_timestamp> <+/-HHMM>"
+            git_date_parts_with_offset = 2
+            if len(parts) == git_date_parts_with_offset:
                 # <unix_timestamp> <+/-HHMM>
                 ts, offset = parts
                 dt = datetime.fromtimestamp(int(ts), tz=timezone.utc)
@@ -142,14 +161,14 @@ class DateParser:
             else:
                 raise DateParseError(date_str, "Unexpected git date format")
         except Exception as e:
-            raise DateParseError(date_str, f"Failed to parse git date: {str(e)}") from e
+            raise DateParseError(date_str, f"Failed to parse git date: {e!s}") from e
 
     @classmethod
     def validate_date_range(
         cls,
-        start_date: Optional[Union[datetime, str]] = None,
-        end_date: Optional[Union[datetime, str]] = None,
-    ) -> Tuple[datetime, datetime]:
+        start_date: datetime | str | None = None,
+        end_date: datetime | str | None = None,
+    ) -> tuple[datetime, datetime]:
         """Validate and normalize a date range, returning UTC datetimes.
 
         Args:
@@ -188,10 +207,14 @@ class DateParser:
         else:
             end_date = end_date.astimezone(timezone.utc)
 
-        # Validate BEFORE normalizing end_date to end of day so error message matches expected timestamp
+        # Validate BEFORE normalizing end_date to end of day so error
+        # message matches expected timestamp
         if end_date < start_date:
             raise ValueError(
-                f"Invalid date range: end date ({end_date}) is before start date ({start_date})"
+                (
+                    "Invalid date range: end date ("
+                    f"{end_date}) is before start date ({start_date})"
+                ),
             )
 
         # Always normalize end_date to end of day after validation
@@ -221,7 +244,7 @@ class DateParser:
             if unit not in unit_map:
                 valid_units = ", ".join(f"'{u}'" for u in unit_map.keys())
                 raise ValueError(
-                    f"Invalid time unit '{unit}'. Valid units are: {valid_units}"
+                    f"Invalid time unit '{unit}'. Valid units are: {valid_units}",
                 )
 
             _, _, delta = unit_map[unit]
@@ -230,9 +253,12 @@ class DateParser:
         except (ValueError, IndexError) as e:
             raise DateParseError(
                 date_str,
-                f"Could not parse date: Invalid relative date format: {str(e)}. "
-                "Expected format: <number><unit> where <unit> is one of: "
-                "d (days), w (weeks), m (months), y (years)",
+                (
+                    "Could not parse date: Invalid relative date format: "
+                    f"{e!s}. "
+                    "Expected format: <number><unit> where <unit> is one of: "
+                    "d (days), w (weeks), m (months), y (years)"
+                ),
             ) from e
 
     @classmethod
@@ -253,9 +279,12 @@ class DateParser:
         """
         try:
             dt = datetime.strptime(date_str, "%Y-%m-%d")
-            if not (2000 <= dt.year <= 2100):
+            if not (cls.YEAR_MIN <= dt.year <= cls.YEAR_MAX):
                 raise ValidationError(
-                    f"Year {dt.year} is outside the supported range (2000-2100)",
+                    (
+                        f"Year {dt.year} is outside the supported range "
+                        f"({cls.YEAR_MIN}-{cls.YEAR_MAX})"
+                    ),
                     field="date",
                     value=date_str,
                 )
@@ -263,7 +292,11 @@ class DateParser:
         except ValueError as e:
             raise DateParseError(
                 date_str,
-                f"Could not parse date: Invalid date format. Expected YYYY-MM-DD: {str(e)}",
+                (
+                    "Could not parse date: Invalid date format. "
+                    "Expected YYYY-MM-DD: "
+                    f"{e!s}"
+                ),
             ) from e
 
     @classmethod
@@ -283,9 +316,12 @@ class DateParser:
         """
         try:
             dt = datetime.strptime(datetime_str, "%Y-%m-%d %H:%M")
-            if not (2000 <= dt.year <= 2100):
+            if not (cls.YEAR_MIN <= dt.year <= cls.YEAR_MAX):
                 raise ValidationError(
-                    f"Year {dt.year} is outside the supported range (2000-2100)",
+                    (
+                        f"Year {dt.year} is outside the supported range "
+                        f"({cls.YEAR_MIN}-{cls.YEAR_MAX})"
+                    ),
                     field="datetime",
                     value=datetime_str,
                 )
@@ -293,7 +329,11 @@ class DateParser:
         except ValueError as e:
             raise DateParseError(
                 datetime_str,
-                f"Could not parse datetime: Invalid format. Expected YYYY-MM-DD HH:MM: {str(e)}",
+                (
+                    "Could not parse datetime: Invalid format. "
+                    "Expected YYYY-MM-DD HH:MM: "
+                    f"{e!s}"
+                ),
             ) from e
 
     @classmethod

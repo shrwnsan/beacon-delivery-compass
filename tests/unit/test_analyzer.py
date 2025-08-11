@@ -4,10 +4,10 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
-from beaconled.core.date_errors import DateParseError
-
 import git
+
 from beaconled.core.analyzer import GitAnalyzer
+from beaconled.core.date_errors import DateParseError
 from beaconled.core.models import CommitStats, FileStats
 
 
@@ -27,7 +27,7 @@ class TestGitAnalyzer(unittest.TestCase):
         mock_commit.author.name = "Test User"
         mock_commit.author.email = "test@example.com"
         mock_commit.authored_datetime = datetime(
-            2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc
+            2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc,
         )
         mock_commit.message = "Test commit\n\nMore details here"
 
@@ -70,7 +70,7 @@ index 0000000..e69de29
         """Test commit analysis with git command failure."""
         # Set up the mock to raise an exception
         mock_repo.return_value.commit.side_effect = git.exc.BadName(
-            "Ref 'nonexistent' did not resolve to an object"
+            "Ref 'nonexistent' did not resolve to an object",
         )
 
         with self.assertRaises(RuntimeError) as context:
@@ -137,7 +137,7 @@ index 0000000..e69de29
 
         # Verify the result is a datetime (fallback to now)
         self.assertIsInstance(
-            result.date, datetime, "Expected a datetime object as fallback"
+            result.date, datetime, "Expected a datetime object as fallback",
         )
 
     @patch("git.Repo")
@@ -146,7 +146,7 @@ index 0000000..e69de29
         """Test successful range analysis."""
         # Mock the parse_date to return a fixed date
         mock_parse_date.return_value = datetime(
-            2025, 7, 20, 0, 0, 0, tzinfo=timezone.utc
+            2025, 7, 20, 0, 0, 0, tzinfo=timezone.utc,
         )
 
         # Create a mock git repository
@@ -172,7 +172,7 @@ index 0000000..e69de29
         mock_repo_instance.iter_commits.return_value = mock_commits
         # Also ensure git.log returns corresponding hashes when analyzer falls back to git.log
         mock_repo_instance.git.log.return_value = "\n".join(
-            [mc.hexsha for mc in mock_commits]
+            [mc.hexsha for mc in mock_commits],
         )
 
         # Mock get_commit_stats to return dummy stats
@@ -192,7 +192,7 @@ index 0000000..e69de29
                         lines_added=5,
                         lines_deleted=2,
                         lines_changed=7,
-                    )
+                    ),
                 ],
             )
             for i, date in enumerate(test_dates)
@@ -231,10 +231,10 @@ index 0000000..e69de29
         # Create a mock commit with a datetime and author
         mock_commit = MagicMock()
         mock_commit.authored_datetime = datetime(
-            2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc
+            2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc,
         )
         mock_commit.committed_datetime = datetime(
-            2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc
+            2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc,
         )
         mock_commit.hexsha = "abc123"
         mock_commit.author = MagicMock()
@@ -252,7 +252,7 @@ index 0000000..e69de29
         commit_stats.lines_added = 5
         commit_stats.lines_deleted = 2
         commit_stats.files = [
-            FileStats(path="test.txt", lines_added=5, lines_deleted=2, lines_changed=7)
+            FileStats(path="test.txt", lines_added=5, lines_deleted=2, lines_changed=7),
         ]
         commit_stats.author = "Test User <test@example.com>"
         commit_stats.date = datetime(2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc)
@@ -286,10 +286,10 @@ index 0000000..e69de29
         # Create a mock commit with a datetime and author
         mock_commit = MagicMock()
         mock_commit.authored_datetime = datetime(
-            2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc
+            2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc,
         )
         mock_commit.committed_datetime = datetime(
-            2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc
+            2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc,
         )
         mock_commit.hexsha = "abc123"
         mock_commit.author = MagicMock()
@@ -307,7 +307,7 @@ index 0000000..e69de29
         commit_stats.lines_added = 5
         commit_stats.lines_deleted = 2
         commit_stats.files = [
-            FileStats(path="test.txt", lines_added=5, lines_deleted=2, lines_changed=7)
+            FileStats(path="test.txt", lines_added=5, lines_deleted=2, lines_changed=7),
         ]
         commit_stats.author = "Test User <test@example.com>"
         commit_stats.date = datetime(2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc)
@@ -317,7 +317,7 @@ index 0000000..e69de29
         result = self.analyzer.get_range_analytics("2025-07-20", "2025-07-20")
         # The start date should be the beginning of the day in UTC
         self.assertEqual(
-            result.start_date, datetime(2025, 7, 20, 0, 0, 0, tzinfo=timezone.utc)
+            result.start_date, datetime(2025, 7, 20, 0, 0, 0, tzinfo=timezone.utc),
         )
         # The end date should be the end of the day in UTC
         self.assertEqual(
@@ -360,10 +360,10 @@ index 0000000..e69de29
         # Create a mock commit with a datetime and author
         mock_commit = MagicMock()
         mock_commit.authored_datetime = datetime(
-            2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc
+            2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc,
         )
         mock_commit.committed_datetime = datetime(
-            2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc
+            2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc,
         )
         mock_commit.hexsha = "abc123"
         mock_commit.author = MagicMock()
@@ -388,10 +388,10 @@ index 0000000..e69de29
                 lines_deleted=2,
                 files=[
                     FileStats(
-                        path="test.txt", lines_added=5, lines_deleted=2, lines_changed=7
-                    )
+                        path="test.txt", lines_added=5, lines_deleted=2, lines_changed=7,
+                    ),
                 ],
-            )
+            ),
         )
 
         # Mock the first commit to return a specific date for the first call (when getting repo start date)
@@ -408,10 +408,10 @@ index 0000000..e69de29
         # Create a mock for the commit iteration
         mock_commit = MagicMock()
         mock_commit.authored_datetime = datetime(
-            2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc
+            2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc,
         )
         mock_commit.committed_datetime = datetime(
-            2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc
+            2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc,
         )
         mock_commit.hexsha = "abc123"
         mock_commit.author = MagicMock()
@@ -477,7 +477,7 @@ class TestDateParsing(unittest.TestCase):
         for date_str in test_cases:
             with self.subTest(date_str=date_str):
                 with patch(
-                    "beaconled.utils.date_utils.DateParser.parse_date"
+                    "beaconled.utils.date_utils.DateParser.parse_date",
                 ) as mock_parse:
                     mock_parse.return_value = datetime(2025, 1, 1, tzinfo=timezone.utc)
                     result = self.analyzer._parse_date(date_str)
@@ -495,7 +495,7 @@ class TestDateParsing(unittest.TestCase):
         for date_str in test_cases:
             with self.subTest(date_str=date_str):
                 with patch(
-                    "beaconled.utils.date_utils.DateParser.parse_git_date"
+                    "beaconled.utils.date_utils.DateParser.parse_git_date",
                 ) as mock_parse:
                     mock_parse.return_value = datetime(2025, 1, 1, tzinfo=timezone.utc)
                     result = self.analyzer._parse_git_date(date_str)
@@ -513,7 +513,7 @@ class TestDateParsing(unittest.TestCase):
         for commit_hash, expected in test_cases:
             with self.subTest(commit_hash=commit_hash):
                 with patch(
-                    "beaconled.utils.date_utils.DateParser.is_valid_commit_hash"
+                    "beaconled.utils.date_utils.DateParser.is_valid_commit_hash",
                 ) as mock_validate:
                     mock_validate.return_value = expected
                     result = self.analyzer._is_valid_commit_hash(commit_hash)
@@ -532,7 +532,7 @@ class TestDateParsing(unittest.TestCase):
         for date_str in test_cases:
             with self.subTest(date_str=date_str):
                 with patch(
-                    "beaconled.utils.date_utils.DateParser.parse_date"
+                    "beaconled.utils.date_utils.DateParser.parse_date",
                 ) as mock_parse:
                     mock_parse.return_value = datetime(2025, 1, 1, tzinfo=timezone.utc)
                     result = self.analyzer._parse_date(date_str)
@@ -551,7 +551,7 @@ class TestDateParsing(unittest.TestCase):
         for date_str in test_cases:
             with self.subTest(date_str=date_str):
                 with patch(
-                    "beaconled.utils.date_utils.DateParser.parse_date"
+                    "beaconled.utils.date_utils.DateParser.parse_date",
                 ) as mock_parse:
                     mock_parse.return_value = datetime(2025, 1, 1, tzinfo=timezone.utc)
                     result = self.analyzer._parse_date(date_str)
@@ -572,10 +572,10 @@ class TestDateParsing(unittest.TestCase):
         for date_str in invalid_cases:
             with self.subTest(date_str=date_str):
                 with patch(
-                    "beaconled.utils.date_utils.DateParser.parse_date"
+                    "beaconled.utils.date_utils.DateParser.parse_date",
                 ) as mock_parse:
                     mock_parse.side_effect = DateParseError(
-                        f"Could not parse date: {date_str}"
+                        f"Could not parse date: {date_str}",
                     )
                     with self.assertRaises(DateParseError):
                         self.analyzer._parse_date(date_str)
@@ -596,10 +596,10 @@ class TestDateParsing(unittest.TestCase):
         for date_str in invalid_cases:
             with self.subTest(date_str=date_str):
                 with patch(
-                    "beaconled.utils.date_utils.DateParser.parse_date"
+                    "beaconled.utils.date_utils.DateParser.parse_date",
                 ) as mock_parse:
                     mock_parse.side_effect = DateParseError(
-                        f"Could not parse date: {date_str}"
+                        f"Could not parse date: {date_str}",
                     )
                     with self.assertRaises(DateParseError):
                         self.analyzer._parse_date(date_str)

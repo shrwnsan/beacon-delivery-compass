@@ -1,12 +1,13 @@
 """Performance benchmarks for large repository analysis."""
 
 import os
-import tempfile
-import pytest
-import git
 import random
 import string
+import tempfile
 from datetime import datetime, timedelta, timezone
+
+import git
+import pytest
 
 # Skip these tests by default as they're performance benchmarks
 pytestmark = pytest.mark.performance
@@ -20,8 +21,6 @@ NUM_TAGS = 10
 
 def generate_test_file(content_length=1000):
     """Generate a test file with random content."""
-    import random
-    import string
 
     chars = string.ascii_letters + string.digits + "\n"
     # Generate random content
@@ -40,7 +39,7 @@ def create_test_repo(path, num_commits, num_files, num_branches, num_tags):
     readme_path = os.path.join(path, "README.md")
     with open(readme_path, "w") as f:
         f.write(
-            "# Test Repository\n\nThis is a test repository for performance benchmarking."
+            "# Test Repository\n\nThis is a test repository for performance benchmarking.",
         )
 
     repo.index.add([readme_path])
@@ -67,7 +66,7 @@ def create_test_repo(path, num_commits, num_files, num_branches, num_tags):
             file_path = os.path.join(path, f"file_{file_num}.txt")
             with open(file_path, "a") as f:
                 f.write(
-                    f"Commit {commit_num} - {datetime.now(timezone.utc).isoformat()}\n"
+                    f"Commit {commit_num} - {datetime.now(timezone.utc).isoformat()}\n",
                 )
                 f.write(generate_test_file())
 
@@ -83,7 +82,7 @@ def create_test_repo(path, num_commits, num_files, num_branches, num_tags):
 
     # Return to a default branch (support both 'master' and 'main')
     try:
-        default_head = getattr(repo.heads, "master")
+        default_head = repo.heads.master
     except AttributeError:
         # Prefer 'main' if present; otherwise, use the current head's reference
         default_head = getattr(repo.heads, "main", None)
@@ -127,7 +126,7 @@ def test_benchmark_large_repo_analysis(benchmark):
 
             # Run analytics
             analytics = analyzer.get_range_analytics(
-                start_date=start_date, end_date=end_date
+                start_date=start_date, end_date=end_date,
             )
 
             # Get commit stats
@@ -160,6 +159,6 @@ if __name__ == "__main__":
         print(f"Created test repository at {os.path.abspath(repo_path)}")
     else:
         print(
-            "Usage: python -m tests.performance.test_large_repo_benchmark --create-test-repo [path]"
+            "Usage: python -m tests.performance.test_large_repo_benchmark --create-test-repo [path]",
         )
         print("This will create a large test repository for performance testing.")

@@ -1,12 +1,11 @@
 """Test utilities for the Beacon Delivery Compass test suite."""
 
 import os
-import sys
 import subprocess
-from typing import List, Optional
+import sys
 
 
-def get_beaconled_cmd() -> List[str]:
+def get_beaconled_cmd() -> list[str]:
     """
     Get the appropriate beaconled command for testing.
 
@@ -29,7 +28,7 @@ def get_beaconled_cmd() -> List[str]:
     return ["beaconled"]
 
 
-def run_beaconled(args: List[str], **kwargs) -> subprocess.CompletedProcess:
+def run_beaconled(args: list[str], **kwargs) -> subprocess.CompletedProcess:
     """
     Run beaconled with the given arguments.
 
