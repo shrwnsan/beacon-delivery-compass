@@ -6,4 +6,4 @@ across the application, such as date parsing, validation, and other helpers.
 
 from .date_utils import DateParser
 
-__all__ = ['DateParser']
+__all__ = ["DateParser"]

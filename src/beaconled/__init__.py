@@ -24,7 +24,6 @@ __all__ = [
     "GitAnalyzer",
     "CommitStats",
     "RangeStats",
-    
     # Exceptions
     "BeaconError",
     "ConfigurationError",
