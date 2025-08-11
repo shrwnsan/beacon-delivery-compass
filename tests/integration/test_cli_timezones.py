@@ -1,34 +1,15 @@
 """Integration tests for CLI timezone handling."""
+
 import unittest
-import subprocess
-import os
-import sys
+from tests.test_utils import run_beaconled
 
 
 class TestCLITimezoneHandling(unittest.TestCase):
     """Test CLI handling of timezone-aware inputs."""
 
-    def setUp(self):
-        """Set up test environment."""
-        # Use sys.executable to get the Python interpreter path,
-        # then construct the path to beaconled
-        if sys.platform == "win32":
-            self.beacon_cmd = [
-                os.path.join(os.getcwd(), ".venv", "Scripts", "beaconled")
-            ]
-        else:
-            self.beacon_cmd = [
-                os.path.join(os.getcwd(), ".venv", "bin", "beaconled")
-            ]
-
     def run_cli(self, args):
         """Run CLI command and return result."""
-        cmd = self.beacon_cmd + args
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True
-        )
+        result = run_beaconled(args, capture_output=True, text=True)
         return result
 
     def test_timezone_aware_input_rejection(self):
@@ -45,16 +26,19 @@ class TestCLITimezoneHandling(unittest.TestCase):
             with self.subTest(f"Reject timezone-aware input with {desc}"):
                 result = self.run_cli(["--range", "--since", date_str])
                 self.assertNotEqual(
-                    result.returncode, 0,
-                    f"Expected non-zero exit code for timezone-aware input: {date_str}"
+                    result.returncode,
+                    0,
+                    f"Expected non-zero exit code for timezone-aware input: {date_str}",
                 )
                 self.assertIn(
-                    "Error:", result.stderr,
-                    f"Expected error message for timezone-aware input: {date_str}"
+                    "Error:",
+                    result.stderr,
+                    f"Expected error message for timezone-aware input: {date_str}",
                 )
                 self.assertIn(
-                    "UTC", result.stderr,
-                    f"Error message should mention UTC requirement for input: {date_str}"
+                    "UTC",
+                    result.stderr,
+                    f"Error message should mention UTC requirement for input: {date_str}",
                 )
 
     def test_naive_input_acceptance(self):
@@ -63,7 +47,7 @@ class TestCLITimezoneHandling(unittest.TestCase):
             ("2025-01-01", "date only"),
             ("2025-01-01 12:00:00", "datetime without timezone"),
             ("1d", "relative date"),
-            ("now", "special value")
+            ("now", "special value"),
         ]
 
         for date_str, desc in test_cases:
@@ -72,10 +56,11 @@ class TestCLITimezoneHandling(unittest.TestCase):
                 # but not with a timezone error
                 result = self.run_cli(["--range", "--since", date_str])
                 self.assertNotIn(
-                    "timezone", result.stderr.lower(),
-                    f"Should not complain about timezone for valid input: {date_str}"
+                    "timezone",
+                    result.stderr.lower(),
+                    f"Should not complain about timezone for valid input: {date_str}",
                 )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
