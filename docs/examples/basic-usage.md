@@ -1,22 +1,18 @@
 # Basic Usage Examples
 
-This document provides practical examples for getting started with Beacon.
-
-Note:
-- For setup and core commands, see [Engineer Usage](../delivery/usage.md).
-- For how to read the report signals, see [Interpretation Guide](../ANALYTICS_DASHBOARD.md).
+This document provides practical examples for getting started with Beacon, including date handling and output formats. All dates are handled in UTC.
 
 ## Quick Start Examples
 
 ### 1. Analyze Latest Commit
 ```bash
-# Simple analysis
+# Simple analysis with default output
 beaconled
 
 # Example output:
 # 📊 Commit: abc12345
 # 👤 Author: John Doe
-# 📅 Date: 2025-07-20 10:30:00
+# 📅 Date: 2025-07-20 10:30:00+08:00
 # 💬 Message: Add new feature for user analytics
 #
 # 📂 Files changed: 3
@@ -29,11 +25,14 @@ beaconled
 #   tests/test_analytics.py (+15 -0)
 #   README.md          (+0 -7)
 
-# Save to file
-beaconled > latest-commit.txt
+# Save to file with UTC timestamp
+beaconled > latest-commit-$(date -u +%Y%m%d-%H%M%S).txt
 
-# JSON output for processing
+# JSON output
 beaconled --format json > commit-data.json
+
+# Extended format with detailed file information
+beaconled --format extended
 
 # Example JSON output:
 # {
@@ -458,3 +457,8 @@ echo "$DATE,$commits,$files,$insertions,$deletions" >> $LOG_FILE
 | Extended details | `beaconled --format extended` |
 | Custom repo | `beaconled --repo /path/to/repo` |
 | Date range | `beaconled --range --since "2025-07-01" --until "2025-07-31"` |
+| Analyze last 5 commits | `beaconled --range --count 5` |
+| Analyze between commits | `beaconled --range abc123..xyz789` |
+| Analyze by date range (UTC) | `beaconled --range --since "2025-07-01 00:00" --until "2025-07-31 23:59"` |
+| Using date only (assumes 00:00 UTC) | `beaconled --range --since "2025-07-01" --until "2025-07-31"` |
+| Using relative dates | `beaconled --range --since "1 week ago" --until "now"` |
