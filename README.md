@@ -8,14 +8,16 @@ Your delivery compass for empowered product builders. A comprehensive toolkit fo
 
 ## Features
 
-- Commit-level analytics with detailed breakdowns
-- Component and file type analysis
-- Impact assessment (high/medium/low)
-- Range analysis for teams and sprints
-- Multiple output formats (standard, extended, JSON)
-- Integration with CI/CD pipelines and git hooks
-- Type-safe codebase with full mypy support
-- Comprehensive type hints for better IDE support and maintainability
+- **Commit-level analytics** with detailed breakdowns
+- **Component and file type analysis**
+- **Impact assessment** (high/medium/low)
+- **Range analysis** for teams and sprints
+- **Multiple output formats** (standard, extended, JSON)
+- **Timezone-aware date handling** for global teams
+- **Flexible date parsing** supporting multiple formats
+- **Comprehensive test coverage** ensuring reliability
+- **Type-safe codebase** with full mypy support
+- **Comprehensive type hints** for better IDE support and maintainability
 
 ## Development & Contribution
 
@@ -91,8 +93,8 @@ python -m pytest --cov=src tests/
 ## Installation
 
 Beacon requires:
-- Python 3.7+
-- Git 2.0+
+- Python 3.10+
+- Git 2.23+
 - GitPython 3.1.0+
 
 We recommend installing in a virtual environment.
@@ -118,21 +120,34 @@ For more detailed instructions, including development setup and troubleshooting,
 
 ## Quick Start
 
-### Date Format Reference
-Beacon supports both relative and absolute date formats for time-based analysis:
+### Date and Timezone Handling
+
+Beacon provides flexible date parsing with consistent UTC handling, making it reliable for distributed teams.
 
 #### Relative Date Formats
 ```
-1d      # 1 day ago
-2w      # 2 weeks ago
-3m      # 3 months ago
-1y      # 1 year ago
+1d      # 1 day ago from now in UTC
+2w      # 2 weeks ago from now in UTC
+3m      # 3 months ago from now in UTC (approximate, using 4 weeks/month)
+1y      # 1 year ago from now in UTC (approximate, using 52 weeks/year)
 ```
 
-#### Absolute Date Formats
+#### Absolute Date Formats (UTC Only)
 ```
-2025-01-15          # January 15, 2025 at 00:00
-2025-01-15 14:30    # January 15, 2025 at 14:30
+2025-01-15              # January 15, 2025 at 00:00 UTC
+2025-01-15 14:30        # January 15, 2025 at 14:30 UTC
+```
+
+#### Timezone Handling
+Beacon uses UTC for all date handling to ensure consistency:
+- All input dates are interpreted as UTC
+- Results are displayed in UTC
+- No timezone conversion is performed
+
+Example:
+```bash
+# Analyze commits between 9 AM to 5 PM UTC
+beaconled --range --since "2025-01-15 09:00" --until "2025-01-15 17:00"
 ```
 
 ### Basic Usage
@@ -149,14 +164,55 @@ beaconled --range --since "1w" --until "now"
 
 ### Examples
 
+#### Basic Usage
 Analyze changes in the last 3 days:
 ```bash
 beaconled --range --since "3d"
 ```
 
-Analyze changes between specific dates:
+#### Date Range Analysis
+Analyze changes between specific dates with timezone support:
 ```bash
+# Using relative dates
+beaconled --range --since "1w" --until "now"
+
+# Using absolute dates in UTC
+beaconled --range --since "2025-01-01 00:00" --until "2025-01-31 23:59"
+
+# Using date only (assumes 00:00 UTC)
 beaconled --range --since "2025-01-01" --until "2025-01-31"
+```
+
+#### Team Performance Analysis
+Generate a detailed team performance report for the last sprint:
+```bash
+beaconled --range --since "sprint_start" --until "sprint_end" --format extended
+```
+
+#### Integration with CI/CD
+Example GitHub Actions workflow for automated reporting:
+```yaml
+name: Weekly Report
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Every Monday at 9 AM
+
+jobs:
+  generate-report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install Beacon
+        run: pip install beaconled
+      - name: Generate weekly report
+        run: |
+          beaconled --range --since "1w" --format json > weekly-report.json
+          # Upload report artifact
+          gh release upload weekly weekly-report.json
 ```
 
 For more detailed usage examples, please refer to the [Usage Examples](docs/examples/basic-usage.md).
