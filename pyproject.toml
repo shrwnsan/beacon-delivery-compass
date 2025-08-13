@@ -329,14 +329,55 @@ select = [
 ]
 
 [tool.pytest.ini_options]
-minversion = "6.0"
-addopts = "-ra -q --strict-markers --cov=beaconled --cov-report=term-missing --durations=10"
+minversion = "7.0"
+addopts = """
+  -v                  # Verbose output
+  --strict-markers    # Require markers to be registered
+  --durations=10      # Show 10 slowest tests
+  --durations-min=1.0 # Only show tests slower than 1 second
+  --cov=beaconled     # Coverage reporting
+  --cov-report=term-missing  # Show missing lines
+  --cov-report=xml:coverage.xml  # For code coverage reporting
+  -n auto             # Parallel test execution
+  --dist=loadscope    # Group tests by module for better parallelization
+  --typeguard-packages=beaconled  # Enable type checking in tests
+"""
 testpaths = [
     "tests",
 ]
+python_files = [
+    "test_*.py",
+    "*_test.py",
+]
+python_classes = [
+    "Test*",
+    "*Test",
+]
+python_functions = [
+    "test_*",
+]
 markers = [
     "performance: mark test as a performance test (deselect with '-m \"not performance\"')",
+    "integration: integration tests that require external resources",
+    "unit: unit tests (default for tests in unit/ directory)",
 ]
+
+# Configure test coverage reporting
+[tool.coverage.run]
+source = ["beaconled"]
+omit = ["**/__init__.py", "**/tests/**"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 90  # Require at least 90% test coverage
+
+# Type checking configuration
+[tool.typeguard]
+check-variable-types = true
+warn-return-any = true
+warn-unused-ignores = true
 
 # Performance test configuration
 [performance]

@@ -462,3 +462,43 @@ echo "$DATE,$commits,$files,$insertions,$deletions" >> $LOG_FILE
 | Analyze by date range (UTC) | `beaconled --range --since "2025-07-01 00:00" --until "2025-07-31 23:59"` |
 | Using date only (assumes 00:00 UTC) | `beaconled --range --since "2025-07-01" --until "2025-07-31"` |
 | Using relative dates | `beaconled --range --since "1 week ago" --until "now"` |
+
+## Date Format Reference
+
+### Default Behavior
+- When using `--range` without `--since` or `--until`:
+  - `--since` defaults to `7d` (7 days ago in UTC)
+  - `--until` defaults to `now` (current time in UTC)
+- When using `--since` without `--until`, `--until` defaults to `now`
+- When using `--until` without `--since`, `--since` defaults to `7d`
+
+### Relative Formats
+```
+1d      # 1 day ago from now in UTC
+2w      # 2 weeks ago from now in UTC
+3m      # 3 months ago from now in UTC (approximate, using 4 weeks/month)
+1y      # 1 year ago from now in UTC (approximate, using 52 weeks/year)
+```
+
+### Absolute Formats (UTC Only)
+```
+2025-01-15              # January 15, 2025 at 00:00 UTC
+2025-01-15 14:30        # January 15, 2025 at 14:30 UTC
+2025-01-15 14:30:45     # January 15, 2025 at 14:30:45 UTC
+```
+
+### Special Keywords
+```
+now        # Current time in UTC
+```
+
+### Timezone Handling
+- All input dates are interpreted as UTC
+- Results are displayed in UTC
+- No timezone conversion is performed
+
+Example with timezone handling:
+```bash
+# Analyze commits between 9 AM to 5 PM UTC
+beaconled --range --since "2025-01-15 09:00" --until "2025-01-15 17:00"
+```
