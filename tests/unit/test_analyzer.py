@@ -79,6 +79,98 @@ index 0000000..e69de29
         self.assertIn("Unexpected error analyzing commit", str(context.exception))
 
     @patch("git.Repo")
+    def test_get_commit_stats_multiple_files(self, mock_repo):
+        """Test commit analysis with multiple file changes including binary and renamed files."""
+        # Create mock commit
+        mock_commit = MagicMock()
+        mock_commit.hexsha = "multi123"
+        mock_commit.author.name = "Test User"
+        mock_commit.author.email = "test@example.com"
+        mock_commit.authored_datetime = datetime(2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc)
+        mock_commit.message = "Update multiple files\n\n- Added new features\n- Fixed bugs"
+
+        # Create multiple mock diffs
+        # 1. Modified text file
+        diff1 = MagicMock()
+        diff1.a_path = "src/file1.py"
+        diff1.b_path = "src/file1.py"
+        diff1.diff = b"""diff --git a/src/file1.py b/src/file1.py
+index 1234567..89abcde 100644
+--- a/src/file1.py
++++ b/src/file1.py
+@@ -1,4 +1,5 @@
+ def hello():
++    print("Hello, world!")
+     return "Hello"
+ """
+
+        # 2. Added binary file
+        diff2 = MagicMock()
+        diff2.a_path = None
+        diff2.b_path = "assets/image.png"
+        diff2.diff = b"BINARY DATA"
+        diff2.b_blob.size = 1024  # 1KB binary file
+
+        # 3. Renamed file
+        diff3 = MagicMock()
+        diff3.a_path = "old_name.txt"
+        diff3.b_path = "new_name.txt"
+        diff3.renamed = True
+        diff3.diff = b"""diff --git a/old_name.txt b/new_name.txt
+similarity index 100%
+rename from old_name.txt
+rename to new_name.txt
+"""
+
+        # 4. Deleted file
+        diff4 = MagicMock()
+        diff4.a_path = "deleted.txt"
+        diff4.b_path = None
+        diff4.deleted_file = True
+        diff4.diff = b"""diff --git a/deleted.txt b/deleted.txt
+deleted file mode 100644
+index 1234567..0000000
+--- a/deleted.txt
++++ /dev/null
+@@ -1,2 +0,0 @@
+-This file was deleted
+-in the commit
+"""
+
+        # Set up parent commit for diffs
+        mock_parent = MagicMock()
+        mock_commit.parents = [mock_parent]
+        mock_parent.diff.return_value = [diff1, diff2, diff3, diff4]
+
+        # Set up repo mock
+        mock_repo.return_value.commit.return_value = mock_commit
+
+        # Call the method under test
+        result = self.analyzer.get_commit_stats("multi123")
+
+        # Verify results
+        self.assertEqual(result.hash, "multi123")
+        self.assertEqual(result.author, "Test User <test@example.com>")
+        self.assertEqual(result.message, "Update multiple files")
+        
+        # Should count all files including binary and renamed
+        self.assertEqual(result.files_changed, 4)
+        
+        # Should count actual line changes (only in text files)
+        self.assertEqual(result.lines_added, 1)    # One line added in file1.py
+        self.assertEqual(result.lines_deleted, 2)  # Two lines deleted in deleted.txt
+        
+        # Verify all files are included
+        self.assertEqual(len(result.files), 4)
+        
+        # Verify file stats
+        file_paths = [f.path for f in result.files]
+        self.assertIn("src/file1.py", file_paths)
+        self.assertIn("assets/image.png", file_paths)
+        self.assertIn("new_name.txt", file_paths)
+        self.assertIn("deleted.txt", file_paths)
+
+    @patch("git.Repo")
     def test_date_parsing_variations(self, mock_repo):
         """Test handling of datetime objects from GitPython."""
         test_cases = [
@@ -445,228 +537,90 @@ index 0000000..e69de29
         result = self.analyzer.get_range_analytics(None, None)
         self.assertIsNotNone(result)
 
+    @patch("git.Repo")
+    def test_get_range_analytics_timezone_handling(self, mock_repo):
+        """Test that timezones are handled correctly in date ranges."""
+        # Setup mock repo
+        mock_repo_instance = MagicMock()
+        mock_repo.return_value = mock_repo_instance
+        
+        # Create mock commits with different timezones
+        mock_commit1 = MagicMock()
+        mock_commit1.hexsha = "commit1"
+        mock_commit1.author.name = "User1"
+        mock_commit1.author.email = "user1@example.com"
+        mock_commit1.committed_datetime = datetime(2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc)  # 10:00 UTC
+        mock_commit1.message = "Commit 1"
+        mock_commit1.stats.files = {"file1.py": {"insertions": 5, "deletions": 2, "lines": 7}}
+        
+        mock_commit2 = MagicMock()
+        mock_commit2.hexsha = "commit2"
+        mock_commit2.author.name = "User2"
+        mock_commit2.author.email = "user2@example.com"
+        mock_commit2.committed_datetime = datetime(2025, 7, 20, 15, 0, 0, tzinfo=timezone.utc)  # 15:00 UTC (11:00 EDT)
+        mock_commit2.message = "Commit 2"
+        mock_commit2.stats.files = {"file2.py": {"insertions": 3, "deletions": 1, "lines": 4}}
 
-class TestDateParsing(unittest.TestCase):
-    """Test cases for date parsing functionality in GitAnalyzer.
-
-    Note: Most date parsing tests have been moved to test_date_utils.py.
-    This class is kept for backward compatibility and will be removed in a future version.
-    Now uses DateParser instead of GitDateParser.
-    """
-
-    def setUp(self):
-        """Set up test fixtures with a mocked Git repository."""
-        # Create a mock repository to avoid filesystem operations
-        self.mock_repo = MagicMock()
-
-        # Patch the git.Repo class to return our mock
-        self.repo_patcher = patch("git.Repo", return_value=self.mock_repo)
-        self.repo_patcher.start()
-
-        # Initialize the analyzer with a dummy path
-        self.analyzer = GitAnalyzer(".")
-
-    def tearDown(self):
-        """Clean up after tests."""
-        self.repo_patcher.stop()
-
-    def test_parse_relative_dates(self):
-        """Test that _parse_date forwards to DateParser.parse_date."""
-        test_cases = ["1d", "2w", "3m", "1y", "10d", "1w", "12m", "52w"]
-
-        for date_str in test_cases:
-            with self.subTest(date_str=date_str):
-                with patch(
-                    "beaconled.utils.date_utils.DateParser.parse_date",
-                ) as mock_parse:
-                    mock_parse.return_value = datetime(2025, 1, 1, tzinfo=timezone.utc)
-                    result = self.analyzer._parse_date(date_str)
-                    mock_parse.assert_called_once_with(date_str)
-                    self.assertEqual(result, mock_parse.return_value)
-
-    def test_parse_git_date(self):
-        """Test that _parse_git_date forwards to DateParser.parse_git_date."""
-        test_cases = [
-            "1690200000 +0000",
-            "1690200000 -0500",
-            "1690200000 +0900",
-        ]
-
-        for date_str in test_cases:
-            with self.subTest(date_str=date_str):
-                with patch(
-                    "beaconled.utils.date_utils.DateParser.parse_git_date",
-                ) as mock_parse:
-                    mock_parse.return_value = datetime(2025, 1, 1, tzinfo=timezone.utc)
-                    result = self.analyzer._parse_git_date(date_str)
-                    mock_parse.assert_called_once_with(date_str)
-                    self.assertEqual(result, mock_parse.return_value)
-
-    def test_is_valid_commit_hash(self):
-        """Test that _is_valid_commit_hash forwards to DateParser.is_valid_commit_hash."""
-        test_cases = [
-            ("a1b2c3d", True),
-            ("invalid!", False),
-            ("1234567", True),
-        ]
-
-        for commit_hash, expected in test_cases:
-            with self.subTest(commit_hash=commit_hash):
-                with patch(
-                    "beaconled.utils.date_utils.DateParser.is_valid_commit_hash",
-                ) as mock_validate:
-                    mock_validate.return_value = expected
-                    result = self.analyzer._is_valid_commit_hash(commit_hash)
-                    mock_validate.assert_called_once_with(commit_hash)
-                    self.assertEqual(result, expected)
-
-    def test_parse_absolute_dates(self):
-        """Test that _parse_date handles absolute dates by forwarding to DateParser."""
-        test_cases = [
-            "2025-07-20",
-            "2025-07-20 14:30",
-            "2025-07-20T14:30",
-            "2025-07-20 14:30:45",
-        ]
-
-        for date_str in test_cases:
-            with self.subTest(date_str=date_str):
-                with patch(
-                    "beaconled.utils.date_utils.DateParser.parse_date",
-                ) as mock_parse:
-                    mock_parse.return_value = datetime(2025, 1, 1, tzinfo=timezone.utc)
-                    result = self.analyzer._parse_date(date_str)
-                    mock_parse.assert_called_once_with(date_str)
-                    self.assertEqual(result, mock_parse.return_value)
-
-    def test_parse_absolute_date_edge_cases(self):
-        """Test that _parse_date handles various date formats by forwarding to DateParser."""
-        test_cases = [
-            "2025/07/20",
-            "2025-07-20 14:30",
-            "2025/07/20 14:30:45",
-            "2025-07-20T14:30:45",
-        ]
-
-        for date_str in test_cases:
-            with self.subTest(date_str=date_str):
-                with patch(
-                    "beaconled.utils.date_utils.DateParser.parse_date",
-                ) as mock_parse:
-                    mock_parse.return_value = datetime(2025, 1, 1, tzinfo=timezone.utc)
-                    result = self.analyzer._parse_date(date_str)
-                    mock_parse.assert_called_once_with(date_str)
-                    self.assertEqual(result, mock_parse.return_value)
-
-    def test_parse_invalid_relative_dates(self):
-        """Test that _parse_date raises errors for invalid relative dates."""
-        invalid_cases = [
-            "1x",  # Invalid unit
-            "abc",  # Not a number
-            "1d1h",  # Mixed units not supported
-            "d",  # Missing number
-            "-1d",  # Negative numbers not supported
-            "1.5d",  # Decimal numbers not supported
-        ]
-
-        for date_str in invalid_cases:
-            with self.subTest(date_str=date_str):
-                with patch(
-                    "beaconled.utils.date_utils.DateParser.parse_date",
-                ) as mock_parse:
-                    mock_parse.side_effect = DateParseError(
-                        f"Could not parse date: {date_str}",
-                    )
-                    with self.assertRaises(DateParseError):
-                        self.analyzer._parse_date(date_str)
-                    mock_parse.assert_called_once_with(date_str)
-
-    def test_parse_invalid_absolute_dates(self):
-        """Test that _parse_date raises errors for invalid absolute dates."""
-        invalid_cases = [
-            "2025-13-01",  # Invalid month
-            "2025-07-32",  # Invalid day
-            "2025-07-20 25:00",  # Invalid hour
-            "2025-07-20 14:60",  # Invalid minute
-            "not-a-date",  # Completely invalid
-            "",  # Empty string
-            " ",  # Whitespace only
-        ]
-
-        for date_str in invalid_cases:
-            with self.subTest(date_str=date_str):
-                with patch(
-                    "beaconled.utils.date_utils.DateParser.parse_date",
-                ) as mock_parse:
-                    mock_parse.side_effect = DateParseError(
-                        f"Could not parse date: {date_str}",
-                    )
-                    with self.assertRaises(DateParseError):
-                        self.analyzer._parse_date(date_str)
-                    mock_parse.assert_called_once_with(date_str)
-
-    @patch("beaconled.core.analyzer.datetime")
-    @patch("logging.Logger.warning")
-    def test_parse_git_date_invalid(self, mock_warning, mock_datetime):
-        """Test handling of invalid git date strings."""
-        # Mock the current time for consistent testing with UTC timezone
-        fixed_now = datetime(2025, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
-        mock_datetime.now.return_value = fixed_now
-
-        # Create a mock for the datetime.strptime().replace() chain
-        mock_dt = MagicMock()
-        mock_dt.replace.return_value = fixed_now
-        mock_datetime.strptime.return_value = mock_dt
-
-        # Test various invalid formats
-        invalid_cases = [
-            "",  # Empty string
-            " ",  # Whitespace
-            "2025-01-01",  # Missing time
-            "10:00:00",  # Missing date
-            "2025-01-01 10:00:00 +",  # Incomplete timezone
-            "2025-01-01 10:00:00 +25:00",  # Invalid timezone
-            "2025-01-01 10:00:00 +9999",  # Invalid timezone offset
-            "2025-13-01 10:00:00 +0000",  # Invalid month
-            "2025-01-32 10:00:00 +0000",  # Invalid day
-            "2025-01-01 25:00:00 +0000",  # Invalid hour
-            "2025-01-01 10:60:00 +0000",  # Invalid minute
-            "2025-01-01 10:00:60 +0000",  # Invalid second
-        ]
-
-        # Test all invalid cases
-        for date_str in invalid_cases:
-            with self.subTest(date_str=date_str):
-                # Reset the mock for each test case
-                mock_warning.reset_mock()
-
-                # The actual call will raise an exception, which should be caught
-                result = self.analyzer._parse_git_date(date_str)
-
-                # Should return current time in UTC on error
-                self.assertEqual(result, fixed_now)
-                self.assertEqual(result.tzinfo, timezone.utc)
-
-                # Should log a warning
-                mock_warning.assert_called()
-
-        # Test non-string inputs
-        for invalid in [None, 123, {}, []]:
-            with self.subTest(invalid=invalid):
-                # Reset the mock for each test case
-                mock_warning.reset_mock()
-
-                result = self.analyzer._parse_git_date(invalid)
-
-                # Should return current time in UTC on error
-                self.assertEqual(result, fixed_now)
-                self.assertEqual(result.tzinfo, timezone.utc)
-
-                # Should log a warning
-                mock_warning.assert_called()
-
-        # Verify at least one warning was logged in total
-        self.assertGreaterEqual(mock_warning.call_count, 1)
+        # Set up repo mock to return our test commits
+        mock_repo_instance.iter_commits.return_value = [mock_commit1, mock_commit2]
+        
+        # Mock _parse_date to return timezone-aware datetimes
+        with patch('beaconled.core.analyzer.GitAnalyzer._parse_date') as mock_parse:
+            # Mock _parse_date to return timezone-aware datetimes
+            mock_parse.side_effect = [
+                datetime(2025, 7, 20, 6, 0, 0, tzinfo=timezone.utc),  # 06:00 UTC (start)
+                datetime(2025, 7, 20, 16, 0, 0, tzinfo=timezone.utc)   # 16:00 UTC (end)
+            ]
+            
+            # Test with timezone-aware date strings
+            result = self.analyzer.get_range_analytics("2025-07-20T01:00-05:00", "2025-07-20T11:00-05:00")
+            
+            # Should include both commits since they fall within the UTC day
+            self.assertEqual(len(result.commits), 2)
+            self.assertEqual(result.commits[0].hash, "commit1")
+            self.assertEqual(result.commits[1].hash, "commit2")
+            self.assertEqual(result.total_commits, 2)
+            self.assertEqual(result.total_lines_added, 8)  # 5 + 3
+            self.assertEqual(result.total_lines_deleted, 3)  # 2 + 1
+            
+            # Verify date range is preserved with timezone
+            self.assertEqual(result.start_date.hour, 6)  # 06:00 UTC
+            self.assertEqual(result.end_date.hour, 16)   # 16:00 UTC
+    
+    @patch("git.Repo")
+    def test_get_range_analytics_empty_range(self, mock_repo):
+        """Test behavior with an empty commit range."""
+        # Setup mock repo
+        mock_repo_instance = MagicMock()
+        mock_repo.return_value = mock_repo_instance
+        
+        # Set up empty commit range
+        mock_repo_instance.iter_commits.return_value = []
+        
+        # Mock _parse_date to return specific dates
+        with patch('beaconled.core.analyzer.GitAnalyzer._parse_date') as mock_parse:
+            mock_parse.side_effect = [
+                datetime(2025, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                datetime(2025, 1, 31, 23, 59, 59, tzinfo=timezone.utc)
+            ]
+            
+            # Test with a specific date range that has no commits
+            result = self.analyzer.get_range_analytics("2025-01-01", "2025-01-31")
+            
+            # Should return a valid RangeStats object with zero values
+            self.assertEqual(result.total_commits, 0)
+            self.assertEqual(result.total_lines_added, 0)
+            self.assertEqual(result.total_lines_deleted, 0)
+            self.assertEqual(len(result.commits), 0)
+            self.assertEqual(len(result.authors), 0)
+            
+            # Date range should match the input
+            self.assertEqual(result.start_date.year, 2025)
+            self.assertEqual(result.start_date.month, 1)
+            self.assertEqual(result.start_date.day, 1)
+            self.assertEqual(result.end_date.year, 2025)
+            self.assertEqual(result.end_date.month, 1)
+            self.assertEqual(result.end_date.day, 31)
 
 
 if __name__ == "__main__":
