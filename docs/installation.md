@@ -4,9 +4,10 @@ This guide covers different ways to install Beacon Delivery Compass, with best p
 
 ## 🏁 Prerequisites
 
-- **Python 3.7** or higher
-- **Git** (for repository analysis)
-- **pip** (Python package installer)
+- **Python 3.8** or higher
+- **Git 2.0** or higher (for repository analysis)
+- **pip** 21.0 or higher (Python package installer)
+- **GitPython** 3.1.0+ (automatically installed as a dependency)
 
 Verify your Python installation:
 ```bash
@@ -35,8 +36,11 @@ You'll know the virtual environment is active when you see `(.venv)` in your ter
 ### 2. Install Beacon Delivery Compass
 
 ```bash
-# Install the latest stable version from PyPI
-pip install beaconled
+# Install the latest stable version from PyPI with all optional dependencies
+pip install 'beaconled[all]'
+
+# For minimal installation (core functionality only)
+# pip install beaconled
 
 # Verify installation
 beaconled --version
@@ -56,9 +60,22 @@ cd beacon-delivery-compass
 # Install in development mode with all dependencies
 pip install -e ".[dev]"
 
+# Install pre-commit hooks
+pre-commit install
+
 # Run tests to verify installation
 pytest
 ```
+
+### Development Dependencies
+
+Development dependencies include:
+- **pytest**: For running tests
+- **black**: Code formatting
+- **mypy**: Static type checking
+- **ruff**: Linting and code quality
+- **pre-commit**: Git hooks for code quality
+- **coverage**: Test coverage reporting
 
 ### Global Installation (Not Recommended)
 
