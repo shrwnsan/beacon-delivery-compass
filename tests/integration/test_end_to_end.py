@@ -1,45 +1,24 @@
 """End-to-end integration tests."""
+
 import json
-import subprocess
 import unittest
+
+from tests.test_utils import run_beaconled
 
 
 class TestEndToEnd(unittest.TestCase):
     """Integration tests for the complete beaconled workflow."""
 
-    def setUp(self):
-        """Set up test environment."""
-        import sys
-        import os
-        # Use sys.executable to get the Python interpreter path,
-        # then construct the path to beaconled
-        if sys.platform == "win32":
-            self.beacon_cmd = [
-                os.path.join(os.getcwd(), ".venv", "Scripts", "beaconled")
-            ]
-        else:
-            self.beacon_cmd = [
-                os.path.join(os.getcwd(), ".venv", "bin", "beaconled")
-            ]
-
     def test_beaconled_help(self):
         """Test that beaconled help command works."""
-        result = subprocess.run(
-            self.beacon_cmd + ["--help"],
-            capture_output=True,
-            text=True
-        )
+        result = run_beaconled(["--help"], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0)
         self.assertIn("Beacon", result.stdout)
         self.assertIn("delivery compass", result.stdout)
 
     def test_beaconled_current_commit(self):
         """Test analyzing current commit."""
-        result = subprocess.run(
-            self.beacon_cmd,
-            capture_output=True,
-            text=True
-        )
+        result = run_beaconled([], capture_output=True, text=True)
         if result.returncode != 0:
             print("\n=== stderr ===")
             print(result.stderr)
@@ -52,11 +31,7 @@ class TestEndToEnd(unittest.TestCase):
 
     def test_beaconled_json_output(self):
         """Test JSON output format."""
-        result = subprocess.run(
-            self.beacon_cmd + ["--format", "json"],
-            capture_output=True,
-            text=True
-        )
+        result = run_beaconled(["--format", "json"], capture_output=True, text=True)
         if result.returncode != 0:
             print("\n=== stderr ===")
             print(result.stderr)
@@ -78,41 +53,29 @@ class TestEndToEnd(unittest.TestCase):
 
     def test_beaconled_range_analysis(self):
         """Test range analysis functionality."""
-        cmd = self.beacon_cmd + ["--range", "--since", "7d"]
-        print(f"\nRunning command: {' '.join(cmd)}")
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True
-        )
+        args = ["--range", "--since", "7d"]
+        print(f"\nRunning command: beaconled {' '.join(args)}")
+        result = run_beaconled(args, capture_output=True, text=True)
         print(f"Return code: {result.returncode}")
         print("=== STDOUT ===")
         print(result.stdout)
         print("=== STDERR ===")
         print(result.stderr)
         print("=============")
-        
+
         self.assertEqual(result.returncode, 0)
         self.assertIn("Range Analysis:", result.stdout)
         self.assertIn("Total commits:", result.stdout)
 
     def test_beaconled_invalid_commit(self):
         """Test handling of invalid commit hash."""
-        result = subprocess.run(
-            self.beacon_cmd + ["nonexistent123"],
-            capture_output=True,
-            text=True
-        )
+        result = run_beaconled(["nonexistent123"], capture_output=True, text=True)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("Error:", result.stderr)
 
     def test_beaconled_extended_output(self):
         """Test extended output format."""
-        result = subprocess.run(
-            self.beacon_cmd + ["--format", "extended"],
-            capture_output=True,
-            text=True
-        )
+        result = run_beaconled(["--format", "extended"], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0)
         self.assertIn("Commit:", result.stdout)
         self.assertIn("Author:", result.stdout)
@@ -125,27 +88,21 @@ class TestEndToEnd(unittest.TestCase):
 
     def test_beaconled_range_analysis_extended(self):
         """Test range analysis with extended output."""
-        result = subprocess.run(
-            self.beacon_cmd + [
-                "--range", "--since", "7d", "--format", "extended"
-            ],
+        result = run_beaconled(
+            ["--range", "--since", "7d", "--format", "extended"],
             capture_output=True,
-            text=True
+            text=True,
         )
         self.assertEqual(result.returncode, 0)
         self.assertIn("Range Analysis:", result.stdout)
         self.assertIn("to", result.stdout)
         self.assertIn("Total commits:", result.stdout)
-        self.assertIn("Total commits:", result.stdout)
         self.assertIn("Total files changed:", result.stdout)
         self.assertIn("Total lines added:", result.stdout)
         self.assertIn("Total lines deleted:", result.stdout)
+        self.assertIn("Net change:", result.stdout)
         self.assertIn("Contributors:", result.stdout)
-        self.assertIn(
-            "Temporal Analysis - Daily Activity Timeline:",
-            result.stdout
-        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

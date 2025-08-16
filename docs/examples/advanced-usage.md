@@ -1,8 +1,48 @@
 # Advanced Usage Examples
 
-Note:
-- For setup and core commands, see [Engineer Usage](../delivery/usage.md).
-- For how to read the report signals, see [Interpretation Guide](../ANALYTICS_DASHBOARD.md).
+This document covers advanced usage patterns including date handling, custom metrics, and integration examples. All dates are handled in UTC.
+
+## Date Handling
+
+### Date Range Analysis with UTC
+
+```python
+from beaconled.core.analyzer import GitAnalyzer
+from datetime import datetime, timezone
+
+# Initialize analyzer with a repository
+analyzer = GitAnalyzer('/path/to/repo')
+
+# Define UTC date range
+start = datetime(2025, 7, 1, tzinfo=timezone.utc)  # July 1, 2025 00:00 UTC
+end = datetime(2025, 7, 31, 23, 59, 59, tzinfo=timezone.utc)  # July 31, 2025 23:59:59 UTC
+
+# Get analytics for the specified range
+stats = analyzer.get_range_analytics(start, end)
+
+print(f"Analysis from {start} to {end}")
+print(f"Total commits: {stats.total_commits}")
+```
+
+### Handling Empty Commit Ranges
+
+```python
+from beaconled.core.analyzer import GitAnalyzer
+from datetime import datetime, timezone
+
+try:
+    analyzer = GitAnalyzer('/path/to/repo')
+    # This range might be empty if no commits exist in this period
+    stats = analyzer.get_range_analytics("2026-01-01", "2026-01-31")
+
+    if stats.total_commits == 0:
+        print("No commits found in the specified range")
+    else:
+        print(f"Found {stats.total_commits} commits")
+
+except ValueError as e:
+    print(f"Error analyzing range: {e}")
+```
 
 ## Custom Metric Configurations
 
@@ -37,7 +77,7 @@ import json
 analyzer = GitAnalyzer()
 with open('custom_metrics.json') as f:
     metrics = json.load(f)
-    
+
 stats = analyzer.get_commit_stats()
 complexity_score = sum(
     metric['weight'] * len([f for f in stats.files if f.complexity > metric['threshold']])
@@ -107,7 +147,7 @@ plt.savefig('commit-trends.png')
 ### Code Health Evolution
 ```bash
 beaconled --range --since "1 year ago" --format json | \
-jq -s 'group_by(.start_date | fromdate | strftime("%Y-%m")) | 
+jq -s 'group_by(.start_date | fromdate | strftime("%Y-%m")) |
 map({
   month: .[0].start_date | fromdate | strftime("%Y-%m"),
   commits: length,
@@ -146,8 +186,8 @@ jq '.commits | group_by(.author) | map({
 ```bash
 # Track TypeScript file changes
 beaconled --range --since "2 weeks ago" --format json | \
-jq '[.commits[].files[] | select(.path | endswith(".ts"))] | 
-group_by(.path) | 
+jq '[.commits[].files[] | select(.path | endswith(".ts"))] |
+group_by(.path) |
 map({
   file: .[0].path,
   changes: length,
@@ -209,13 +249,13 @@ source .venv/bin/activate
 beaconled --range --since "$(git describe --tags --abbrev=0)" --format json | \
 jq -r '"# Release Notes\n",
   "## New Features",
-  (.commits[] | select(.message | test("feat"; "i")) | 
+  (.commits[] | select(.message | test("feat"; "i")) |
     "- \(.message) (by \(.author))"),
   "\n## Bug Fixes",
-  (.commits[] | select(.message | test("fix"; "i")) | 
+  (.commits[] | select(.message | test("fix"; "i")) |
     "- \(.message) (by \(.author))"),
   "\n## Documentation",
-  (.commits[] | select(.message | test("docs"; "i")) | 
+  (.commits[] | select(.message | test("docs"; "i")) |
     "- \(.message) (by \(.author))")' > RELEASE_NOTES.md
 ```
 
