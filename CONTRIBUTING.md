@@ -97,10 +97,35 @@ We maintain high code quality standards using these tools:
    - Add tests for new functionality
    - Update documentation as needed
 
-3. **Run pre-commit hooks** (automatically runs on commit)
-   ```bash
-   pre-commit run --all-files
-   ```
+3. **Run pre-commit hooks**
+   We use different pre-commit configurations for development and production environments:
+
+   - **Development** (default):
+     ```bash
+     # Installs the development hooks (faster, less strict)
+     pre-commit install
+
+     # Run all hooks on all files
+     pre-commit run --all-files
+     ```
+     The development configuration is more lenient to avoid slowing down development. It includes:
+     - Black with 100-character line length
+     - Basic Ruff linting and formatting
+     - Basic MyPy type checking
+     - Faster execution by excluding some checks
+
+   - **Production/CI**:
+     ```bash
+     # Run production hooks (stricter, includes all checks)
+     pre-commit run --config .pre-commit-prod.yaml --all-files
+     ```
+     The production configuration enforces additional quality checks:
+     - Stricter MyPy with `--strict` flag
+     - Additional validations (TOML, JSON, merge conflicts)
+     - More comprehensive code quality checks
+     - Used in CI/CD pipelines
+
+   > **Note**: The production configuration runs automatically in CI. For local development, the development hooks are installed by default.
 
 4. **Test your changes**
    ```bash
