@@ -92,6 +92,42 @@ We maintain high code quality standards using these tools:
    git checkout -b feature/your-feature-name
    ```
 
+### Branching Strategy
+
+We follow a structured branching model to maintain a clean and organized repository:
+
+1. **Main Branches**
+   - `main`: Primary development branch (always stable)
+   - `stable`: Production-ready releases (kept stable at all times)
+
+2. **Supporting Branches**
+   - `feature/*`: New features being developed
+     - Naming: `feature/descriptive-name` (e.g., `feature/user-authentication`)
+     - Should be created from `main`
+     - Should be deleted after merging
+
+   - `release/*`: Preparation for production releases
+     - Naming: `release/x.y.z` (following semantic versioning)
+     - Should be created from `main`
+     - Used for final testing and version bumps
+
+   - `hotfix/*`: Critical production bug fixes
+     - Naming: `hotfix/description`
+     - Should be created from `stable`
+     - Merged back to both `stable` and `main`
+
+3. **Branch Management**
+   - Keep feature branches focused and small
+   - Delete branches after they're merged
+   - Regularly sync with `main` to avoid large merge conflicts
+   - Use pull requests for all changes (except hotfixes in emergencies)
+
+4. **Commit Messages**
+   - Use present tense ("Add feature" not "Added feature")
+   - Keep the first line under 50 characters
+   - Include a blank line between the subject and body
+   - Reference issues/tickets when applicable
+
 2. **Make your changes**
    - Follow existing code patterns and conventions
    - Add tests for new functionality
