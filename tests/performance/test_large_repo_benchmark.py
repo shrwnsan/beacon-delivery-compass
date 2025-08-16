@@ -78,7 +78,7 @@ def create_test_repo(path, num_commits, num_files, num_branches, num_tags):
 
         # Create tags occasionally
         if commit_num % (num_commits // num_tags) == 0 and commit_num > 0:
-            repo.create_tag(f"v{commit_num//(num_commits//num_tags)}")
+            repo.create_tag(f"v{commit_num // (num_commits // num_tags)}")
 
     # Return to a default branch (support both 'master' and 'main')
     try:

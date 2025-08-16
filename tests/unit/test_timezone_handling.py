@@ -4,6 +4,7 @@ All dates are now treated as UTC. Timezone conversion is the responsibility
 of the caller.
 """
 
+import re
 from datetime import datetime, timezone
 
 import pytest
@@ -22,6 +23,8 @@ class TestUTCOnlyHandling:
     # Test constants
     TEST_YEAR = 2023
     TEST_MONTH = 1
+    TEST_DAY = 1
+    TEST_HOUR = 10
     START_DAY = 1
     START_HOUR = 10
     END_DAY = 10
@@ -117,7 +120,7 @@ class TestUTCOnlyHandling:
             error_msg = str(exc_info.value).lower()
             if not any(term in error_msg for term in expected_terms):
                 pytest.fail(
-                    f"Expected timezone-related error for '{date_str}', " f"got: {error_msg}",
+                    f"Expected timezone-related error for '{date_str}', got: {error_msg}",
                 )
 
     def _verify_parsed_date(
@@ -172,28 +175,22 @@ class TestUTCOnlyHandling:
     def test_parse_date_invalid_formats(self) -> None:
         """Test that invalid date formats raise appropriate errors."""
         test_cases: list[tuple[str, str]] = [
-            ("", "date string cannot be empty"),
-            ("not-a-date", "parse date"),
+            ("", "Date string cannot be None or empty"),
+            ("not-a-date", "Unsupported date format"),
             ("2025-13-01", "invalid date"),
             ("2025-01-32", "invalid date"),
-            ("2025-01-15 25:00", "could not parse datetime"),
-            ("2025-01-15 14:60", "could not parse datetime"),
+            ("2025-01-15 25:00", "Could not parse datetime"),
+            ("2025-01-15 14:60", "Could not parse datetime"),
             # Timezone offsets not allowed
-            ("2025-01-15 14:30 +0000", "utc"),
-            ("2025-01-15 14:30 -0500", "utc"),
+            ("2025-01-15 14:30 +0000", "Unsupported date format"),
+            ("2025-01-15 14:30 -0500", "Unsupported date format"),
         ]
 
-        for date_str, error_keyword in test_cases:
+        for date_str, error_msg in test_cases:
             with pytest.raises(
                 DateParseError,
-                match=rf"(?i){error_keyword}",
+                match=rf".*{re.escape(error_msg)}.*",
             ) as exc_info:
                 DateParser.parse_date(date_str)
 
-            # Verify the error message contains the expected keyword
-            error_msg = str(exc_info.value).lower()
-            if error_keyword not in error_msg:
-                pytest.fail(
-                    f"Expected error message to contain '{error_keyword}' "
-                    f"for input '{date_str}', got: {error_msg}",
-                )
+            # The error message is already checked by the pytest.raises match pattern

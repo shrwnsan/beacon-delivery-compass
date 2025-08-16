@@ -77,9 +77,9 @@ class ExtendedFormatter(BaseFormatter):
             f"{self._format_date(stats.end_date).split()[0]}",
             "",
             f"{Fore.YELLOW}Total commits:{Style.RESET_ALL} {stats.total_commits}",
-            (f"{Fore.YELLOW}Total files changed:{Style.RESET_ALL} " f"{stats.total_files_changed}"),
-            (f"{Fore.GREEN}Total lines added:{Style.RESET_ALL} " f"{stats.total_lines_added}"),
-            (f"{Fore.RED}Total lines deleted:{Style.RESET_ALL} " f"{stats.total_lines_deleted}"),
+            (f"{Fore.YELLOW}Total files changed:{Style.RESET_ALL} {stats.total_files_changed}"),
+            (f"{Fore.GREEN}Total lines added:{Style.RESET_ALL} {stats.total_lines_added}"),
+            (f"{Fore.RED}Total lines deleted:{Style.RESET_ALL} {stats.total_lines_deleted}"),
             f"{Fore.YELLOW}Net change:{Style.RESET_ALL} {range_net_change}",
         ]
 
@@ -138,7 +138,7 @@ class ExtendedFormatter(BaseFormatter):
     ) -> list[str]:
         """Format author contribution statistics."""
         return [
-            f"  {author}: {count} commits ({count/total_commits:.1%})"
+            f"  {author}: {count} commits ({count / total_commits:.1%})"
             for author, count in sorted(
                 authors.items(),
                 key=lambda x: x[1],

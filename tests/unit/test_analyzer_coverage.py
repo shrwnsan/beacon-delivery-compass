@@ -195,8 +195,8 @@ class TestGitAnalyzerCoverage(unittest.TestCase):
         ):
             # Set up the mock datetime
             mock_datetime.now.return_value = datetime(2023, 1, 1, tzinfo=timezone.utc)
-            mock_datetime.side_effect = (
-                lambda *args, **kw: datetime(*args, **kw, tzinfo=timezone.utc)
+            mock_datetime.side_effect = lambda *args, **kw: (
+                datetime(*args, **kw, tzinfo=timezone.utc)
                 if "tzinfo" in kw or (len(args) > 6 and args[6] is not None)
                 else datetime(
                     *args,
@@ -251,8 +251,8 @@ class TestGitAnalyzerCoverage(unittest.TestCase):
         ):
             # Set up the mock datetime
             mock_datetime.now.return_value = datetime(2023, 1, 1, tzinfo=timezone.utc)
-            mock_datetime.side_effect = (
-                lambda *args, **kw: datetime(*args, **kw, tzinfo=timezone.utc)
+            mock_datetime.side_effect = lambda *args, **kw: (
+                datetime(*args, **kw, tzinfo=timezone.utc)
                 if "tzinfo" in kw or (len(args) > 6 and args[6] is not None)
                 else datetime(
                     *args,
@@ -300,8 +300,8 @@ class TestGitAnalyzerCoverage(unittest.TestCase):
         ):
             # Set up the mock datetime to return fixed times
             mock_datetime.now.return_value = datetime(2023, 1, 1, tzinfo=timezone.utc)
-            mock_datetime.side_effect = (
-                lambda *args, **kw: datetime(*args, **kw, tzinfo=timezone.utc)
+            mock_datetime.side_effect = lambda *args, **kw: (
+                datetime(*args, **kw, tzinfo=timezone.utc)
                 if "tzinfo" in kw or (len(args) > 6 and args[6] is not None)
                 else datetime(
                     *args,

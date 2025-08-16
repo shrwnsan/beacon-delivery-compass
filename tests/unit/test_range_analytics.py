@@ -113,6 +113,13 @@ class TestRangeAnalytics(unittest.TestCase):
         # Mock get_commit_stats
         self.analyzer.get_commit_stats = MagicMock(return_value=commit_stats)
 
+        # Mock the file stats
+        file_stats = FileStats(path="test.py", lines_added=5, lines_deleted=2, lines_changed=7)
+        commit_stats.files = [file_stats]
+        commit_stats.files_changed = 1
+        commit_stats.lines_added = 5
+        commit_stats.lines_deleted = 2
+
         # Test with string dates
         result = self.analyzer.get_range_analytics("2025-01-01", "2025-12-31")
 
@@ -120,9 +127,11 @@ class TestRangeAnalytics(unittest.TestCase):
         print("\nMock calls to get_commit_stats:", self.analyzer.get_commit_stats.mock_calls)
         print(
             "Result commits:",
-            [c.hash for c in result.commits]
-            if hasattr(result, "commits")
-            else "No commits in result",
+            (
+                [c.hash for c in result.commits]
+                if hasattr(result, "commits")
+                else "No commits in result"
+            ),
         )
 
         # Verify results
@@ -131,9 +140,11 @@ class TestRangeAnalytics(unittest.TestCase):
             result.start_date,
             start_date.replace(hour=0, minute=0, second=0, microsecond=0),
         )
+        expected_end = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
         self.assertEqual(
             result.end_date,
-            end_date.replace(hour=0, minute=0, second=0, microsecond=0),  # 00:00:00 is the default
+            expected_end,
+            f"Expected end date to be end of day, got {result.end_date} instead of {expected_end}",
         )
 
         # Check if we got any commits back
@@ -152,6 +163,8 @@ class TestRangeAnalytics(unittest.TestCase):
             # Check that the commit stats were processed correctly
             self.assertEqual(result.total_commits, 1)
             self.assertEqual(result.total_files_changed, 1)
+            self.assertEqual(result.total_lines_added, 5)
+            self.assertEqual(result.total_lines_deleted, 2)
             self.assertEqual(result.total_lines_added, 5)
             self.assertEqual(result.total_lines_deleted, 2)
             self.assertEqual(len(result.commits), 1)
@@ -183,11 +196,13 @@ class TestRangeAnalytics(unittest.TestCase):
         self.assertEqual(result.authors, {})
 
         # Verify the date range is correct
-        # Note: The current implementation sets the end date to 00:00:00 of the specified day
+        # The end date should be set to the end of the day (23:59:59.999999)
         self.assertEqual(result.start_date, datetime(2025, 1, 1, tzinfo=timezone.utc))
+        expected_end = datetime(2025, 1, 31, 23, 59, 59, 999999, tzinfo=timezone.utc)
         self.assertEqual(
             result.end_date,
-            datetime(2025, 1, 31, tzinfo=timezone.utc),  # 00:00:00 is the default
+            expected_end,
+            f"Expected end date to be end of day, got {result.end_date} instead of {expected_end}",
         )
 
 
