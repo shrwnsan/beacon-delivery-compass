@@ -33,17 +33,53 @@ Our development priorities and planned improvements are tracked in the [Enhancem
 
 ### Code Quality
 
-Beacon is built with a strong focus on code quality and maintainability:
+Beacon is built with a strong focus on code quality and maintainability. We use pre-commit hooks to ensure consistent code quality across the project.
+
+#### Pre-commit Configuration
+
+We provide two pre-commit configurations:
+
+1. **Development Mode** (`.pre-commit-dev.yaml`):
+   - More lenient rules for local development
+   - Focuses on critical issues only
+   - Faster feedback loop
+
+   ```bash
+   # Setup development pre-commit hooks
+   make dev-setup
+   ```
+
+2. **Production Mode** (`.pre-commit-config.yaml`):
+   - Strict rules for CI/CD and production
+   - Enforces all code quality standards
+   - Includes all linters and formatters
+
+   ```bash
+   # Setup production pre-commit hooks
+   make prod-setup
+   ```
+
+#### Key Quality Tools
 
 - **Type Safety**: Full static type checking with [mypy](https://mypy-lang.org/)
 - **Code Style**: Consistent code formatting with [Black](https://black.readthedocs.io/)
-- **Linting**: Code quality enforcement with [Flake8](https://flake8.pycqa.org/)
+- **Linting**: Code quality enforcement with [Ruff](https://github.com/charliermarsh/ruff)
 - **Documentation**: Comprehensive docstrings and API documentation
 
-To run the type checker locally:
+#### Development Workflow
+
+1. During active development, use `dev-setup` for faster commits
+2. Before pushing changes, run `prod-setup` to ensure all checks pass
+3. Use `git commit --no-verify` sparingly when needed
+
+#### Manual Checks
 
 ```bash
+# Run type checking
 mypy --ignore-missing-imports src/beaconled
+
+# Run all code quality checks
+make lint
 ```
 
 ## Testing
@@ -240,11 +276,11 @@ Date Range: 2025-01-15 to 2025-01-23
 [2025-01-23 14:32] feat: Add user authentication module (John Doe)
   Impact: HIGH - 8 files changed, 245 insertions, 12 deletions
   Components: auth/, middleware/, tests/
-  
+
 [2025-01-23 10:15] fix: Resolve database connection timeout (Jane Smith)
   Impact: MEDIUM - 3 files changed, 28 insertions, 15 deletions
   Components: database/, config/
-  
+
 [2025-01-22 16:45] docs: Update API documentation (Mike Johnson)
   Impact: LOW - 2 files changed, 67 insertions, 3 deletions
   Components: docs/
@@ -287,7 +323,7 @@ Active Days: 6/7
 === CONTRIBUTOR BREAKDOWN ===
 John Doe: 9 commits (39%)
   - High Impact: 3 commits
-  - Medium Impact: 4 commits  
+  - Medium Impact: 4 commits
   - Low Impact: 2 commits
   - Most Active: Monday, Wednesday
 

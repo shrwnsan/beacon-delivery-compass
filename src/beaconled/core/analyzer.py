@@ -11,7 +11,7 @@ import git
 from beaconled.core.date_errors import DateParseError, DateRangeError
 from beaconled.core.models import CommitStats, FileStats, RangeStats
 from beaconled.exceptions import CommitParseError, InvalidRepositoryError
-from beaconled.utils.date_utils import DateParser
+from beaconled.utils.date_utils import DateUtils
 
 # Constants
 DATE_STR_MAX_LEN = 50
@@ -41,14 +41,20 @@ class GitAnalyzer:
             InvalidRepositoryError: If the path is invalid, not a directory,
             or not a git repository
         """
-        path = Path(repo_path).resolve()
+        try:
+            path = Path(repo_path).resolve()
+        except Exception as e:
+            # Normalize any unexpected error during path resolution to
+            # InvalidRepositoryError so callers/tests can assert on the message
+            raise InvalidRepositoryError(str(repo_path), reason=str(e)) from e
 
         # Ensure path exists and is a directory
         if not path.exists():
             raise InvalidRepositoryError(str(path), reason="Path does not exist")
         if not path.is_dir():
             raise InvalidRepositoryError(
-                str(path), reason="Path is not a directory",
+                str(path),
+                reason="Path is not a directory",
             )
 
         # Relax boundary restriction: allow absolute paths (including temp dirs)
@@ -60,7 +66,8 @@ class GitAnalyzer:
                 _ = git.Repo(str(path))
             except Exception as e:
                 raise InvalidRepositoryError(
-                    str(path), reason=f"Not a git repository: {e}",
+                    str(path),
+                    reason=f"Not a git repository: {e}",
                 ) from e
 
         return str(path)
@@ -105,7 +112,7 @@ class GitAnalyzer:
             DateParseError: If the date string format is invalid,
             malformed, or out of range.
         """
-        return DateParser.parse_date(date_str)
+        return DateUtils.parse_date(date_str)
 
     def _parse_git_date(self, date_str: str) -> datetime:
         """Parse a date string from git log output into a datetime object.
@@ -138,7 +145,7 @@ class GitAnalyzer:
             datetime: Parsed datetime object in UTC, or current time if parsing fails
         """
         try:
-            return DateParser.parse_git_date(date_str)
+            return DateUtils._parse_git_date(date_str)
         except DateParseError as e:
             # Log the error but continue with current time in UTC
             logger.warning("Could not parse git date '%s': %s", date_str, str(e))
@@ -173,14 +180,8 @@ class GitAnalyzer:
               'beaconled.core.analyzer' logger
         """
         logger.debug("Getting commit stats for hash: %s", commit_hash)
-        if (
-            not commit_hash
-            or not isinstance(commit_hash, str)
-            or not commit_hash.strip()
-        ):
-            error_msg = (
-                f"Invalid commit hash: '{commit_hash}'. Must be a non-empty string."
-            )
+        if not commit_hash or not isinstance(commit_hash, str) or not commit_hash.strip():
+            error_msg = f"Invalid commit hash: '{commit_hash}'. Must be a non-empty string."
             logger.error(error_msg)
             raise CommitParseError(
                 commit_ref=commit_hash,
@@ -198,9 +199,7 @@ class GitAnalyzer:
                 return True
             return False
 
-        if not (
-            self._is_valid_commit_hash(commit_hash) or _is_symbolic_ref(commit_hash)
-        ):
+        if not (self._is_valid_commit_hash(commit_hash) or _is_symbolic_ref(commit_hash)):
             # Allow short hashes commonly used in tests (e.g., "abc123") of length 6+
             if len(commit_hash) >= SHORT_REF_MIN_LEN and all(
                 c in "0123456789abcdefABCDEF" for c in commit_hash
@@ -298,9 +297,7 @@ class GitAnalyzer:
                         # Parse the diff to count added/removed lines
                         diff_content = diff.diff
                         if isinstance(diff_content, bytes):
-                            added = (
-                                diff_content.count(b"\n+") - 1
-                            )  # Subtract 1 for the header line
+                            added = diff_content.count(b"\n+") - 1  # Subtract 1 for the header line
                             deleted = (
                                 diff_content.count(b"\n-") - 1
                             )  # Subtract 1 for the header line
@@ -372,7 +369,7 @@ class GitAnalyzer:
                 # Ensure we have a valid date
                 commit_date = commit.authored_datetime
                 if commit_date is None:
-                    logger.warning(
+                    logger.warning(  # type: ignore[unreachable]
                         "No authored_datetime for commit %s, using current time",
                         commit_hash[:7],
                     )
@@ -384,7 +381,8 @@ class GitAnalyzer:
                 author_info = ""
                 try:
                     if hasattr(commit.author, "name") and hasattr(
-                        commit.author, "email",
+                        commit.author,
+                        "email",
                     ):
                         author_info = f"{commit.author.name} <{commit.author.email}>"
                         logger.debug("Commit author: %s", author_info)
@@ -393,7 +391,9 @@ class GitAnalyzer:
                         logger.debug("Using fallback author info: %s", author_info)
                 except Exception as e:
                     logger.warning(
-                        "Error getting author info: %s", str(e), exc_info=True,
+                        "Error getting author info: %s",
+                        str(e),
+                        exc_info=True,
                     )
                     author_info = "Unknown Author <unknown@example.com>"
 
@@ -419,7 +419,7 @@ class GitAnalyzer:
                     total_deletions,
                 )
 
-                return stats  # noqa: TRY300
+                return stats
 
             except Exception as e:
                 error_msg = f"Error processing commit {commit_hash}"
@@ -431,8 +431,9 @@ class GitAnalyzer:
                 ) from e
 
         except git.GitCommandError as e:
+            msg = f"Failed to analyze commit {commit_hash}: {e!s}"
             raise RuntimeError(
-                f"Failed to analyze commit {commit_hash}: {e!s}",
+                msg,
             ) from e
         except DateParseError:
             # Surface domain-specific date errors directly
@@ -440,8 +441,9 @@ class GitAnalyzer:
         except DateRangeError:
             raise
         except Exception as e:
+            msg = f"Unexpected error analyzing commit {commit_hash}: {e!s}"
             raise RuntimeError(
-                f"Unexpected error analyzing commit {commit_hash}: {e!s}",
+                msg,
             ) from e
 
     def get_range_analytics(
@@ -472,13 +474,39 @@ class GitAnalyzer:
               large repositories
         """
         try:
-            # Parse and validate the date range
-            start_date, end_date = DateParser.validate_date_range(start_date, end_date)
+            # Pre-parse string inputs using the instance parser so tests can
+            # patch _parse_date and to support ISO8601 strings with timezone
+            if isinstance(start_date, str):
+                start_date = self._parse_date(start_date)
+            if isinstance(end_date, str):
+                if end_date.lower() in ["now", "today", ""]:
+                    end_date = datetime.now(timezone.utc)
+                else:
+                    end_date = self._parse_date(end_date)
 
-            # Set end of day for end_date to include the entire end date
-            end_of_day = end_date.replace(
-                hour=23, minute=59, second=59, microsecond=999999,
+            # Record whether caller provided an explicit end time
+            original_end_dt = end_date if isinstance(end_date, datetime) else None
+            has_explicit_end_time = isinstance(original_end_dt, datetime) and (
+                original_end_dt.hour != 0
+                or original_end_dt.minute != 0
+                or original_end_dt.second != 0
+                or original_end_dt.microsecond != 0
             )
+
+            # Validate and normalize the date range (library may set end to end-of-day)
+            start_date, end_date = DateUtils.validate_date_range(start_date, end_date)
+
+            # If caller provided an explicit end time, preserve it
+            if has_explicit_end_time and original_end_dt is not None:
+                # Ensure UTC
+                end_date = (
+                    original_end_dt
+                    if original_end_dt.tzinfo
+                    else original_end_dt.replace(tzinfo=timezone.utc)
+                ).astimezone(timezone.utc)
+
+            # Use end_limit for comparisons (preserved explicit end or normalized end-of-day)
+            end_limit = end_date
 
             # Initialize stats
             commits: list[CommitStats] = []
@@ -495,15 +523,20 @@ class GitAnalyzer:
 
             # Obtain commits for range:
             # 1) Prefer repo.iter_commits (unit tests patch this to return mock commits)
+            #    When available, we'll keep the objects so we can build stats without
+            #    re-fetching from the repo (important for tests with MagicMocks).
             # 2) Fallback to git log hashes
             rev_list: list[str] = []
             commits_iter = None
+            commits_map: dict[str, object] = {}
             try:
                 if hasattr(repo, "iter_commits"):
                     try:
                         # Real gitpython path
                         commits_iter = repo.iter_commits(
-                            all=True, since=start_date, until=end_of_day,
+                            all=True,
+                            since=start_date,
+                            until=end_limit,
                         )
                     except TypeError:
                         # Mock path: ignore parameters
@@ -515,7 +548,10 @@ class GitAnalyzer:
                 try:
                     for c in commits_iter:
                         ch = getattr(c, "hexsha", None)
-                        rev_list.append(str(ch) if ch else str(c))
+                        key = str(ch) if ch else str(c)
+                        rev_list.append(key)
+                        # Retain mapping to the commit object for direct processing
+                        commits_map[key] = c
                 except Exception as e:
                     logger.debug("Failed iterating commits: %s", e)
                     rev_list = []
@@ -527,7 +563,7 @@ class GitAnalyzer:
                         "--reverse",
                         "--pretty=format:%H",
                         since=start_date.isoformat(),
-                        until=end_of_day.isoformat(),
+                        until=end_limit.isoformat(),
                     ).splitlines()
                 except Exception:
                     rev_list = []
@@ -538,36 +574,87 @@ class GitAnalyzer:
                     continue
 
                 try:
-                    # First try lightweight date check using commit metadata
+                    # If we have an object from iter_commits(), prefer using it directly
+                    commit_obj = commits_map.get(str(commit_hash))
                     commit_date = None
-                    try:
-                        # Only fetch metadata for real commits (skip for mocks)
-                        if not isinstance(commit_hash, MagicMock):
-                            repo = git.Repo(self.repo_path)
-                            commit = repo.commit(commit_hash)
-                            commit_date = commit.authored_datetime
-                            if commit_date is None:
-                                commit_date = datetime.now(timezone.utc)
-                    except Exception as e:
-                        logger.debug("Commit metadata fetch failed: %s", e)
-                        # Fallback to using commit stats
+                    if commit_obj is not None:
+                        # Prefer committed/authored datetime if present
+                        commit_date = getattr(commit_obj, "authored_datetime", None)
+                        if commit_date is None:
+                            commit_date = getattr(commit_obj, "committed_datetime", None)
+                        if commit_date is None:
+                            commit_date = datetime.now(timezone.utc)
 
-                    # Check date range if we have real metadata
-                    if commit_date is not None and not isinstance(
-                        commit_date, MagicMock,
-                    ):
+                        # Range check
                         try:
-                            within_range = (
-                                commit_date >= start_date and commit_date <= end_of_day
-                            )
-                            if not within_range:
+                            if commit_date < start_date or commit_date > end_limit:
                                 continue
-                        except (TypeError, ValueError):
-                            # Fall through to commit stats if comparison fails
+                        except Exception:
+                            # If comparison fails for any reason, fall back to including
                             pass
 
-                    # Get full commit stats
-                    commit_stats = self.get_commit_stats(commit_hash)
+                        # Build CommitStats directly from the commit object
+                        try:
+                            auth = getattr(commit_obj, "author", None)
+                            if auth and hasattr(auth, "name") and hasattr(auth, "email"):
+                                author_info = f"{auth.name} <{auth.email}>"
+                            else:
+                                author_info = str(auth) if auth is not None else ""
+
+                            # Aggregate file stats if available
+                            files_list: list[FileStats] = []
+                            total_add = 0
+                            total_del = 0
+                            stats = getattr(commit_obj, "stats", None)
+                            files_dict = getattr(stats, "files", None) if stats else None
+                            if isinstance(files_dict, dict):
+                                for p, s in files_dict.items():
+                                    ins = int(s.get("insertions", 0))
+                                    dels = int(s.get("deletions", 0))
+                                    files_list.append(
+                                        FileStats(
+                                            path=str(p),
+                                            lines_added=ins,
+                                            lines_deleted=dels,
+                                            lines_changed=ins + dels,
+                                        ),
+                                    )
+                                    total_add += ins
+                                    total_del += dels
+
+                            ch = getattr(commit_obj, "hexsha", None)
+                            commit_stats = CommitStats(
+                                hash=str(ch) if ch is not None else str(commit_hash),
+                                author=author_info,
+                                date=commit_date,
+                                message=str(getattr(commit_obj, "message", ""))
+                                .split("\n", 1)[0]
+                                .strip(),
+                                files_changed=len(files_list) if files_list else 0,
+                                lines_added=total_add,
+                                lines_deleted=total_del,
+                                files=files_list,
+                            )
+                        except Exception as e:
+                            logger.debug("Failed building stats from commit object: %s", e)
+                            # Fallback to normal path below
+                            commit_stats = self.get_commit_stats(commit_hash)
+                    else:
+                        # No object; fall back to repo.commit() path via get_commit_stats
+                        # First try lightweight date check using commit metadata
+                        try:
+                            repo = git.Repo(self.repo_path)
+                            commit = repo.commit(commit_hash)
+                            commit_date = getattr(commit, "authored_datetime", None)
+                            if commit_date is None:
+                                commit_date = datetime.now(timezone.utc)
+                            # Range check
+                            if commit_date < start_date or commit_date > end_limit:
+                                continue
+                        except Exception as e:
+                            logger.debug("Commit metadata fetch failed: %s", e)
+                        # Get full commit stats
+                        commit_stats = self.get_commit_stats(commit_hash)
 
                     # For commits without metadata or mocks, verify range using
                     # stats date
@@ -577,7 +664,7 @@ class GitAnalyzer:
                             if not isinstance(commit_stats.date, MagicMock):
                                 within_range = (
                                     commit_stats.date >= start_date
-                                    and commit_stats.date <= end_of_day
+                                    and commit_stats.date <= end_limit
                                 )
                             else:
                                 # For mocks, assume in range as in unit tests
@@ -637,7 +724,7 @@ class GitAnalyzer:
             # Attach additional aggregates for ExtendedFormatter
             setattr(rs, "commits_by_day", commits_by_day)  # noqa: B010
             setattr(rs, "file_types", file_types)  # noqa: B010
-            return rs  # noqa: TRY300
+            return rs
 
         except git.GitCommandError as e:
             # Map git failures in range analysis to a consistent message as
@@ -676,7 +763,7 @@ class GitAnalyzer:
         Returns:
             bool: True if the commit hash is valid, False otherwise.
         """
-        return DateParser.is_valid_commit_hash(commit_hash)
+        return DateUtils.is_valid_commit_hash(commit_hash)
 
     def _is_valid_date_string(self, date_str: str) -> bool:
         """Validate date string format to prevent injection."""

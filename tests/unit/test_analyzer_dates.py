@@ -15,7 +15,9 @@ class TestGitAnalyzerDates(unittest.TestCase):
         """Set up test fixtures."""
         # Create a mock for the GitAnalyzer class that bypasses repository validation
         with patch.object(
-            GitAnalyzer, "_validate_repo_path", return_value="/valid/repo/path",
+            GitAnalyzer,
+            "_validate_repo_path",
+            return_value="/valid/repo/path",
         ):
             self.analyzer = GitAnalyzer("dummy_path")
 
@@ -38,7 +40,8 @@ class TestGitAnalyzerDates(unittest.TestCase):
         date_str2 = "2025-01-15 14:30:45 -0500"
         result2 = self.analyzer._parse_git_date(date_str2)
         self.assertEqual(
-            result2, datetime(2025, 1, 15, 19, 30, 45, tzinfo=timezone.utc),
+            result2,
+            datetime(2025, 1, 15, 19, 30, 45, tzinfo=timezone.utc),
         )
         mock_date_parser.parse_git_date.assert_called_with(date_str2)
 
@@ -186,7 +189,9 @@ class TestGitAnalyzerDates(unittest.TestCase):
         # Add 31 more characters to reach exactly 50 characters
         long_valid_date = "2025-01-01 12:00:00" + "x" * 31  # 19 + 31 = 50 chars
         self.assertEqual(
-            len(long_valid_date), 50, f"Expected length 50, got {len(long_valid_date)}",
+            len(long_valid_date),
+            50,
+            f"Expected length 50, got {len(long_valid_date)}",
         )
 
         # Debug: Print the string and its length

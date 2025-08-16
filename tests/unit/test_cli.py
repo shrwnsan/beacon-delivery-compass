@@ -76,9 +76,7 @@ class TestCLI(unittest.TestCase):
         mock_analyzer.return_value.get_range_analytics.return_value = mock_stats
 
         # Mock the formatter to return a simple string
-        mock_formatter.return_value.format_range_stats.return_value = (
-            "Mocked range stats output"
-        )
+        mock_formatter.return_value.format_range_stats.return_value = "Mocked range stats output"
 
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
             main()
@@ -104,9 +102,7 @@ class TestCLI(unittest.TestCase):
         mock_analyzer.return_value.get_commit_stats.return_value = mock_commit
 
         # Mock the formatter to return a simple string
-        mock_formatter.return_value.format_commit_stats.return_value = (
-            "Mocked extended output"
-        )
+        mock_formatter.return_value.format_commit_stats.return_value = "Mocked extended output"
 
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
             main()
@@ -180,9 +176,7 @@ class TestCLI(unittest.TestCase):
 
         # Mock the analyzer to return our test data
         mock_analyzer.return_value.get_commit_stats.return_value = mock_commit
-        mock_formatter.return_value.format_commit_stats.return_value = (
-            "Formatted output"
-        )
+        mock_formatter.return_value.format_commit_stats.return_value = "Formatted output"
 
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
             main()
@@ -242,9 +236,7 @@ class TestCLI(unittest.TestCase):
 
         # Set up mocks
         mock_analyzer.return_value.get_range_analytics.return_value = mock_stats
-        mock_formatter.return_value.format_range_stats.return_value = (
-            "Range stats output"
-        )
+        mock_formatter.return_value.format_range_stats.return_value = "Range stats output"
 
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
             main()
@@ -326,9 +318,7 @@ class TestCLI(unittest.TestCase):
 
         # Set up mocks
         mock_analyzer.return_value.get_commit_stats.return_value = mock_commit
-        mock_formatter.return_value.format_commit_stats.return_value = (
-            "Formatted output"
-        )
+        mock_formatter.return_value.format_commit_stats.return_value = "Formatted output"
 
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
             main()
@@ -363,9 +353,7 @@ class TestCLI(unittest.TestCase):
 
         # Mock the StandardFormatter
         with patch("beaconled.cli.StandardFormatter") as mock_formatter:
-            mock_formatter.return_value.format_commit_stats.return_value = (
-                "Formatted output"
-            )
+            mock_formatter.return_value.format_commit_stats.return_value = "Formatted output"
             with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
                 main()
                 self.assertEqual(mock_stdout.getvalue().strip(), "Formatted output")
@@ -408,7 +396,8 @@ class TestCLI(unittest.TestCase):
             # The raw output should contain the properly escaped Unicode sequences
             self.assertIn("T\\u00e9st Us\\u00e9r", output)  # Escaped Unicode in JSON
             self.assertIn(
-                "sp\\u00e9ci\\u00e1l ch\\u00e0racters", output,
+                "sp\\u00e9ci\\u00e1l ch\\u00e0racters",
+                output,
             )  # Escaped Unicode in JSON
 
     @patch("beaconled.cli.GitAnalyzer")

@@ -14,18 +14,14 @@ repos:
     rev: v0.0.270
     hooks:
     -   id: ruff
-        args: [--fix, --ignore=E501,F401,E902]  # Ignore line length, unused imports, and file not found
+        args: [--fix, --ignore=E501,F401]  # Ignore line length and unused imports
 
 -   repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.4.1
     hooks:
     -   id: mypy
-        name: mypy
-        entry: mypy
-        language: python
-        types: [python]
-        args: [--ignore-missing-imports, --disallow-untyped-defs, --no-warn-no-return, --no-warn-return-any, --no-warn-unused-ignores]
-        additional_dependencies: [types-python-dateutil, types-pytz, types-requests]
+        additional_dependencies: [types-python-dateutil, types-pytz]
+        args: [--ignore-missing-imports]
         exclude: '^tests/|^docs/|^migrations/|^src/beaconled/core/git_analyzer.py'
         files: '^src/beaconled/.*\.py$'
 

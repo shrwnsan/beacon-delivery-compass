@@ -37,7 +37,8 @@ class BaseFormatter:
         return f"{net_color}{net_change}{Style.RESET_ALL}"
 
     def _get_file_type_breakdown(
-        self, files: list[FileStats],
+        self,
+        files: list[FileStats],
     ) -> dict[str, dict[str, int]]:
         """Group file statistics by file extension."""
         file_types: dict[str, dict[str, int]] = {}
