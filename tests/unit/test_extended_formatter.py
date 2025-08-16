@@ -1,6 +1,6 @@
 """Tests for the ExtendedFormatter class."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 
 import pytest
 
@@ -14,11 +14,14 @@ def sample_commit_with_file_types():
     return CommitStats(
         hash="abc123def456",
         author="John Doe <john@example.com>",
-        date=datetime(2023, 1, 15, 10, 30),
+        date=datetime(2023, 1, 15, 10, 30, tzinfo=timezone.utc),
         message="Add new feature implementation",
         files=[
             FileStats(
-                path="src/main.py", lines_added=30, lines_deleted=5, lines_changed=35,
+                path="src/main.py",
+                lines_added=30,
+                lines_deleted=5,
+                lines_changed=35,
             ),
             FileStats(
                 path="tests/test_main.py",
@@ -27,13 +30,22 @@ def sample_commit_with_file_types():
                 lines_changed=15,
             ),
             FileStats(
-                path="docs/README.md", lines_added=5, lines_deleted=2, lines_changed=7,
+                path="docs/README.md",
+                lines_added=5,
+                lines_deleted=2,
+                lines_changed=7,
             ),
             FileStats(
-                path="config.yaml", lines_added=3, lines_deleted=1, lines_changed=4,
+                path="config.yaml",
+                lines_added=3,
+                lines_deleted=1,
+                lines_changed=4,
             ),
             FileStats(
-                path="requirements.txt", lines_added=2, lines_deleted=0, lines_changed=2,
+                path="requirements.txt",
+                lines_added=2,
+                lines_deleted=0,
+                lines_changed=2,
             ),
         ],
     )
@@ -42,7 +54,7 @@ def sample_commit_with_file_types():
 @pytest.fixture
 def sample_range_with_commits():
     """Provides a sample RangeStats object with commits for testing."""
-    start_date = datetime(2023, 1, 1)
+    start_date = datetime(2023, 1, 1, tzinfo=timezone.utc)
     commits = []
 
     # Create commits with different authors and dates
@@ -88,7 +100,8 @@ class TestExtendedFormatter:
         self.formatter = ExtendedFormatter()
 
     def test_format_commit_stats_file_type_breakdown(
-        self, sample_commit_with_file_types,
+        self,
+        sample_commit_with_file_types,
     ):
         """Test that file type breakdown is included in commit stats."""
         result = self.formatter.format_commit_stats(sample_commit_with_file_types)
@@ -141,7 +154,7 @@ class TestExtendedFormatter:
         empty_commit = CommitStats(
             hash="abc123",
             author="Test User <test@example.com>",
-            date=datetime(2023, 1, 1),
+            date=datetime(2023, 1, 1, tzinfo=timezone.utc),
             message="Empty commit",
             files=[],
         )
@@ -150,9 +163,7 @@ class TestExtendedFormatter:
         clean_result = self._strip_ansi_codes(result)
 
         assert "Files changed: 0" in clean_result
-        assert (
-            "File type breakdown:" not in clean_result
-        )  # Shouldn't show empty breakdown
+        assert "File type breakdown:" not in clean_result  # Shouldn't show empty breakdown
 
     def _strip_ansi_codes(self, text):
         """Helper method to strip ANSI color codes from text."""

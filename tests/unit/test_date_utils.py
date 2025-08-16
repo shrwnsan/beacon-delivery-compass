@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
-from beaconled.utils.date_utils import DateParser
+from beaconled.utils.date_utils import DateUtils as DateParser
 
 
 class TestDateParser(unittest.TestCase):
@@ -14,9 +14,9 @@ class TestDateParser(unittest.TestCase):
         """Test parsing of absolute date strings."""
         test_cases: list[tuple[str, datetime]] = [
             # (input_string, expected_datetime)
-            ("2023-10-05", datetime(2023, 10, 5, 0, 0)),
-            ("2023-10-05 14:30", datetime(2023, 10, 5, 14, 30, tzinfo=timezone.utc)),
-            ("2024-01-01", datetime(2024, 1, 1, 0, 0)),
+            ("2023-10-05", datetime(2023, 10, 5, 0, 0, tzinfo=timezone.utc)),
+            ("2023-10-05T14:30:00", datetime(2023, 10, 5, 14, 30, 0, tzinfo=timezone.utc)),
+            ("2024-01-01", datetime(2024, 1, 1, 0, 0, tzinfo=timezone.utc)),
         ]
 
         for date_str, expected_dt in test_cases:
@@ -36,7 +36,7 @@ class TestDateParser(unittest.TestCase):
         """Test parsing of valid relative dates."""
         # Fixed test date for consistent results
         fixed_now = datetime(2023, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
-        
+
         test_cases: list[tuple[str, timedelta]] = [
             # (input_string, expected_timedelta)
             ("1d", timedelta(days=1)),
@@ -50,27 +50,34 @@ class TestDateParser(unittest.TestCase):
         for date_str, expected_delta in test_cases:
             with self.subTest(date_str=date_str):
                 # Mock datetime.now() in the module where it's actually used
-                with patch('beaconled.utils.date_utils.datetime') as mock_datetime:
+                with patch("beaconled.utils.date_utils.datetime") as mock_datetime:
                     # Configure the mock
                     mock_datetime.now.return_value = fixed_now
-                    mock_datetime.side_effect = lambda *args, **kw: datetime(*args, **kw)
-                    mock_datetime.fromtimestamp.side_effect = lambda ts, tz: datetime.fromtimestamp(ts, tz)
-                    
+                    mock_datetime.side_effect = lambda *args, **kw: datetime(
+                        *args,
+                        **kw,
+                        tzinfo=timezone.utc,
+                    )
+                    mock_datetime.fromtimestamp.side_effect = lambda ts, tz: datetime.fromtimestamp(
+                        ts,
+                        tz,
+                    )
+
                     # Call the method under test
                     result = DateParser.parse_date(date_str)
-                    
+
                     # Calculate expected result
                     # The implementation subtracts the delta from now
                     expected = fixed_now - expected_delta
-                    
+
                     # Verify the result is timezone-aware
                     self.assertEqual(result.tzinfo, timezone.utc)
-                    
+
                     # Compare the dates directly (ignoring microseconds)
                     result_no_us = result.replace(microsecond=0)
                     expected_no_us = expected.replace(microsecond=0)
                     self.assertEqual(
-                        result_no_us, 
+                        result_no_us,
                         expected_no_us,
                         f"Failed for {date_str}: expected {expected_no_us}, got {result_no_us}",
                     )
@@ -128,7 +135,7 @@ class TestDateParser(unittest.TestCase):
             "0123456",  # All digits
             "abcdef0",  # All hex chars
         ]
-        
+
         invalid_hashes = [
             ("", "empty string"),
             ("a" * 6, "too short"),

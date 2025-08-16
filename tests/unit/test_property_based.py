@@ -77,7 +77,9 @@ class TestPropertyBasedDateParsing:
                 assert result == expected
             else:
                 # Date only - should be at midnight UTC
-                expected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+                expected_date = (
+                    datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc).date()
+                )
                 assert result.date() == expected_date
                 assert result.hour == 0
                 assert result.minute == 0
@@ -89,13 +91,13 @@ class TestPropertyBasedDateParsing:
 
     @given(
         st.datetimes(
-            min_value=datetime(2000, 1, 1),
-            max_value=datetime(2100, 12, 31, 23, 59, 59),
+            min_value=datetime(2000, 1, 1, tzinfo=timezone.utc),
+            max_value=datetime(2100, 12, 31, 23, 59, 59, tzinfo=timezone.utc),
             timezones=st.just(timezone.utc),
         ),
     )
     @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
-    def test_roundtrip_datetime(self, dt: datetime):
+    def test_roundtrip_datetime(self, dt: datetime, tzinfo=timezone.utc):
         """Test that datetimes can be formatted and parsed back to the same value."""
         # Format the datetime in a way that our parser can handle
         date_str = dt.strftime("%Y-%m-%d %H:%M")
@@ -103,7 +105,8 @@ class TestPropertyBasedDateParsing:
 
         # The parsed datetime should be the same as the input (to the minute)
         assert parsed.replace(second=0, microsecond=0) == dt.replace(
-            second=0, microsecond=0,
+            second=0,
+            microsecond=0,
         )
 
     @given(st.text())
@@ -128,8 +131,8 @@ class TestPropertyBasedDateParsing:
 
     @given(
         st.datetimes(
-            min_value=datetime(1970, 1, 2),
-            max_value=datetime(2038, 1, 1),
+            min_value=datetime(1970, 1, 2, tzinfo=timezone.utc),
+            max_value=datetime(2038, 1, 1, tzinfo=timezone.utc),
             timezones=st.just(timezone.utc),
         ),
     )

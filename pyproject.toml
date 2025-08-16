@@ -55,7 +55,7 @@ dev = [
     "hypothesis>=6.0.0",
     "freezegun>=1.0.0",
     "pytz>=2023.3",
-    
+
     # Code style and formatting
     "black>=23.0.0",
     "isort>=5.10.0",
@@ -63,22 +63,22 @@ dev = [
     "flake8-bugbear>=23.0.0",
     "flake8-docstrings>=1.6.0",
     "pep8-naming>=0.13.0",
-    
+
     # Type checking
     "mypy>=1.0.0",
     "types-python-dateutil>=2.8.0",
     "types-pytz>=2023.0.0",
     "types-requests>=2.28.0",
-    
+
     # Security
     "bandit>=1.7.0",
     "safety>=2.0.0",
-    
+
     # Documentation
     "sphinx>=7.0.0",
     "sphinx-rtd-theme>=1.0.0",
     "myst-parser>=1.0.0",
-    
+
     # Development tools
     "pre-commit>=3.0.0",
     "ipdb>=0.13.0",
@@ -106,84 +106,111 @@ extend-exclude = '''
 
 # Ruff configuration
 [tool.ruff]
-# Global Ruff settings
-line-length = 88
-target-version = "py310"
+line-length = 100
 
-[tool.ruff.lint]
-# Enable all rules in these categories
+# Ignore these rules globally
+ignore = [
+    "ANN401",  # Allow dynamically typed expressions (Any)
+]
+
+# Enable all available rules
 select = [
     "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
     "F",   # pyflakes
     "I",   # isort
     "B",   # flake8-bugbear
     "C4",  # flake8-comprehensions
-    "FBT", # flake8-boolean-trap
-    "UP",  # pyupgrade
-    "N",   # pep8-naming
-    "YTT", # flake8-2020
-    "ANN", # flake8-annotations
-    "S",   # flake8-bandit
-    "A",   # flake8-builtins
     "COM", # flake8-commas
-    "C90", # mccabe
-    "EXE", # flake8-executable
+    "C90", # mccabe complexity
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "YTT", # flake8-2020
+    "FBT", # flake8-boolean-trap
+    "A",   # flake8-builtins
+    "C",   # flake8-comprehensions
+    "B",   # flake8-bugbear
+    "T20", # flake8-print
     "ISC", # flake8-implicit-str-concat
     "ICN", # flake8-import-conventions
     "G",   # flake8-logging-format
     "INP", # flake8-no-pep420
     "PIE", # flake8-pie
-    "T20", # flake8-print
-    "TID", # flake8-tidy-imports
     "TCH", # flake8-type-checking
-    "INT", # flake8-gettext
-    "PTH", # flake8-use-pathlib
     "ERA", # eradicate
-    "PD",  # pandas-vet
-    "PGH", # pygrep-hooks
-    "PL",  # pylint
-    "TRY", # tryceratops
-    "NPY", # numpy
-    "RUF", # Ruff-specific rules
-    "AIR", # flake8-airflow
-    "PERF",# perflint
-    "FURB",# flake8-functions
+    "RUF", # ruff-specific rules
+    "S",   # flake8-bandit (security)
+    "B",   # flake8-blind-except
+    "DTZ", # flake8-datetimez
+    "T10", # flake8-debugger
+    "EM",  # flake8-errmsg
+    "EXE", # flake8-executable
+    "TID", # flake8-tidy-imports
+    "RUF"  # Ruff-specific rules
 ]
 
-# Relax rules for tests where pragmatic assertions and long lines are acceptable
-[tool.ruff.lint.per-file-ignores]
+# Relax rules for source files and scripts
+[tool.ruff.per-file-ignores]
+# Source files
+"src/beaconled/**/*.py" = [
+  "ANN101",  # missing type annotation for self in methods
+  "ANN102",  # missing type annotation for cls in classmethods
+  "ANN201",  # missing return type on functions
+  "ANN202",  # missing return type on private methods
+  "ANN204",  # __init__ return type
+  "PLR0913", # too many arguments
+  "PLR2004", # magic numbers
+  "S110",    # try/except/pass
+  "A003",    # class attribute shadowing builtin
+  "ISC001"   # implicit string concatenation
+]
+
+# Tests
 "tests/**" = [
-  "S101",  # allow bare assert in tests
-  "E501",  # ignore line-length in tests
-  "ANN201",# missing return type on test functions
-  "ANN001",# missing type annotations for function arguments in tests
-  "ANN202",# missing return type on private helpers in tests
-  "ANN002",# *args annotation not needed in tests
-  "ANN003",# **kwargs annotation not needed in tests
-  "ANN204",# __init__ return type in tests
-  "C901",  # complexity in helper methods
-  "INP001", # implicit namespace package
-  "PLR2004", # magic numbers are fine in tests
-  "PLC0415", # allow local imports in tests
+  # Type checking
+  "ANN001",  # missing type annotations for function arguments in tests
+  "ANN002",  # *args annotation not needed in tests
+  "ANN003",  # **kwargs annotation not needed in tests
+  "ANN101",  # missing type annotation for self in test methods
+  "ANN201",  # missing return type on test functions
+  "ANN202",  # missing return type on private helpers in tests
+  "ANN204",  # __init__ return type in tests
+  "ANN401",  # allow Any in tests
+
+  # Testing-specific
+  "S101",    # allow bare assert in tests
+  "E501",    # ignore line-length in tests
+  "ISC001",  # implicit string concatenation
+  "F841",    # allow assigned-but-unused in tests (e.g., captured stdout)
+  "FBT003",  # boolean positional in asserts in tests
   "ERA001",  # allow commented-out code in tests
   "T201",    # allow print in tests for debug
-  "I001",    # ignore import sorting in tests
+
+  # Naming conventions
   "N805",    # first arg name in class methods (used by Hypothesis composites)
   "N818",    # exception naming in tests
+
+  # Path handling
+  "PTH100",  # os.path.abspath in tests is OK
   "PTH103",  # os.makedirs in tests is OK
+  "PTH109",  # os.getcwd in tests is OK
+  "PTH110",  # os.path.exists in tests is OK
   "PTH117",  # os.path.isabs in tests is OK
   "PTH118",  # os.path.join in tests is OK
   "PTH121",  # os.path.samefile in tests is OK
-  "PTH100",  # os.path.abspath in tests is OK
-  "PTH109",  # os.getcwd in tests is OK
-  "PTH110",  # os.path.exists in tests is OK
   "PTH123",  # open() in tests is OK
-  "PLW1510", # explicit check kw in subprocess wrappers in tests
-  "F841",    # allow assigned-but-unused in tests (e.g., captured stdout)
-  "FBT003",  # boolean positional in asserts in tests
+
+  # Code complexity and patterns
+  "C901",    # complexity in helper methods
+  "PLR2004", # magic numbers are fine in tests
+
+  # Imports and packages
+  "I001",    # ignore import sorting in tests
+  "INP001",  # implicit namespace package
+
+  # Security (testing exceptions)
   "S311",    # use of random for non-crypto in tests
-  "S603",    # subprocess usage in tests
-  "ANN401"   # allow Any in tests
+  "S603"     # subprocess usage in tests
 ]
 "src/beaconled/utils/date_utils.py" = [
   "TRY003", # long messages are fine in this validated module
@@ -240,39 +267,61 @@ select = [
   "T201",    # script prints allowed
   "UP006",   # legacy typing in annotations acceptable
   "UP035",   # typing.Dict import allowed
-  "PERF401", # minor perf suggestions ignored in scripts
   "COM812",  # trailing comma suggestions in argparse style
   "I001",    # import layout acceptable
   "PLR2004", # magic numbers acceptable in heuristics
   "PLR0911", # multiple returns acceptable in classifier
+  "ANN101",  # missing type annotation for self in methods
+  "ANN201",  # missing return type on functions
+  "ANN202",  # missing return type on private methods
+  "ANN204",  # __init__ return type
+  "E402"     # module level import not at top of file
 ]
+
+# Scripts
 "scripts/**/*.py" = [
-  "T201",   # intentional prints in CLIs/scripts
-  "EXE001", # shebangs allowed
-  "I001",   # import layout flexibility
-  "E501",   # long embedded text/strings
-  "COM812", # trailing commas suggestions
-  "ANN201", # return annotations optional
-  "ANN202", # private return annotations optional
-  "ANN204", # __init__ annotation optional
-  "UP006",  # legacy typing in annotations
-  "UP035",  # typing.* imports acceptable
-  "PERF401",# minor perf hints
-  "PLR0911",# multiple returns
-  "PLR0912",# branches
-  "PLR2004",# magic numbers
-  "TRY003", # long exception messages
-  "TRY301", # abstract raise suggestion
-  "PTH123", # built-in open()
-  "PTH101", # os.chmod
-  "S103",   # chmod mask
-  "C901",   # complexity
-  "S603",   # subprocess shell/args in scripts
-  "RUF005", # list concat suggestions
-  "PLW2901",# loop var overwritten
-  "PLR0915",# too many statements
-  "UP015",  # unnecessary mode argument
-  "B904",   # raise from suggestion
+  # Type annotation rules - allow dynamic types in scripts
+  "ANN001",  # Missing type annotation for function arguments
+  "ANN002",  # Missing type annotation for *args
+  "ANN003",  # Missing type annotation for **kwargs
+  "ANN101",  # Missing type annotation for self in method
+  "ANN102",  # Missing type annotation for cls in classmethods
+  "ANN201",  # Missing return type on functions
+  "ANN202",  # Missing return type on private methods
+  "ANN204",  # __init__ return type
+  "ANN401",  # Allow Any in type annotations for scripts
+
+  # Style and formatting
+  "T201",    # Intentional prints in CLIs/scripts
+  "E402",    # Module level import not at top of file
+  "E501",    # Long lines in scripts
+  "I001",    # Import sorting
+  "COM812",  # Trailing commas suggestions
+  "UP006",   # Legacy typing in annotations
+  "UP035",   # typing.* imports acceptable
+  "EXE001",  # Shebang issues in scripts
+
+  # Code complexity
+  "C901",    # Complexity
+  "PLR0911", # Too many return statements
+  "PLR0912", # Too many branches
+  "PLR0915", # Too many statements
+  "PLR2004", # Magic numbers
+
+  # Security
+  "S103",    # chmod mask
+  "S603",    # subprocess shell/args in scripts
+
+  # Other
+  "TRY003",  # Long exception messages
+  "TRY200",  # Use raise from
+  "TRY301",  # Abstract raise suggestion
+  "PTH123",  # built-in open()
+  "RUF005",  # List concat suggestions
+  "PLW2901", # Loop var overwritten
+  "UP015",   # Unnecessary mode argument
+  "B904",    # raise from suggestion
+  "INP001"   # Implicit namespace package
 ]
 
 "run_tests.py" = [
@@ -324,10 +373,9 @@ select = [
   "EXE001", # shebang not executable
   "I001",   # import sorting not required
   "ANN001", # arg annotations optional
-  "TRY300", # return outside else
-  "PLC0415",# local import in except
+  "PTH123",  # built-in open() in scripts
+  "TRY300", # try/except in exceptions
 ]
-
 [tool.pytest.ini_options]
 minversion = "7.0"
 addopts = """

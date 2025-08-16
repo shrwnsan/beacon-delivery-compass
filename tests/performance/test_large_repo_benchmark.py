@@ -126,7 +126,8 @@ def test_benchmark_large_repo_analysis(benchmark):
 
             # Run analytics
             analytics = analyzer.get_range_analytics(
-                start_date=start_date, end_date=end_date,
+                start_date=start_date,
+                end_date=end_date,
             )
 
             # Get commit stats

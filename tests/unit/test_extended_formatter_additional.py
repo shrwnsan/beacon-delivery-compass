@@ -1,6 +1,6 @@
 """Additional tests for ExtendedFormatter to improve coverage."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 
 from beaconled.core.models import CommitStats, RangeStats
 from beaconled.formatters.extended import ExtendedFormatter
@@ -35,7 +35,8 @@ class TestExtendedFormatterAdditional:
             CommitStats(
                 hash=f"hash{i}",
                 author="Test Author",
-                date=datetime(2023, 1, 1) + timedelta(days=i % 3),  # 3 different days
+                date=datetime(2023, 1, 1, tzinfo=timezone.utc)
+                + timedelta(days=i % 3),  # 3 different days
                 message=f"Commit {i}",
                 files_changed=1,
                 lines_added=i + 1,
@@ -57,8 +58,8 @@ class TestExtendedFormatterAdditional:
         """Test format_range_stats with commits_by_day attribute."""
         # Create a RangeStats with commits_by_day attribute
         range_stats = RangeStats(
-            start_date=datetime(2023, 1, 1),
-            end_date=datetime(2023, 1, 31),
+            start_date=datetime(2023, 1, 1, tzinfo=timezone.utc),
+            end_date=datetime(2023, 1, 31, tzinfo=timezone.utc),
             total_commits=10,
             total_files_changed=25,
             total_lines_added=100,
@@ -83,8 +84,8 @@ class TestExtendedFormatterAdditional:
         """Test format_range_stats with file_types attribute."""
         # Create a RangeStats with file_types attribute
         range_stats = RangeStats(
-            start_date=datetime(2023, 1, 1),
-            end_date=datetime(2023, 1, 31),
+            start_date=datetime(2023, 1, 1, tzinfo=timezone.utc),
+            end_date=datetime(2023, 1, 31, tzinfo=timezone.utc),
             total_commits=10,
             total_files_changed=25,
             total_lines_added=100,

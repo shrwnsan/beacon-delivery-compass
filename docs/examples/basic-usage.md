@@ -338,19 +338,19 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.8'
-      
+
       - name: Install Beacon
         run: pip install beaconled
-      
+
       - name: Generate Daily Report
         run: |
           beaconled --range --since "1 day ago" --format json > daily-report.json
-      
+
       - name: Upload Report
         uses: actions/upload-artifact@v3
         with:
@@ -370,14 +370,14 @@ from beaconled.formatters.json_format import JSONFormatter
 
 def send_daily_report(webhook_url):
     analyzer = GitAnalyzer()
-    
+
     # Yesterday's stats
     yesterday = datetime.now() - timedelta(days=1)
     stats = analyzer.analyze_range(
         since=yesterday.strftime("%Y-%m-%d"),
         until=datetime.now().strftime("%Y-%m-%d")
     )
-    
+
     message = {
         "text": "📊 Daily Development Report",
         "attachments": [{
@@ -390,7 +390,7 @@ def send_daily_report(webhook_url):
             ]
         }]
     }
-    
+
     requests.post(webhook_url, json=message)
 
 if __name__ == "__main__":

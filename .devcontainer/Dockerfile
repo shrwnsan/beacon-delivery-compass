@@ -21,7 +21,7 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Poetry
-RUN curl -sSL https://install.python-poetry.org | python3 - 
+RUN curl -sSL https://install.python-poetry.org | python3 -
 ENV PATH="${PATH}:/root/.local/bin"
 
 # Create a non-root user

@@ -1,4 +1,4 @@
-.PHONY: help setup test lint typecheck format check-deps clean
+.PHONY: help setup test lint typecheck format check-deps clean dev-setup prod-setup
 
 # Default target
 help:
@@ -10,6 +10,8 @@ help:
 	@echo "  format    - Format code (black, isort)"
 	@echo "  check-deps - Check for outdated dependencies"
 	@echo "  clean     - Clean up temporary files"
+	@echo "  dev-setup - Configure pre-commit for development"
+	@echo "  prod-setup - Configure pre-commit for production"
 
 # Set up development environment
 setup:
@@ -46,3 +48,22 @@ clean:
 	find . -type d -name ".pytest_cache" -exec rm -r {} +
 	find . -type d -name ".mypy_cache" -exec rm -r {} +
 	rm -rf .coverage coverage.xml htmlcov/ .ruff_cache/ .hypothesis/
+
+# Configure pre-commit for development
+dev-setup:
+	@echo "Configuring pre-commit for development..."
+	cp .pre-commit-dev.yaml .pre-commit-config.yaml
+	pre-commit install --install-hooks
+	@echo "\nDevelopment pre-commit configured. The following checks are enabled:"
+	@echo "- Black (lenient: 100 chars/line)"
+	@echo "- Ruff (ignoring E501,F401)"
+	@echo "- mypy (non-strict)"
+	@echo "\nUse 'make prod-setup' to switch to production checks before committing."
+
+# Configure pre-commit for production
+prod-setup:
+	@echo "Configuring pre-commit for production..."
+	cp .pre-commit-prod.yaml .pre-commit-config.yaml
+	pre-commit install --install-hooks
+	@echo "\nProduction pre-commit configured with strict checks."
+	@echo "All hooks including isort, black, ruff, and mypy will run."

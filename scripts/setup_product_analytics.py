@@ -153,27 +153,27 @@ on:
 jobs:
   generate-report:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.9'
-    
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-    
+
     - name: Generate Product Insights
       run: |
         python scripts/product_insights_cli.py weekly --since "1 week ago" > weekly_report.txt
         python scripts/product_insights_cli.py executive --since "1 week ago" > executive_summary.json
-    
+
     - name: Upload Report
       uses: actions/upload-artifact@v3
       with:
@@ -181,7 +181,7 @@ jobs:
         path: |
           weekly_report.txt
           executive_summary.json
-    
+
     - name: Send Slack Notification
       if: env.SLACK_WEBHOOK_URL != ''
       run: |

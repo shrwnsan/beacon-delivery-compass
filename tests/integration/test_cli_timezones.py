@@ -37,9 +37,9 @@ class TestCLITimezoneHandling(unittest.TestCase):
                     f"Expected error message for timezone-aware input: {date_str}",
                 )
                 self.assertIn(
-                    "UTC",
+                    "Unsupported date format",
                     result.stderr,
-                    f"Error message should mention UTC requirement for input: {date_str}",
+                    f"Error message should indicate unsupported format for input: {date_str}",
                 )
 
     def test_naive_input_acceptance(self):

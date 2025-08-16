@@ -5,28 +5,49 @@ handling. Each exception includes a unique error code and a human-readable
 message.
 """
 
+from __future__ import annotations
+
 from enum import Enum
+from typing import Any, TypedDict
 
 
-class ErrorCode(Enum):
-    """Error codes for different types of exceptions."""
+class ErrorDetail(TypedDict, total=False):
+    """Type for error details dictionary."""
 
-    # Generic errors (1000-1999)
-    UNKNOWN_ERROR = 1000
-    CONFIGURATION_ERROR = 1001
-    VALIDATION_ERROR = 1002
+    message: str
+    code: str
+    details: dict[str, Any]
 
-    # Date-related errors (2000-2999)
-    DATE_ERROR = 2000
-    DATE_PARSE_ERROR = 2001
-    DATE_RANGE_ERROR = 2002
 
-    # Repository errors (3000-3999)
-    REPOSITORY_ERROR = 3000
-    INVALID_REPOSITORY = 3001
-    COMMIT_ERROR = 3002
-    COMMIT_NOT_FOUND = 3003
-    COMMIT_PARSE_ERROR = 3004
+class ErrorCode(str, Enum):
+    """Standard error codes for the application."""
+
+    UNKNOWN = "unknown_error"
+    VALIDATION = "validation_error"
+    NOT_FOUND = "not_found"
+    PERMISSION_DENIED = "permission_denied"
+    UNAUTHORIZED = "unauthorized"
+    CONFLICT = "conflict"
+    BAD_REQUEST = "bad_request"
+    TIMEOUT = "timeout"
+    NETWORK = "network_error"
+    CONFIGURATION = "configuration_error"
+    NOT_IMPLEMENTED = "not_implemented"
+    INTERNAL = "internal_error"
+    GIT_ERROR = "git_error"
+    INVALID_DATE = "invalid_date"
+    INVALID_TIMEZONE = "invalid_timezone"
+    INVALID_COMMIT = "invalid_commit"
+    INVALID_REPOSITORY = "invalid_repository"
+    REPOSITORY_NOT_FOUND = "repository_not_found"
+    COMMIT_NOT_FOUND = "commit_not_found"
+    BRANCH_NOT_FOUND = "branch_not_found"
+    TAG_NOT_FOUND = "tag_not_found"
+    ANALYZER_ERROR = "analyzer_error"
+    FORMATTER_ERROR = "formatter_error"
+    INTEGRATION_ERROR = "integration_error"
+    DATE_ERROR = "date_error"
+    DATE_PARSE_ERROR = "date_parse_error"
 
 
 class BeaconError(Exception):
@@ -38,23 +59,23 @@ class BeaconError(Exception):
         details: Additional error details (optional)
     """
 
-    DEFAULT_ERROR_CODE = ErrorCode.UNKNOWN_ERROR
+    DEFAULT_ERROR_CODE = ErrorCode.UNKNOWN
 
     def __init__(
         self,
         message: str,
         error_code: ErrorCode | None = None,
-        details: dict[str, object] | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         self.error_code = error_code or self.DEFAULT_ERROR_CODE
-        self.details = details or {}
+        self.details = details.copy() if details else {}
         super().__init__(message)
 
 
 class ConfigurationError(BeaconError):
     """Raised when there is a configuration error."""
 
-    DEFAULT_ERROR_CODE = ErrorCode.CONFIGURATION_ERROR
+    DEFAULT_ERROR_CODE = ErrorCode.CONFIGURATION
 
 
 class ValidationError(BeaconError):
@@ -64,10 +85,10 @@ class ValidationError(BeaconError):
         message: Explanation of the validation error
         field: The field that failed validation (optional)
         value: The value that caused the validation to fail (optional)
-        error_code: Specific error code (defaults to VALIDATION_ERROR)
+        error_code: Specific error code (defaults to VALIDATION)
     """
 
-    DEFAULT_ERROR_CODE = ErrorCode.VALIDATION_ERROR
+    DEFAULT_ERROR_CODE = ErrorCode.VALIDATION
 
     def __init__(
         self,
@@ -75,7 +96,7 @@ class ValidationError(BeaconError):
         field: str | None = None,
         value: object | None = None,
         error_code: ErrorCode | None = None,
-        details: dict[str, object] | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         self.field = field
         self.value = value
@@ -92,16 +113,10 @@ class ValidationError(BeaconError):
         )
 
 
-# Re-export date-related errors for backward compatibility.
-# Prefer importing from beaconled.core.date_errors in new code.
-
-__all__ = []
-
-
 class RepositoryError(BeaconError):
     """Base class for repository-related errors."""
 
-    DEFAULT_ERROR_CODE = ErrorCode.REPOSITORY_ERROR
+    DEFAULT_ERROR_CODE = ErrorCode.INVALID_REPOSITORY
 
 
 class InvalidRepositoryError(RepositoryError):
@@ -110,7 +125,10 @@ class InvalidRepositoryError(RepositoryError):
     DEFAULT_ERROR_CODE = ErrorCode.INVALID_REPOSITORY
 
     def __init__(
-        self, repo_path: str, reason: str | None = None, **kwargs: object,
+        self,
+        repo_path: str,
+        reason: str | None = None,
+        **kwargs: Any,
     ) -> None:
         self.repo_path = repo_path
         self.reason = reason
@@ -123,42 +141,57 @@ class InvalidRepositoryError(RepositoryError):
         if reason:
             details["reason"] = reason
 
-        # Do not pass error_code twice; allow base to use DEFAULT_ERROR_CODE
-        # via its own logic.
         super().__init__(message=message, details=details, **kwargs)
 
 
-class CommitError(RepositoryError):
-    """Base class for commit-related errors.
-
-    Attributes:
-        commit_ref: The commit reference (hash, branch, tag, etc.)
-        message: Human-readable error message
-        details: Additional error context
-    """
-
-    DEFAULT_ERROR_CODE = ErrorCode.COMMIT_ERROR
+class CommitError(BeaconError):
+    """Base class for commit-related errors."""
 
     def __init__(
         self,
-        commit_ref: str,
-        message: str | None = None,
-        details: dict[str, object] | None = None,
-        **kwargs: object,
+        message: str,
+        error_code: ErrorCode = ErrorCode.INVALID_COMMIT,
+        commit_hash: str | None = None,
+        commit_ref: str | None = None,
+        details: dict[str, Any] | None = None,
+        **kwargs: Any,
     ) -> None:
-        self.commit_ref = commit_ref
-        message = message or f"Error processing commit: {commit_ref}"
+        # Initialize a new dictionary to avoid modifying the input
+        safe_details: dict[str, Any] = {}
 
-        details = details or {}
-        details["commit_ref"] = commit_ref
+        # Copy details if provided
+        if details is not None:
+            safe_details.update(details)
 
-        # Avoid passing error_code explicitly to prevent duplicate keyword issues
-        super().__init__(message=message, details=details, **kwargs)
+        # Add any additional details from kwargs (except special parameters)
+        special_params = {"details", "error_code", "commit_hash", "commit_ref"}
+        for key, value in kwargs.items():
+            if key not in special_params and not key.startswith("_"):
+                safe_details[key] = value
+
+        # Add commit hash to details if provided
+        if commit_hash is not None:
+            safe_details["commit_hash"] = commit_hash
+
+        # Add commit ref to details if provided
+        if commit_ref is not None:
+            safe_details["commit_ref"] = commit_ref
+
+        # Call parent with properly typed arguments
+        super().__init__(
+            message=message,
+            error_code=error_code,
+            details=safe_details,
+        )
+        self.commit_hash = commit_hash
 
     @classmethod
-    def from_commit(
-        cls, commit_ref: str, reason: str | None = None, **kwargs: object,
-    ) -> "CommitError":
+    def with_reason(
+        cls,
+        commit_ref: str,
+        reason: str | None = None,
+        **kwargs: Any,
+    ) -> CommitError:
         """Create a CommitError with a reason.
 
         Args:
@@ -169,11 +202,20 @@ class CommitError(RepositoryError):
         Returns:
             A configured CommitError instance
         """
-        message = f"Error processing commit {commit_ref}"
+        message = f"Error with commit {commit_ref}"
         if reason:
             message += f": {reason}"
 
-        return cls(commit_ref=commit_ref, message=message, **kwargs)
+        details: dict[str, Any] = {}
+        details["commit_ref"] = commit_ref
+        if reason:
+            details["reason"] = reason
+
+        # Filter out any 'details' from kwargs to avoid duplication
+        kwargs_without_details = {k: v for k, v in kwargs.items() if k != "details"}
+        details.update(kwargs_without_details)
+
+        return cls(message=message, details=details)
 
 
 class CommitNotFoundError(CommitError):
@@ -182,42 +224,81 @@ class CommitNotFoundError(CommitError):
     DEFAULT_ERROR_CODE = ErrorCode.COMMIT_NOT_FOUND
 
     def __init__(
-        self, commit_ref: str, repo_path: str | None = None, **kwargs: object,
+        self,
+        commit_ref: str,
+        repo_path: str | None = None,
+        **kwargs: Any,
     ) -> None:
         message = f"Commit not found: {commit_ref}"
-        details = kwargs.pop("details", {})
+        details: dict[str, Any] = {}
+
+        # Get any existing details from kwargs
+        if "details" in kwargs and isinstance(kwargs["details"], dict):
+            details.update(kwargs["details"])
+            del kwargs["details"]
+
+        # Add commit reference to details
         details["commit_ref"] = commit_ref
-        if repo_path:
+
+        # Add repo path to details if provided
+        if repo_path is not None:
             details["repo_path"] = repo_path
             message += f" in repository {repo_path}"
 
-        # CommitError parent will handle DEFAULT_ERROR_CODE; avoid duplicating
-        # error_code.
+        # Extract specific parameters for the parent class
+        error_code = kwargs.pop("error_code", self.DEFAULT_ERROR_CODE)
+        commit_hash = kwargs.pop("commit_hash", None)
+
+        # Call parent with properly typed arguments
         super().__init__(
-            commit_ref=commit_ref, message=message, details=details, **kwargs,
+            message=message,
+            error_code=error_code,
+            commit_hash=commit_hash,
+            commit_ref=commit_ref,
+            details=details,
         )
 
 
 class CommitParseError(CommitError):
     """Raised when there's an error parsing commit data."""
 
-    DEFAULT_ERROR_CODE = ErrorCode.COMMIT_PARSE_ERROR
+    DEFAULT_ERROR_CODE = ErrorCode.INVALID_COMMIT
 
     def __init__(
-        self, commit_ref: str, parse_error: Exception | None = None, **kwargs: object,
+        self,
+        commit_ref: str,
+        parse_error: Exception | None = None,
+        **kwargs: Any,
     ) -> None:
         message = f"Failed to parse commit: {commit_ref}"
-        details = kwargs.pop("details", {})
+
+        # Initialize a new dictionary for details
+        details: dict[str, Any] = {}
+
+        # Get any existing details from kwargs
+        if "details" in kwargs and isinstance(kwargs["details"], dict):
+            details.update(kwargs["details"])
+            del kwargs["details"]
+
+        # Add commit reference to details
         details["commit_ref"] = commit_ref
 
-        if parse_error:
+        # Add parse error details if available
+        if parse_error is not None:
             details["parse_error"] = str(parse_error)
             message += f" - {parse_error!s}"
 
-        # CommitError parent provides error_code behavior; do not pass error_code
-        # again.
+        # Extract specific parameters for the parent class
+        error_code = kwargs.pop("error_code", self.DEFAULT_ERROR_CODE)
+        commit_hash = kwargs.pop("commit_hash", None)
+
+        # Call parent with properly typed arguments
         super().__init__(
-            commit_ref=commit_ref, message=message, details=details, **kwargs,
+            message=message,
+            error_code=error_code,
+            commit_hash=commit_hash,
+            commit_ref=commit_ref,
+            details=details,
         )
 
 

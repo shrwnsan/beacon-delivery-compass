@@ -6,7 +6,7 @@ New code should import directly from ``beaconled.utils.date_utils`` instead.
 
 from datetime import datetime
 
-from beaconled.utils.date_utils import DateParser
+from beaconled.utils.date_utils import DateUtils
 
 
 class GitDateParser:
@@ -17,10 +17,8 @@ class GitDateParser:
     """
 
     # Maintain the same patterns for compatibility
-    RELATIVE_DATE_PATTERN = DateParser.RELATIVE_DATE_PATTERN
-    ISO_DATE_PATTERN = DateParser.ISO_DATE_PATTERN
-    ISO_DATETIME_PATTERN = DateParser.ISO_DATETIME_PATTERN
-    GIT_DATE_PATTERN = DateParser.GIT_DATE_PATTERN
+    RELATIVE_DATE_PATTERN = DateUtils.RELATIVE_DATE_PATTERN
+    # These patterns don't exist on DateUtils, so we'll remove them for now
 
     @classmethod
     def parse_date(cls, date_str: str) -> datetime:
@@ -37,7 +35,7 @@ class GitDateParser:
         Raises:
             DateParseError: If the date string cannot be parsed.
         """
-        return DateParser.parse_date(date_str)
+        return DateUtils.parse_date(date_str)
 
     @classmethod
     def parse_git_date(cls, date_str: str) -> datetime:
@@ -54,7 +52,7 @@ class GitDateParser:
         Raises:
             DateParseError: If the date string cannot be parsed.
         """
-        return DateParser.parse_git_date(date_str)
+        return DateUtils.parse_git_date(date_str)
 
     @classmethod
     def validate_date_range(
@@ -76,7 +74,7 @@ class GitDateParser:
         Raises:
             ValueError: If the range is invalid.
         """
-        return DateParser.validate_date_range(start_date, end_date)
+        return DateUtils.validate_date_range(start_date, end_date)
 
     @classmethod
     def _parse_relative_date(cls, date_str: str) -> datetime:
@@ -84,7 +82,7 @@ class GitDateParser:
 
         This is a compatibility wrapper around DateParser._parse_relative_date().
         """
-        return DateParser._parse_relative_date(date_str)
+        return DateUtils._parse_relative_date(date_str)
 
     @classmethod
     def _parse_iso_date(cls, date_str: str) -> datetime:
@@ -92,7 +90,7 @@ class GitDateParser:
 
         This is a compatibility wrapper around DateParser._parse_iso_date().
         """
-        return DateParser._parse_iso_date(date_str)
+        return DateUtils._parse_iso_date(date_str)
 
     @classmethod
     def _parse_iso_datetime(cls, datetime_str: str) -> datetime:
@@ -100,7 +98,7 @@ class GitDateParser:
 
         This is a compatibility wrapper around DateParser._parse_iso_datetime().
         """
-        return DateParser._parse_iso_datetime(datetime_str)
+        return DateUtils._parse_iso_datetime(datetime_str)
 
     @classmethod
     def is_valid_commit_hash(cls, commit_hash: str) -> bool:
@@ -114,4 +112,4 @@ class GitDateParser:
         Returns:
             bool: True if the commit hash is valid, False otherwise.
         """
-        return DateParser.is_valid_commit_hash(commit_hash)
+        return DateUtils.is_valid_commit_hash(commit_hash)

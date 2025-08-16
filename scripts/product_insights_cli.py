@@ -134,9 +134,7 @@ class ProductInsightsCLI:
         customer_keywords = ["customer", "user", "client", "ui", "ux", "experience"]
         has_customer_keyword = any(kw in message for kw in customer_keywords)
 
-        customer_components = (
-            components.get("frontend", 0) > 0 or components.get("api", 0) > 0
-        )
+        customer_components = components.get("frontend", 0) > 0 or components.get("api", 0) > 0
 
         return has_customer_keyword or customer_components
 
@@ -151,12 +149,8 @@ def main():
     )
 
     parser.add_argument("--since", default="1 week ago", help="Start date for analysis")
-    parser.add_argument(
-        "--commit", default="HEAD", help="Commit hash for single commit analysis"
-    )
-    parser.add_argument(
-        "--format", choices=["text", "json"], default="text", help="Output format"
-    )
+    parser.add_argument("--commit", default="HEAD", help="Commit hash for single commit analysis")
+    parser.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
     parser.add_argument("--repo", default=".", help="Repository path")
 
     args = parser.parse_args()
