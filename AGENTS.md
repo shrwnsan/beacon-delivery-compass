@@ -17,10 +17,10 @@ This document outlines the development guidelines for agents operating within th
 ## 2. Code Style Guidelines
 
 ### General
-*   **Imports:** 
+*   **Imports:**
     - Group imports in this order: standard library, third-party, local
     - Use `isort` to maintain order
-*   **Formatting:** 
+*   **Formatting:**
     - Follow PEP 8 standards
     - Use `black` for automatic formatting
 *   **Naming Conventions:**

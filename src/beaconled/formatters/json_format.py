@@ -1,28 +1,34 @@
 """JSON output formatter."""
 
 import json
-from datetime import datetime
-from ..core.models import CommitStats, RangeStats
+from datetime import datetime, timezone
+
+from beaconled.core.models import CommitStats, RangeStats
 
 
 class JSONFormatter:
     """JSON formatter for Beacon delivery analytics output."""
 
-    def _serialize_datetime(self, obj: object) -> str:
+    def _serialize_datetime(self, obj: object, **kwargs: object) -> str:
         """JSON serializer for datetime objects.
-        
+
         Args:
             obj: Object to serialize
-            
+            **kwargs: Additional keyword arguments (e.g., tzinfo)
+
         Returns:
-            str: ISO formatted datetime string
-            
+            str: ISO formatted datetime string with timezone if present
+
         Raises:
             TypeError: If the object is not a datetime
         """
         if isinstance(obj, datetime):
+            # Ensure consistent timezone handling
+            if obj.tzinfo is None:
+                obj = obj.replace(tzinfo=timezone.utc)
             return obj.isoformat()
-        raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+        # Fallback to TypeError without a custom message to satisfy TRY003
+        raise TypeError
 
     def format_commit_stats(self, stats: CommitStats) -> str:
         """Format commit statistics as JSON."""

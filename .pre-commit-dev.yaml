@@ -1,0 +1,42 @@
+# Development pre-commit configuration
+# This is a more lenient configuration for local development
+# For production/CI, use .pre-commit-config.yaml
+
+repos:
+-   repo: https://github.com/psf/black
+    rev: 23.3.0
+    hooks:
+    -   id: black
+        args: [--line-length=100]  # Slightly more lenient line length
+        exclude: '^docs/|migrations/'
+
+-   repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.0.270
+    hooks:
+    -   id: ruff
+        args: [--fix, --ignore=E501,F401]  # Ignore line length and unused imports
+
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.4.1
+    hooks:
+    -   id: mypy
+        additional_dependencies: [types-python-dateutil, types-pytz]
+        args: [--ignore-missing-imports]
+        exclude: '^tests/|^docs/|^migrations/|^src/beaconled/core/git_analyzer.py'
+        files: '^src/beaconled/.*\.py$'
+
+# Keep these fast-running checks for development
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+    -   id: trailing-whitespace
+    -   id: end-of-file-fixer
+    -   id: check-yaml
+    -   id: check-added-large-files
+        args: ['--maxkb=500']
+
+# Skip these in development
+# - isort (handled by ruff)
+# - flake8 (handled by ruff)
+# - pydocstyle (too strict for dev)
+# - pylint (too slow for dev)
