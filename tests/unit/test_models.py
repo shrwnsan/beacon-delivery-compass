@@ -1,7 +1,9 @@
 """Tests for the models module."""
+
 import unittest
 from datetime import datetime
-from beaconled.core.models import FileStats, CommitStats, RangeStats
+
+from beaconled.core.models import CommitStats, FileStats, RangeStats
 
 
 class TestFileStats(unittest.TestCase):
@@ -13,7 +15,7 @@ class TestFileStats(unittest.TestCase):
             path="test.py",
             lines_added=10,
             lines_deleted=5,
-            lines_changed=15
+            lines_changed=15,
         )
 
         self.assertEqual(file_stats.path, "test.py")
@@ -35,14 +37,14 @@ class TestCommitStats(unittest.TestCase):
             files_changed=1,
             lines_added=10,
             lines_deleted=5,
-            files=[FileStats("test.py", 10, 5, 15)]
+            files=[FileStats("test.py", 10, 5, 15)],
         )
 
         self.assertEqual(commit_stats.hash, "abc123")
         self.assertEqual(commit_stats.author, "Test Author")
         self.assertEqual(
             commit_stats.date,
-            datetime.fromisoformat("2025-07-20T10:00:00+08:00")
+            datetime.fromisoformat("2025-07-20T10:00:00+08:00"),
         )
         self.assertEqual(commit_stats.message, "Test commit")
         self.assertEqual(commit_stats.files_changed, 1)
@@ -64,26 +66,28 @@ class TestRangeStats(unittest.TestCase):
             total_files_changed=1,
             total_lines_added=10,
             total_lines_deleted=5,
-            commits=[CommitStats(
-                hash="abc123",
-                author="Test Author",
-                date=datetime.fromisoformat("2025-07-20T10:00:00+08:00"),
-                message="Test commit",
-                files_changed=1,
-                lines_added=10,
-                lines_deleted=5,
-                files=[FileStats("test.py", 10, 5, 15)]
-            )],
-            authors={"Test Author": 1}
+            commits=[
+                CommitStats(
+                    hash="abc123",
+                    author="Test Author",
+                    date=datetime.fromisoformat("2025-07-20T10:00:00+08:00"),
+                    message="Test commit",
+                    files_changed=1,
+                    lines_added=10,
+                    lines_deleted=5,
+                    files=[FileStats("test.py", 10, 5, 15)],
+                ),
+            ],
+            authors={"Test Author": 1},
         )
 
         self.assertEqual(
             range_stats.start_date,
-            datetime.fromisoformat("2025-07-20T10:00:00+08:00")
+            datetime.fromisoformat("2025-07-20T10:00:00+08:00"),
         )
         self.assertEqual(
             range_stats.end_date,
-            datetime.fromisoformat("2025-07-21T10:00:00+08:00")
+            datetime.fromisoformat("2025-07-21T10:00:00+08:00"),
         )
         self.assertEqual(range_stats.total_commits, 1)
         self.assertEqual(range_stats.total_files_changed, 1)

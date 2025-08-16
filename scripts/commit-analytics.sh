@@ -112,7 +112,7 @@ DELETED_FILES=$(echo "$FILES_INFO" | grep -c '^D' || echo "0")
 get_file_type_breakdown() {
     local temp_file=$(mktemp)
     git --no-pager show --name-only "$COMMIT_HASH" | grep -v '^$' > "$temp_file"
-    
+
     # Use a simpler approach for file type counting
     local extensions=""
     while IFS= read -r file; do
@@ -123,9 +123,9 @@ get_file_type_breakdown() {
         fi
         extensions="$extensions$ext "
     done < "$temp_file"
-    
+
     rm "$temp_file"
-    
+
     # Count and display unique extensions
     echo "$extensions" | tr ' ' '\n' | sort | uniq -c | while read count ext; do
         if [ -n "$ext" ]; then
@@ -141,7 +141,7 @@ get_component_breakdown() {
     local docs_files=$(git --no-pager show --name-only "$COMMIT_HASH" | grep -c '^docs/' || echo "0")
     local config_files=$(git --no-pager show --name-only "$COMMIT_HASH" | grep -cE '\.(json|yaml|yml|toml|ini|env)$' || echo "0")
     local test_files=$(git --no-pager show --name-only "$COMMIT_HASH" | grep -cE 'test_|\.test\.|\.spec\.' || echo "0")
-    
+
     echo "Backend: $backend_files files"
     echo "Frontend: $frontend_files files"
     echo "Documentation: $docs_files files"
@@ -158,12 +158,12 @@ output_standard() {
     echo -e "${YELLOW}Branch: ${CURRENT_BRANCH:-unknown}${NC}"
     echo -e "${CYAN}Author: $COMMIT_AUTHOR${NC}"
     echo -e "${CYAN}Date: $COMMIT_DATE${NC}"
-    
+
     if [ "$SHOW_DETAILED" = true ]; then
         echo ""
         echo -e "${PURPLE}File Types:${NC}"
         get_file_type_breakdown | sed 's/^/  - /'
-        
+
         echo ""
         echo -e "${PURPLE}Components:${NC}"
         get_component_breakdown | sed 's/^/  - /'
@@ -179,7 +179,7 @@ output_extended() {
     if [ "$DELETED_FILES" -gt 0 ]; then
         echo -e "${RED}$DELETED_FILES files deleted${NC}"
     fi
-    
+
     echo ""
     echo -e "${BLUE}--Commit Details:${NC}"
     echo -e "${YELLOW}Hash: $COMMIT_SHORT${NC}"
@@ -187,12 +187,12 @@ output_extended() {
     echo -e "${CYAN}Author: $COMMIT_AUTHOR${NC}"
     echo -e "${CYAN}Date: $COMMIT_DATE${NC}"
     echo -e "${CYAN}Message: $COMMIT_MESSAGE${NC}"
-    
+
     if [ "$SHOW_DETAILED" = true ]; then
         echo ""
         echo -e "${BLUE}--Breakdown by Component:${NC}"
         get_component_breakdown
-        
+
         echo ""
         echo -e "${BLUE}--File Types:${NC}"
         get_file_type_breakdown

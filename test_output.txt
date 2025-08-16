@@ -1,0 +1,24 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.5, pytest-8.4.1, pluggy-1.6.0 -- /Users/karma/.pyenv/versions/3.13.5/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'dev' -> max_examples=10, suppress_health_check=(HealthCheck.too_slow,)
+rootdir: /Users/karma/Developer/code-audit
+configfile: pytest.ini
+plugins: xdist-3.8.0, anyio-4.10.0, hypothesis-6.136.7, cov-6.2.1, mock-3.14.1
+collecting ... collected 6 items
+
+tests/unit/test_date_utils.py::TestDateParser::test_is_valid_commit_hash PASSED [ 16%]
+tests/unit/test_date_utils.py::TestDateParser::test_parse_absolute_dates PASSED [ 33%]
+tests/unit/test_date_utils.py::TestDateParser::test_parse_git_date PASSED [ 50%]
+tests/unit/test_date_utils.py::TestDateParser::test_parse_relative_dates FAILED [ 66%]
+tests/unit/test_date_utils.py::TestDateParser::test_validate_date_range PASSED [ 83%]
+tests/unit/test_date_utils.py::TestDateParser::test_validate_date_range_invalid PASSED [100%]
+
+=================================== FAILURES ===================================
+___________________ TestDateParser.test_parse_relative_dates ___________________
+tests/unit/test_date_utils.py:72: in test_parse_relative_dates
+    self.assertEqual(
+E   AssertionError: datetime.datetime(2022, 12, 31, 12, 0, tzinfo=datetime.timezone.utc) != datetime.datetime(2023, 1, 2, 12, 0, tzinfo=datetime.timezone.utc) : Failed for 1d: expected 2023-01-02 12:00:00+00:00, got 2022-12-31 12:00:00+00:00
+=========================== short test summary info ============================
+FAILED tests/unit/test_date_utils.py::TestDateParser::test_parse_relative_dates - AssertionError: datetime.datetime(2022, 12, 31, 12, 0, tzinfo=datetime.timezone.utc) != datetime.datetime(2023, 1, 2, 12, 0, tzinfo=datetime.timezone.utc) : Failed for 1d: expected 2023-01-02 12:00:00+00:00, got 2022-12-31 12:00:00+00:00
+========================= 1 failed, 5 passed in 0.06s ==========================

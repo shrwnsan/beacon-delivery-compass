@@ -93,24 +93,24 @@ on:
 jobs:
   analytics:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0  # Full history for range analysis
-    
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.8'
-    
+
     - name: Install Beacon
       run: pip install beaconled
-    
+
     - name: Generate Commit Analytics
       run: |
         beaconled --format json > commit-stats.json
-    
+
     - name: Upload Analytics
       uses: actions/upload-artifact@v3
       with:
@@ -134,32 +134,32 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.8', '3.9', '3.10']
-    
+
     steps:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
-    
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install beaconled
-    
+
     - name: Generate weekly report
       run: |
         beaconled --range --since "1 week ago" --format json > weekly-report.json
-    
+
     - name: Upload report
       uses: actions/upload-artifact@v3
       with:
         name: weekly-analytics-${{ matrix.python-version }}
         path: weekly-report.json
-    
+
     - name: Send to Slack
       if: matrix.python-version == '3.8'
       uses: slackapi/slack-github-action@v1.23.0
@@ -271,7 +271,7 @@ from beaconled.formatters.json_format import JSONFormatter
 def send_to_slack(webhook_url, channel="#dev-updates"):
     analyzer = GitAnalyzer()
     stats = analyzer.analyze_range(since="1 day ago")
-    
+
     # Format for Slack
     message = {
         "channel": channel,
@@ -287,7 +287,7 @@ def send_to_slack(webhook_url, channel="#dev-updates"):
             ]
         }]
     }
-    
+
     requests.post(webhook_url, json=message)
 
 if __name__ == "__main__":
@@ -308,7 +308,7 @@ app = App(token=os.environ["SLACK_BOT_TOKEN"])
 @app.command("/beaconled")
 def handle_beaconled_command(ack, say, command):
     ack()
-    
+
     text = command["text"]
     if "weekly" in text:
         stats = analyzer.analyze_range(since="1 week ago")

@@ -1,113 +1,82 @@
-# Beacon Delivery Compass - Enhancement Plan
+# Beacon Delivery Compass - Development Roadmap
+
+*Last Updated: 2025-08-16*
 
 ## Overview
-This document outlines potential improvements and enhancements for the Beacon Delivery Compass project, organized by category and priority.
+This document tracks the development progress and future plans for Beacon Delivery Compass, organized by priority and category.
 
-## Timezone Handling (UTC Standardization) ✅
-### Implementation Details
-- All dates are internally handled in UTC timezone
-- Input dates without timezone information are assumed to be in UTC
-- All date parsing functions return timezone-aware datetime objects
-- Date comparisons and filtering are performed in UTC
-- Output dates are consistently formatted in UTC
+## High Priority (Next 2-4 Weeks)
 
-### Key Components
-- `_parse_date` and `_parse_git_date` enforce UTC timezone
-- `get_range_analytics` operates exclusively in UTC
-- Test suite validates UTC handling across all date operations
+### Core Functionality
+- [x] Basic Git repository analysis
+- [x] Multiple output formats (JSON, standard, extended)
+- [x] Basic test coverage
+- [x] Basic error handling
+- [x] Basic documentation
 
-### Benefits
-- Eliminates timezone-related bugs
-- Simplifies date comparisons and arithmetic
-- Ensures consistent behavior across different environments
-- Makes test cases more predictable and maintainable
+### Performance Optimizations
+- [x] Migrate direct git subprocess calls to GitPython
+- [x] Improve error handling for git operations
+- [ ] Implement streaming for large commit ranges (Memory Management)
 
-## 1. Documentation Updates ✅
-### High Priority
-- [x] Add comprehensive examples of date formats to README
-- [x] Update CLI help text with detailed examples and usage patterns
-- [x] Document date parsing behavior and supported formats in code docstrings
-
-### Medium Priority ✅
-- [x] Create a user guide for common workflows
-- [x] Add API documentation for core modules
-
-## 2. Error Handling ✅
-### High Priority
-- [x] Improve error messages for invalid date formats
-- [x] Add input validation for date ranges (end date after start date)
-- [x] Ensure consistent error handling patterns across the codebase
-
-### Medium Priority
-- [x] Add custom exception classes for different error types
-- [x] Implement more granular error codes for programmatic handling
-
-## 3. Testing
-### High Priority
-- [x] Add edge case tests for date parsing
-- [x] Test invalid date format scenarios
-- [x] Expand CLI integration tests with various date formats
-
-## 4. Type Safety & Code Quality ✅
-### High Priority
-- [x] Add comprehensive type hints across the codebase
-- [x] Fix all mypy type checking errors
-- [x] Add proper type annotations for function parameters and return values
-- [x] Update documentation to reflect type requirements
-
-### Benefits
-- Improved code reliability and maintainability
-- Better IDE support with type checking
-- Easier refactoring and code navigation
-- Reduced likelihood of type-related bugs
-
-### Medium Priority ✅
-- [x] Add property-based testing for date parsing
-- [x] Test with different timezones and DST transitions
-- [x] Add performance benchmarks for large repositories
-
-## 5. Code Quality
-### High Priority
-- [ ] Complete type hints for all functions and methods
-- [ ] Refactor date parsing logic into a dedicated utility class
+### Code Quality
+- [x] Add comprehensive type hints
+- [x] Configure mypy for static type checking
+- [x] Implement custom exception classes
+- [x] Standardize error messages and logging
 - [ ] Increase test coverage to 90%+
 
-### Medium Priority
-- [ ] Implement static type checking in CI
-- [ ] Add code quality checks (flake8, black, isort)
-- [ ] Set up code coverage reporting
+## Medium Priority (Next 1-3 Months)
 
-## 6. User Experience
-### High Priority
+### Dependency Management
+- [ ] Create dependency verification script
+- [ ] Add pre-commit hooks for dependency validation
+
+### Documentation
+- [x] Update installation instructions
+- [x] Add troubleshooting guide
+- [x] Improve CLI help text
+- [ ] Add API documentation for core modules
+
+### Testing
+- [x] Unit tests for core functionality
+- [x] Edge case tests for date parsing
+- [x] Test invalid date format scenarios
+- [x] CLI integration tests with various date formats
+- [ ] Integration tests for large repositories
+- [ ] Cross-platform compatibility tests
+
+## Long-term (3-6 Months)
+
+### Performance
+- [ ] Implement parallel processing for large repositories
+- [ ] Add progress indicators for long-running operations
+- [ ] Benchmark key operations
+- [ ] Memory usage monitoring
+
+### User Experience
 - [ ] Add `--list-formats` flag to display supported date formats
-- [ ] Implement progress indicators for long-running operations
-- [ ] Add colorized output for better readability
+- [ ] Implement interactive shell for exploring repository statistics
+- [ ] Add support for generating charts and graphs
 
-### Medium Priority
-- [ ] Support additional relative date formats (e.g., "yesterday", "last week")
-- [ ] Add interactive mode for guided usage
-- [ ] Implement output formatting options (CSV, JSON, table)
+## Technical Debt
+- [ ] Refactor date parsing logic into a dedicated utility class
+- [ ] Move net change calculation to model `@property`
+- [ ] Use `dateutil` for more reliable date parsing
 
-## 7. Performance
-### Medium Priority
-- [ ] Optimize git operations for large repositories
-- [ ] Add caching for frequently accessed repository data
-- [ ] Implement parallel processing for independent operations
+## Security
+See [Security Roadmap](./security/roadmap.md) for detailed security-related improvements.
 
-## 8. Technical Debt
-### High Priority
-- [ ] Remove deprecated code paths
-- [ ] Update dependencies to latest stable versions
-- [ ] Address all TODO/FIXME comments in code
+## Version History
 
-## Implementation Strategy
-1. Start with high-priority items that provide the most value to users
-2. Address technical debt to maintain code health
-3. Implement features in small, testable increments
-4. Ensure comprehensive test coverage for all new functionality
+### v0.2.0 (Current)
+- Initial public release
+- Core repository analysis functionality
+- Multiple output formatters
+- Basic test coverage
 
-## Success Metrics
-- Improved test coverage to 90%+
-- Reduced number of open issues
-- Positive user feedback on improved error messages and documentation
-- Faster execution time for common operations
+## Contributing
+Contributions are welcome! Please see our [Contributing Guidelines](../CONTRIBUTING.md) for details.
+
+## License
+This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details.

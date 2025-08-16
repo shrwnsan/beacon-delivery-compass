@@ -1,7 +1,10 @@
 """Configuration for performance tests."""
-import pytest
+
 import time
-from typing import Callable, Any
+from collections.abc import Callable
+from typing import Any
+
+import pytest
 
 
 def pytest_configure(config):
@@ -21,6 +24,7 @@ def benchmark():
             result = benchmark(lambda: some_function(arg1, arg2))
             assert result == expected_value
     """
+
     class Benchmark:
         def __call__(self, func: Callable[..., Any], *args, **kwargs) -> Any:
             """Run the function and return its result along with timing information."""
@@ -42,4 +46,6 @@ def benchmark():
 def skip_slow_tests(request):
     """Skip performance tests unless explicitly requested with --runslow."""
     if "performance" in request.keywords and not request.config.getoption("--runslow"):
-        pytest.skip("performance tests are skipped by default (use --runslow to run them)")
+        pytest.skip(
+            "performance tests are skipped by default (use --runslow to run them)",
+        )
