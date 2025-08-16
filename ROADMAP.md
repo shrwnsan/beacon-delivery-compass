@@ -1,122 +1,52 @@
-# Beacon Delivery Compass - Development Roadmap
+# Beacon Delivery Compass - Project Roadmap
 
-*Last Updated: 2025-07-25*
+*Last Updated: 2025-08-16*
 
 ## Overview
-This document outlines the development roadmap for Beacon Delivery Compass, combining optimization plans, performance improvements, and feature enhancements in a single source of truth.
+This document provides a high-level overview of the Beacon Delivery Compass development direction. For detailed tracking of features and tasks, please refer to the specialized roadmaps listed below.
 
-## High-Priority Improvements (Next 2-4 Weeks)
+## Roadmap Structure
 
-### Performance Optimizations
-- **Git Command Optimization** (Partially Implemented)
-  - Migrate remaining direct git subprocess calls to GitPython
-  - Improve error handling for git operations
-  - **Files to Update**: `core/analyzer.py`
+1. **[Development Roadmap](./docs/development/roadmap.md)**
+   - Feature development timeline
+   - Technical improvements
+   - Code quality initiatives
+   - Performance optimizations
 
-### Code Quality
-- **Type Hints**
-  - Add comprehensive type hints throughout the codebase
-  - Configure mypy for static type checking
-  - **Files to Update**: All Python files
+2. **[Security Roadmap](./docs/development/security/roadmap.md)**
+   - Security enhancements
+   - Vulnerability management
+   - Security testing strategy
 
-- **Error Handling**
-  - Implement custom exception classes
-  - Standardize error messages and logging
-  - **Files to Update**: `core/exceptions.py` (new), `core/analyzer.py`
+## Current Focus (Q3 2025)
 
-## Medium-Priority Improvements (Next 1-3 Months)
-
-### Dependency Management
-- **Dependency Verification**
-  - Create a dependency verification script
-  - Add pre-commit hooks for dependency validation
-  - **Files to Create**: `scripts/verify_deps.py`
-
-### Documentation
-- **User Documentation**
-  - Update installation instructions
-  - Add troubleshooting guide
-  - Improve CLI help text
-  - **Files to Update**: `README.md`, `docs/installation.md`, `docs/TROUBLESHOOTING.md`
-
-### Testing
-- **Test Coverage**
-  - Increase test coverage to 95%+
-  - Add integration tests for large repositories
-  - **Files to Focus On**: `core/analyzer.py`, `formatters/`
-
-## Long-Term Improvements (3-6 Months)
-
-### Performance
-- **Parallel Processing**
-  - Implement parallel processing for large repositories
-  - Add progress indicators for long-running operations
-  - **Files to Update**: `core/analyzer.py`, `cli.py`
-
-### User Experience
-- **Interactive Mode**
-  - Add an interactive shell for exploring repository statistics
-  - **Files to Create**: `cli/interactive.py`
-
-- **Visualizations**
-  - Add support for generating charts and graphs
-  - **Files to Create**: `visualization/` (new module)
-
-## Technical Debt
-
-### Memory Management
-- **Issue**: Loading all commit data into memory
-- **Solution**: Implement streaming for large commit ranges
-- **Files to Update**: `core/analyzer.py`
-
-### Date Parsing
-- **Issue**: Complex date parsing logic
-- **Solution**: Use `dateutil` for more reliable date parsing
-- **Files to Update**: `core/analyzer.py`
-
-### Formatter Improvements
-- **Issue**: Duplicate net change calculation in formatters
-- **Solution**: Move net change calculation to model `@property`
-- **Files to Update**: `formatters/standard.py`, `formatters/json_format.py`
-
-## Dependency Management Plan
-
-### Current Dependencies
-- Python 3.7+
-- Git
-- Core Python packages: click, gitpython, rich, pydantic, colorama
-
-### Verification Script
-```python
-# scripts/verify_deps.py
-# Script to verify all dependencies are installed and at correct versions
-# This will be implemented in Phase 1
-```
-
-## Testing Strategy
-
-### Unit Tests
-- Core functionality
-- Edge cases
-- Error conditions
-
-### Integration Tests
-- Full workflow tests
-- Large repository handling
-- Cross-platform compatibility
-
-### Performance Testing
-- Benchmark key operations
-- Memory usage monitoring
-- Large repository performance
-
-## Completed Items
-
-- Basic Git repository analysis
+### Core Functionality
+- Stable core repository analysis
 - Multiple output formats (JSON, standard, extended)
-- Basic test coverage
-- Basic error handling
-- Basic documentation
+- Comprehensive test coverage for core features
+- Robust error handling and logging
+
+### Recent Improvements
+- Migrated to GitPython for better git operations
+- Implemented comprehensive type hints
+- Standardized error handling across the codebase
+- Enhanced test coverage for date parsing and timezone handling
+
+## Upcoming Milestones
+
+### Q4 2025
+- Performance optimizations for large repositories
+- Enhanced user experience with new CLI features
+- Advanced analytics and reporting
+
+### Q1 2026
+- Interactive shell for repository exploration
+- Data visualization capabilities
+- Plugin system for extensibility
+
+## How to Contribute
+
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on how to get involved.
 
 ## Version History
 
@@ -126,10 +56,5 @@ This document outlines the development roadmap for Beacon Delivery Compass, comb
 - Multiple output formatters
 - Basic test coverage
 
-## Contributing
-
-Contributions are welcome! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
 ## License
-
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
