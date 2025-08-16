@@ -59,13 +59,17 @@ def fix_datetime_issues(file_path: Path) -> bool:
 
 def main():
     """Main function to fix datetime issues in test files."""
-    test_dir = Path(__file__).parent.parent / "tests" / "unit"
+    test_dirs = [
+        Path(__file__).parent.parent / "tests" / "unit",
+        Path(__file__).parent.parent / "tests" / "integration",
+    ]
     fixed_files = 0
 
-    for test_file in test_dir.glob("test_*.py"):
-        if fix_datetime_issues(test_file):
-            print(f"Fixed datetime issues in {test_file}")
-            fixed_files += 1
+    for test_dir in test_dirs:
+        for test_file in test_dir.glob("test_*.py"):
+            if fix_datetime_issues(test_file):
+                print(f"Fixed datetime issues in {test_file}")
+                fixed_files += 1
 
     print(f"Fixed datetime issues in {fixed_files} files")
 

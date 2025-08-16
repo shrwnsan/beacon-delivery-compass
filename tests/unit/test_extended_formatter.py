@@ -61,7 +61,7 @@ def sample_range_with_commits():
     for day in range(5):
         # Create commits for each day
         for i in range(day + 1):  # 1, 2, 3, 4, 5 commits per day
-            author = f"Author {day % 2 + 1} <author{day%2+1}@example.com>"
+            author = f"Author {day % 2 + 1} <author{day % 2 + 1}@example.com>"
             commit = CommitStats(
                 hash=f"hash{day}{i}",
                 author=author,

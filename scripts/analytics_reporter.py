@@ -291,12 +291,12 @@ def format_commit_stats(stats: Dict, format_type: str = "standard") -> str:
 
     if format_type == "standard":
         output = f"""📊 Commit Stats:
-{statistics['files_changed']} files changed
-{statistics['insertions']} insertions, {statistics['deletions']} deletions
-Commit Hash: {commit['short_hash']}
-Branch: {commit['branch']}
-Author: {commit['author']}
-Date: {commit['date']}"""
+{statistics["files_changed"]} files changed
+{statistics["insertions"]} insertions, {statistics["deletions"]} deletions
+Commit Hash: {commit["short_hash"]}
+Branch: {commit["branch"]}
+Author: {commit["author"]}
+Date: {commit["date"]}"""
 
         if stats.get("file_types"):
             output += "\nFiles by Type:"
@@ -324,11 +324,11 @@ Date: {commit['date']}"""
             product_focus.append("API enhancements")
 
         output = f"""--📊 Product Development Summary:
-{statistics['files_changed']} files updated
-{statistics['insertions']} new lines, {statistics['deletions']} removed
+{statistics["files_changed"]} files updated
+{statistics["insertions"]} new lines, {statistics["deletions"]} removed
 {change_indicator}: {abs(net_changes)} net changes
-{len(file_changes['added'])} new features/files added
-{len(file_changes['modified'])} existing features improved"""
+{len(file_changes["added"])} new features/files added
+{len(file_changes["modified"])} existing features improved"""
 
         if file_changes["deleted"]:
             output += f"\n{len(file_changes['deleted'])} deprecated features removed"
@@ -353,11 +353,11 @@ Date: {commit['date']}"""
 
         output += f"""
 \n--📝 Commit Details:
-Hash: {commit['short_hash']}
-Branch: {commit['branch']}
-Author: {commit['author']}
-Date: {commit['date']}
-Message: {commit['message']}"""
+Hash: {commit["short_hash"]}
+Branch: {commit["branch"]}
+Author: {commit["author"]}
+Date: {commit["date"]}
+Message: {commit["message"]}"""
 
     elif format_type == "json":
         return json.dumps(stats, indent=2, default=str)

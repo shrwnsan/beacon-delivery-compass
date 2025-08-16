@@ -155,30 +155,30 @@ class NotificationSystem:
         return f"""
 🚨 **Product Development Alert**
 
-**Severity:** {alert['severity'].upper()}
-**Message:** {alert['message']}
-**Action Required:** {alert['action']}
+**Severity:** {alert["severity"].upper()}
+**Message:** {alert["message"]}
+**Action Required:** {alert["action"]}
 
 **Current Metrics:**
-{json.dumps(insights['metrics'], indent=2)}
+{json.dumps(insights["metrics"], indent=2)}
 
-**Timestamp:** {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S %Z')}
+**Timestamp:** {datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S %Z")}
 """
 
     def _format_weekly_report(self, insights: Dict) -> str:
         """Format comprehensive weekly report."""
         return f"""
 📊 **Weekly Product Development Report**
-Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S %Z')}
+Generated: {datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S %Z")}
 
 **Key Metrics:**
-{json.dumps(insights['metrics'], indent=2)}
+{json.dumps(insights["metrics"], indent=2)}
 
 **Recommendations:**
-{chr(10).join(f"• {rec}" for rec in insights['recommendations'])}
+{chr(10).join(f"• {rec}" for rec in insights["recommendations"])}
 
 **Alerts:**
-{chr(10).join(f"• [{a['severity']}] {a['message']}" for a in insights['alerts'])}
+{chr(10).join(f"• [{a['severity']}] {a['message']}" for a in insights["alerts"])}
 
 **Next Actions:**
 Review the attached insights and schedule follow-up discussions as needed.

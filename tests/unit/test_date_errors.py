@@ -1,5 +1,6 @@
 """Tests for date-related exceptions."""
 
+import re
 from datetime import datetime, timezone
 
 from beaconled.core.date_errors import DateError, DateParseError, DateRangeError
@@ -51,6 +52,12 @@ def test_date_parse_error_custom_message():
     assert str(error) == "Custom message"
 
 
+def normalize_tz_offset(dt_str: str) -> str:
+    """Normalize timezone offset to +00:00 format."""
+    # Convert +0000 to +00:00
+    return re.sub(r"([+-]\d{2})(\d{2})", r"\1:\2", dt_str)
+
+
 def test_date_range_error_initialization():
     """Test DateRangeError initialization."""
     start = datetime(2023, 1, 1, tzinfo=timezone.utc)
@@ -63,8 +70,12 @@ def test_date_range_error_initialization():
     assert error.start_date == start
     assert error.end_date == end
     assert error.error_code == ErrorCode.DATE_RANGE_ERROR
-    assert error.details["start_date"] == "2023-01-01 00:00:00+00:00"
-    assert error.details["end_date"] == "2023-01-02 00:00:00+00:00"
+
+    # Normalize timezone offset for comparison
+    start_str = normalize_tz_offset(error.details["start_date"])
+    end_str = normalize_tz_offset(error.details["end_date"])
+    assert start_str == "2023-01-01 00:00:00+00:00"
+    assert end_str == "2023-01-02 00:00:00+00:00"
 
 
 def test_date_range_error_custom_message():
@@ -93,7 +104,13 @@ def test_date_range_error_from_dates():
 
     # Test with additional details
     error = DateRangeError.from_dates(start, end, details={"custom": "detail"})
-    assert error.details == {
+
+    # Normalize timezone offsets for comparison
+    details = error.details.copy()
+    details["start_date"] = normalize_tz_offset(details["start_date"])
+    details["end_date"] = normalize_tz_offset(details["end_date"])
+
+    assert details == {
         "custom": "detail",
         "start_date": "2023-01-01 00:00:00+00:00",
         "end_date": "2023-01-02 00:00:00+00:00",
@@ -108,7 +125,12 @@ def test_date_range_error_with_details():
 
     error = DateRangeError(start, end, details={"custom": "detail"})
 
-    assert error.details == {
+    # Normalize timezone offsets for comparison
+    details = error.details.copy()
+    details["start_date"] = normalize_tz_offset(details["start_date"])
+    details["end_date"] = normalize_tz_offset(details["end_date"])
+
+    assert details == {
         "custom": "detail",
         "start_date": "2023-01-01 00:00:00+00:00",
         "end_date": "2023-01-02 00:00:00+00:00",

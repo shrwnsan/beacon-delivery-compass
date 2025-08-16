@@ -93,18 +93,20 @@ class TestPropertyBasedDateParsing:
         st.datetimes(
             min_value=datetime(2000, 1, 1, tzinfo=timezone.utc),
             max_value=datetime(2100, 12, 31, 23, 59, 59, tzinfo=timezone.utc),
-            timezones=st.just(timezone.utc),
         ),
     )
     @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
-    def test_roundtrip_datetime(self, dt: datetime, tzinfo=timezone.utc):
+    def test_roundtrip_datetime(self, dt: datetime):
         """Test that datetimes can be formatted and parsed back to the same value."""
+        # Convert to UTC
+        dt_utc = dt.replace(tzinfo=timezone.utc)
+
         # Format the datetime in a way that our parser can handle
-        date_str = dt.strftime("%Y-%m-%d %H:%M")
+        date_str = dt_utc.strftime("%Y-%m-%d %H:%M")
         parsed = self.analyzer._parse_date(date_str)
 
         # The parsed datetime should be the same as the input (to the minute)
-        assert parsed.replace(second=0, microsecond=0) == dt.replace(
+        assert parsed.replace(second=0, microsecond=0) == dt_utc.replace(
             second=0,
             microsecond=0,
         )
@@ -133,14 +135,14 @@ class TestPropertyBasedDateParsing:
         st.datetimes(
             min_value=datetime(1970, 1, 2, tzinfo=timezone.utc),
             max_value=datetime(2038, 1, 1, tzinfo=timezone.utc),
-            timezones=st.just(timezone.utc),
         ),
     )
     @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
     def test_parse_git_date_property(self, dt: datetime):
         """Test that git date strings are parsed correctly."""
-        # Create a git-style date string (timestamp +0000)
-        git_date = f"{int(dt.timestamp())} +0000"
+        # Convert to UTC timestamp
+        dt_utc = dt.replace(tzinfo=timezone.utc)
+        git_date = f"{int(dt_utc.timestamp())} +0000"
         result = self.analyzer._parse_git_date(git_date)
 
         # Verify the result is a datetime in UTC
@@ -148,4 +150,4 @@ class TestPropertyBasedDateParsing:
         assert result.tzinfo == timezone.utc
 
         # The date part should match the input, ignoring minor precision differences
-        assert result.date() == dt.date()
+        assert result.date() == dt_utc.date()

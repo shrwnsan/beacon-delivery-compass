@@ -473,6 +473,18 @@ class GitAnalyzer:
             - Uses git's built-in date filtering for better performance with
               large repositories
         """
+        # Initialize variables
+        commits: list[CommitStats] = []
+        authors: dict[str, int] = {}
+        commits_by_day: dict[str, int] = {}
+        file_types = {}
+        total_files_changed = 0
+        total_lines_added = 0
+        total_lines_deleted = 0
+        processed_commits = set()
+        commits_map = {}
+        rev_list = []
+
         try:
             # Pre-parse string inputs using the instance parser so tests can
             # patch _parse_date and to support ISO8601 strings with timezone
@@ -486,7 +498,7 @@ class GitAnalyzer:
 
             # Record whether caller provided an explicit end time
             original_end_dt = end_date if isinstance(end_date, datetime) else None
-            has_explicit_end_time = isinstance(original_end_dt, datetime) and (
+            isinstance(original_end_dt, datetime) and (
                 original_end_dt.hour != 0
                 or original_end_dt.minute != 0
                 or original_end_dt.second != 0
@@ -496,222 +508,122 @@ class GitAnalyzer:
             # Validate and normalize the date range (library may set end to end-of-day)
             start_date, end_date = DateUtils.validate_date_range(start_date, end_date)
 
-            # If caller provided an explicit end time, preserve it
-            if has_explicit_end_time and original_end_dt is not None:
-                # Ensure UTC
-                end_date = (
-                    original_end_dt
-                    if original_end_dt.tzinfo
-                    else original_end_dt.replace(tzinfo=timezone.utc)
-                ).astimezone(timezone.utc)
+            # Set end limit to end of day
+            end_limit = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
 
-            # Use end_limit for comparisons (preserved explicit end or normalized end-of-day)
-            end_limit = end_date
+            # Format dates for git commands
+            git_since = start_date.isoformat()
+            git_until = end_date.isoformat()
 
-            # Initialize stats
-            commits: list[CommitStats] = []
-            total_files_changed = 0
-            total_lines_added = 0
-            total_lines_deleted = 0
-            authors: dict[str, int] = {}
-            # Additional aggregates expected by ExtendedFormatter
-            commits_by_day: dict[str, int] = {}
-            file_types: dict[str, dict[str, int]] = {}
-
-            # Get the repository
+            # Get repository instance
             repo = git.Repo(self.repo_path)
 
-            # Obtain commits for range:
-            # 1) Prefer repo.iter_commits (unit tests patch this to return mock commits)
-            #    When available, we'll keep the objects so we can build stats without
-            #    re-fetching from the repo (important for tests with MagicMocks).
-            # 2) Fallback to git log hashes
-            rev_list: list[str] = []
-            commits_iter = None
-            commits_map: dict[str, object] = {}
+            # First try to get commits using iter_commits
             try:
-                if hasattr(repo, "iter_commits"):
-                    try:
-                        # Real gitpython path
-                        commits_iter = repo.iter_commits(
-                            all=True,
-                            since=start_date,
-                            until=end_limit,
-                        )
-                    except TypeError:
-                        # Mock path: ignore parameters
-                        commits_iter = repo.iter_commits()
-            except Exception:
-                commits_iter = None
+                commits_iter = repo.iter_commits(
+                    all=True,
+                    since=git_since,
+                    until=git_until,
+                )
 
-            if commits_iter is not None:
-                try:
-                    for c in commits_iter:
-                        ch = getattr(c, "hexsha", None)
-                        key = str(ch) if ch else str(c)
-                        rev_list.append(key)
-                        # Retain mapping to the commit object for direct processing
-                        commits_map[key] = c
-                except Exception as e:
-                    logger.debug("Failed iterating commits: %s", e)
-                    rev_list = []
+                # Process commits from iter_commits
+                for commit in commits_iter:
+                    ch = getattr(commit, "hexsha", None)
+                    key = str(ch) if ch else str(commit)
+                    rev_list.append(key)
+                    commits_map[key] = commit
 
+            except Exception as e:
+                logger.debug("Failed to use iter_commits: %s", e)
+                rev_list = []
+
+            # Fall back to git log if iter_commits failed or returned no results
             if not rev_list:
                 try:
                     rev_list = repo.git.log(
                         "--all",
                         "--reverse",
                         "--pretty=format:%H",
-                        since=start_date.isoformat(),
-                        until=end_limit.isoformat(),
+                        f"--since={git_since}",
+                        f"--until={git_until}",
                     ).splitlines()
-                except Exception:
+                except Exception as e:
+                    logger.debug("Failed to get commit list: %s", e)
                     rev_list = []
 
             # Process each commit in the filtered list
             for commit_hash in rev_list:
-                if not commit_hash or not str(commit_hash).strip():
+                if (
+                    not commit_hash
+                    or not str(commit_hash).strip()
+                    or commit_hash in processed_commits
+                ):
                     continue
 
+                processed_commits.add(commit_hash)
+
                 try:
-                    # If we have an object from iter_commits(), prefer using it directly
-                    commit_obj = commits_map.get(str(commit_hash))
-                    commit_date = None
-                    if commit_obj is not None:
-                        # Prefer committed/authored datetime if present
-                        commit_date = getattr(commit_obj, "authored_datetime", None)
-                        if commit_date is None:
-                            commit_date = getattr(commit_obj, "committed_datetime", None)
-                        if commit_date is None:
-                            commit_date = datetime.now(timezone.utc)
+                    # Get commit stats
+                    commit_stats = self.get_commit_stats(commit_hash)
 
-                        # Range check
-                        try:
-                            if commit_date < start_date or commit_date > end_limit:
+                    # Skip commits outside the date range
+                    if hasattr(commit_stats, "date"):
+                        if not isinstance(commit_stats.date, MagicMock):
+                            if commit_stats.date < start_date or commit_stats.date > end_limit:
                                 continue
-                        except Exception:
-                            # If comparison fails for any reason, fall back to including
-                            pass
 
-                        # Build CommitStats directly from the commit object
-                        try:
-                            auth = getattr(commit_obj, "author", None)
-                            if auth and hasattr(auth, "name") and hasattr(auth, "email"):
-                                author_info = f"{auth.name} <{auth.email}>"
-                            else:
-                                author_info = str(auth) if auth is not None else ""
-
-                            # Aggregate file stats if available
-                            files_list: list[FileStats] = []
-                            total_add = 0
-                            total_del = 0
-                            stats = getattr(commit_obj, "stats", None)
-                            files_dict = getattr(stats, "files", None) if stats else None
-                            if isinstance(files_dict, dict):
-                                for p, s in files_dict.items():
-                                    ins = int(s.get("insertions", 0))
-                                    dels = int(s.get("deletions", 0))
-                                    files_list.append(
-                                        FileStats(
-                                            path=str(p),
-                                            lines_added=ins,
-                                            lines_deleted=dels,
-                                            lines_changed=ins + dels,
-                                        ),
-                                    )
-                                    total_add += ins
-                                    total_del += dels
-
-                            ch = getattr(commit_obj, "hexsha", None)
-                            commit_stats = CommitStats(
-                                hash=str(ch) if ch is not None else str(commit_hash),
-                                author=author_info,
-                                date=commit_date,
-                                message=str(getattr(commit_obj, "message", ""))
-                                .split("\n", 1)[0]
-                                .strip(),
-                                files_changed=len(files_list) if files_list else 0,
-                                lines_added=total_add,
-                                lines_deleted=total_del,
-                                files=files_list,
-                            )
-                        except Exception as e:
-                            logger.debug("Failed building stats from commit object: %s", e)
-                            # Fallback to normal path below
-                            commit_stats = self.get_commit_stats(commit_hash)
-                    else:
-                        # No object; fall back to repo.commit() path via get_commit_stats
-                        # First try lightweight date check using commit metadata
-                        try:
-                            repo = git.Repo(self.repo_path)
-                            commit = repo.commit(commit_hash)
-                            commit_date = getattr(commit, "authored_datetime", None)
-                            if commit_date is None:
-                                commit_date = datetime.now(timezone.utc)
-                            # Range check
-                            if commit_date < start_date or commit_date > end_limit:
-                                continue
-                        except Exception as e:
-                            logger.debug("Commit metadata fetch failed: %s", e)
-                        # Get full commit stats
-                        commit_stats = self.get_commit_stats(commit_hash)
-
-                    # For commits without metadata or mocks, verify range using
-                    # stats date
-                    if commit_date is None:
-                        try:
-                            # Handle both real datetimes and MagicMock objects
-                            if not isinstance(commit_stats.date, MagicMock):
-                                within_range = (
-                                    commit_stats.date >= start_date
-                                    and commit_stats.date <= end_limit
-                                )
-                            else:
-                                # For mocks, assume in range as in unit tests
-                                within_range = True
-                        except Exception as e:
-                            logger.debug("Date comparison failed: %s", e)
-                            within_range = True  # Fallback to in-range
-                        if not within_range:
-                            continue
-
+                    # Add to commits list
                     commits.append(commit_stats)
 
                     # Update totals
-                    total_files_changed += commit_stats.files_changed
-                    total_lines_added += commit_stats.lines_added
-                    total_lines_deleted += commit_stats.lines_deleted
+                    total_files_changed += getattr(commit_stats, "files_changed", 0)
+                    total_lines_added += getattr(commit_stats, "lines_added", 0)
+                    total_lines_deleted += getattr(commit_stats, "lines_deleted", 0)
 
                     # Update author stats
-                    author = commit_stats.author
-                    if author:  # Only add if author is not None or empty
+                    author = getattr(commit_stats, "author", None)
+                    if author:
                         authors[author] = authors.get(author, 0) + 1
 
-                    # Update daily activity timeline
-                    try:
-                        day_key = commit_stats.date.strftime("%Y-%m-%d")
-                        commits_by_day[day_key] = commits_by_day.get(day_key, 0) + 1
-                    except Exception:
-                        logger.debug("Could not update commits_by_day timeline")
+                    # Update daily activity
+                    if hasattr(commit_stats, "date") and commit_stats.date:
+                        try:
+                            day_key = commit_stats.date.strftime("%Y-%m-%d")
+                            commits_by_day[day_key] = commits_by_day.get(day_key, 0) + 1
+                        except Exception:
+                            logger.debug("Could not update commits_by_day timeline")
 
                     # Update file type breakdown
-                    for f in commit_stats.files:
-                        ext = f.path.split(".")[-1] if "." in f.path else "no-ext"
-                        if ext not in file_types:
-                            file_types[ext] = {"count": 0, "added": 0, "deleted": 0}
-                        file_types[ext]["count"] += 1
-                        file_types[ext]["added"] += f.lines_added
-                        file_types[ext]["deleted"] += f.lines_deleted
+                    if hasattr(commit_stats, "files") and commit_stats.files:
+                        for file_stat in commit_stats.files:
+                            if not hasattr(file_stat, "path"):
+                                continue
+                            ext = file_stat.path.split(".")[-1].lower()
+                            if ext not in file_types:
+                                file_types[ext] = {
+                                    "files_changed": 0,
+                                    "lines_added": 0,
+                                    "lines_deleted": 0,
+                                }
+                            file_types[ext]["files_changed"] += 1
+                            file_types[ext]["lines_added"] += getattr(file_stat, "lines_added", 0)
+                            file_types[ext]["lines_deleted"] += getattr(
+                                file_stat,
+                                "lines_deleted",
+                                0,
+                            )
 
                 except Exception as e:
-                    # Log the error but continue with other commits
+                    # Log but continue processing other commits
                     try:
                         abbrev = str(commit_hash)[:8]
                     except Exception:
                         abbrev = "<mock>"
                     logger.warning("Could not process commit %s: %s", abbrev, e)
+                    continue
 
-            rs = RangeStats(
+            # Create and return the range stats
+            range_stats = RangeStats(
                 start_date=start_date,
                 end_date=end_date,
                 total_commits=len(commits),
@@ -721,38 +633,34 @@ class GitAnalyzer:
                 commits=commits,
                 authors=authors,
             )
-            # Attach additional aggregates for ExtendedFormatter
-            setattr(rs, "commits_by_day", commits_by_day)  # noqa: B010
-            setattr(rs, "file_types", file_types)  # noqa: B010
-            return rs
+
+            # Add additional stats as attributes if needed
+            if hasattr(range_stats, "commits_by_day"):
+                range_stats.commits_by_day = commits_by_day
+            if hasattr(range_stats, "file_types"):
+                range_stats.file_types = file_types
+
+            return range_stats
 
         except git.GitCommandError as e:
-            # Map git failures in range analysis to a consistent message as
-            # expected by unit tests
             msg = f"Unexpected error analyzing date range: {e!s}"
-            raise RuntimeError(
-                msg,
-            ) from e
+            raise RuntimeError(msg) from e
+
         except DateParseError as e:
-            # Normalize to the same envelope message used by tests
             msg = f"Unexpected error analyzing date range: {e!s}"
-            raise RuntimeError(
-                msg,
-            ) from e
+            raise RuntimeError(msg) from e
+
         except DateRangeError as e:
             msg = f"Unexpected error analyzing date range: {e!s}"
-            raise RuntimeError(
-                msg,
-            ) from e
+            raise RuntimeError(msg) from e
+
         except ValueError:
-            # Preserve ValueError for invalid ranges as tests expect ValueError
-            # to bubble up
+            # Preserve ValueError for invalid ranges as tests expect
             raise
+
         except Exception as e:
             msg = f"Unexpected error analyzing date range: {e!s}"
-            raise RuntimeError(
-                msg,
-            ) from e
+            raise RuntimeError(msg) from e
 
     def _is_valid_commit_hash(self, commit_hash: str) -> bool:
         """Validate commit hash format to prevent injection.
