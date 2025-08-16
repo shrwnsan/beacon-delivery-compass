@@ -20,7 +20,8 @@ class ExtendedFormatter(BaseFormatter):
     def format_commit_stats(self, stats: CommitStats) -> str:
         """Format commit statistics with extended details."""
         net_change_str = self._format_net_change(
-            stats.lines_added, stats.lines_deleted,
+            stats.lines_added,
+            stats.lines_deleted,
         )
         output = [
             f"{Fore.CYAN}Commit:{Style.RESET_ALL} {stats.hash[:8]}",
@@ -67,7 +68,8 @@ class ExtendedFormatter(BaseFormatter):
     def format_range_stats(self, stats: RangeStats) -> str:
         """Format range statistics with extended details."""
         range_net_change = self._format_net_change(
-            stats.total_lines_added, stats.total_lines_deleted,
+            stats.total_lines_added,
+            stats.total_lines_deleted,
         )
         output = [
             f"{Fore.CYAN}Range Analysis:{Style.RESET_ALL} "
@@ -75,18 +77,9 @@ class ExtendedFormatter(BaseFormatter):
             f"{self._format_date(stats.end_date).split()[0]}",
             "",
             f"{Fore.YELLOW}Total commits:{Style.RESET_ALL} {stats.total_commits}",
-            (
-                f"{Fore.YELLOW}Total files changed:{Style.RESET_ALL} "
-                f"{stats.total_files_changed}"
-            ),
-            (
-                f"{Fore.GREEN}Total lines added:{Style.RESET_ALL} "
-                f"{stats.total_lines_added}"
-            ),
-            (
-                f"{Fore.RED}Total lines deleted:{Style.RESET_ALL} "
-                f"{stats.total_lines_deleted}"
-            ),
+            (f"{Fore.YELLOW}Total files changed:{Style.RESET_ALL} " f"{stats.total_files_changed}"),
+            (f"{Fore.GREEN}Total lines added:{Style.RESET_ALL} " f"{stats.total_lines_added}"),
+            (f"{Fore.RED}Total lines deleted:{Style.RESET_ALL} " f"{stats.total_lines_deleted}"),
             f"{Fore.YELLOW}Net change:{Style.RESET_ALL} {range_net_change}",
         ]
 
@@ -99,7 +92,9 @@ class ExtendedFormatter(BaseFormatter):
                     *[
                         self._format_author_stats(a, c)
                         for a, c in sorted(
-                            stats.authors.items(), key=lambda x: x[1], reverse=True,
+                            stats.authors.items(),
+                            key=lambda x: x[1],
+                            reverse=True,
                         )
                     ],
                 ],
@@ -137,13 +132,17 @@ class ExtendedFormatter(BaseFormatter):
         return "\n".join(output)
 
     def _get_author_contribution_stats(
-        self, authors: dict[str, int], total_commits: int,
+        self,
+        authors: dict[str, int],
+        total_commits: int,
     ) -> list[str]:
         """Format author contribution statistics."""
         return [
             f"  {author}: {count} commits ({count/total_commits:.1%})"
             for author, count in sorted(
-                authors.items(), key=lambda x: x[1], reverse=True,
+                authors.items(),
+                key=lambda x: x[1],
+                reverse=True,
             )
         ]
 

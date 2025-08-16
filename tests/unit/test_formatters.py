@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
 import pytest
@@ -15,11 +15,14 @@ def sample_commit_stats():
     return CommitStats(
         hash="abc123def456",
         author="John Doe <john@example.com>",
-        date=datetime(2023, 1, 15, 10, 30),
+        date=datetime(2023, 1, 15, 10, 30, tzinfo=timezone.utc),
         message="Add new feature implementation",
         files=[
             FileStats(
-                path="src/main.py", lines_added=30, lines_deleted=5, lines_changed=35,
+                path="src/main.py",
+                lines_added=30,
+                lines_deleted=5,
+                lines_changed=35,
             ),
             FileStats(
                 path="tests/test_main.py",
@@ -28,7 +31,10 @@ def sample_commit_stats():
                 lines_changed=15,
             ),
             FileStats(
-                path="docs/README.md", lines_added=5, lines_deleted=2, lines_changed=7,
+                path="docs/README.md",
+                lines_added=5,
+                lines_deleted=2,
+                lines_changed=7,
             ),
         ],
     )
@@ -38,15 +44,15 @@ def sample_commit_stats():
 def sample_range_stats():
     """Provides a sample RangeStats object for testing."""
     mock_commits = [
-        MagicMock(author="John Doe", date=datetime(2023, 1, 10)),
-        MagicMock(author="Jane Smith", date=datetime(2023, 1, 12)),
-        MagicMock(author="John Doe", date=datetime(2023, 1, 15)),
-        MagicMock(author="Jane Smith", date=datetime(2023, 1, 20)),
-        MagicMock(author="Bob Johnson", date=datetime(2023, 1, 25)),
+        MagicMock(author="John Doe", date=datetime(2023, 1, 10, tzinfo=timezone.utc)),
+        MagicMock(author="Jane Smith", date=datetime(2023, 1, 12, tzinfo=timezone.utc)),
+        MagicMock(author="John Doe", date=datetime(2023, 1, 15, tzinfo=timezone.utc)),
+        MagicMock(author="Jane Smith", date=datetime(2023, 1, 20, tzinfo=timezone.utc)),
+        MagicMock(author="Bob Johnson", date=datetime(2023, 1, 25, tzinfo=timezone.utc)),
     ]
     return RangeStats(
-        start_date=datetime(2023, 1, 1),
-        end_date=datetime(2023, 1, 31),
+        start_date=datetime(2023, 1, 1, tzinfo=timezone.utc),
+        end_date=datetime(2023, 1, 31, tzinfo=timezone.utc),
         total_commits=5,
         total_files_changed=12,
         total_lines_added=156,

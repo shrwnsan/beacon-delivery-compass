@@ -106,7 +106,7 @@ We maintain high code quality standards using these tools:
    ```bash
    # Run all tests
    make test
-   
+
    # Run specific test file
    pytest tests/unit/test_your_feature.py -v
    ```

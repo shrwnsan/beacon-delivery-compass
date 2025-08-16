@@ -46,7 +46,7 @@ graph TD
 1. Add to `docs/installation.md`:
    ```markdown
    ## Troubleshooting
-   
+
    If you encounter `ModuleNotFoundError` after installation:
    ```bash
    # Manually install dependencies

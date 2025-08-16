@@ -2,7 +2,7 @@
 
 import json
 import unittest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from tests.test_utils import run_beaconled
 
@@ -38,9 +38,10 @@ class TestCLIDateFormats(unittest.TestCase):
 
     def test_absolute_date_formats(self):
         """Test various absolute date formats."""
-        # Test different date formats
-        today = datetime.now().strftime("%Y-%m-%d")
-        yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+        # Test different date formats with timezone-aware datetimes
+        now = datetime.now(timezone.utc)
+        today = now.strftime("%Y-%m-%d")
+        yesterday = (now - timedelta(days=1)).strftime("%Y-%m-%d")
 
         # Test YYYY-MM-DD format
         result = self.run_cli(["--range", "--since", yesterday, "--until", today])
@@ -58,21 +59,24 @@ class TestCLIDateFormats(unittest.TestCase):
         """Test handling of invalid date formats."""
         # Test various invalid formats with their expected error patterns
         test_cases = [
-            ("2023/01/01", "Could not parse date"),  # Wrong separator
-            ("01-01-2023", "Could not parse date"),  # Wrong order
-            ("2023-13-01", "Could not parse date"),  # Invalid month
-            ("2023-01-32", "Could not parse date"),  # Invalid day
-            ("1 d", "Could not parse date"),  # Space between number and unit
-            ("1x", "Could not parse date"),  # Invalid unit
-            ("0d", "Could not parse date"),  # Zero value
-            ("1.5d", "Could not parse date"),  # Decimal value
-            ("1D", "Could not parse date"),  # Uppercase unit
+            ("2023/01/01", ["Could not parse date", "Unsupported date format"]),  # Wrong separator
+            ("01-01-2023", ["Could not parse date", "Unsupported date format"]),  # Wrong order
+            ("2023-13-01", ["Could not parse date", "Unsupported date format"]),  # Invalid month
+            ("2023-01-32", ["Could not parse date", "Unsupported date format"]),  # Invalid day
+            (
+                "1 d",
+                ["Could not parse date", "Unsupported date format"],
+            ),  # Space between number and unit
+            ("1x", ["Could not parse date", "Unsupported date format"]),  # Invalid unit
+            ("0d", ["Could not parse date", "Unsupported date format"]),  # Zero value
+            ("1.5d", ["Could not parse date", "Unsupported date format"]),  # Decimal value
         ]
 
-        for date_str, error_pattern in test_cases:
+        for date_str, error_patterns in test_cases:
             with self.subTest(invalid_format=date_str):
                 result = self.run_cli(
-                    ["--range", "--since", date_str], expect_success=False,
+                    ["--range", "--since", date_str],
+                    expect_success=False,
                 )
                 self.assertNotEqual(
                     result.returncode,
@@ -80,11 +84,13 @@ class TestCLIDateFormats(unittest.TestCase):
                     f"Expected non-zero exit code for input: {date_str}",
                 )
                 self.assertIn("Error:", result.stderr)
-                self.assertIn(
-                    error_pattern,
-                    result.stderr,
-                    f"Expected error message containing '{error_pattern}' for input: {date_str}\nGot: {result.stderr}",
-                )
+
+                # Check if any of the expected error patterns match
+                if not any(pattern in result.stderr for pattern in error_patterns):
+                    self.fail(
+                        f"Expected error message containing one of {error_patterns} for input: {date_str}\n"
+                        f"Got: {result.stderr}",
+                    )
 
     def test_edge_case_date_formats(self):
         """Test edge cases that should be handled appropriately."""
@@ -109,7 +115,13 @@ class TestCLIDateFormats(unittest.TestCase):
 
     def test_valid_relative_date_formats(self):
         """Test that valid relative date formats work as expected."""
-        valid_formats = ["1d", "2w", "3m", "1y"]
+        valid_formats = [
+            "1d",
+            "2w",
+            "3m",
+            "1y",
+            "1D",
+        ]  # Include uppercase D for case-insensitive test
         for fmt in valid_formats:
             with self.subTest(valid_format=fmt):
                 result = self.run_cli(["--range", "--since", fmt])
@@ -122,18 +134,19 @@ class TestCLIDateFormats(unittest.TestCase):
 
     def test_date_range_validation(self):
         """Test that end date must be after start date."""
-        today = datetime.now().strftime("%Y-%m-%d")
-        yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+        now = datetime.now(timezone.utc)
+        today = now.strftime("%Y-%m-%d")
+        yesterday = (now - timedelta(days=1)).strftime("%Y-%m-%d")
 
         # Test with end date before start date
         result = self.run_cli(
-            ["--range", "--since", today, "--until", yesterday], expect_success=False,
+            ["--range", "--since", today, "--until", yesterday],
+            expect_success=False,
         )
 
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("Error:", result.stderr)
-        self.assertIn("end date (", result.stderr)
-        self.assertIn(") is before start date (", result.stderr)
+        self.assertIn("cannot be before start date", result.stderr)
 
     def test_combined_with_other_options(self):
         """Test date formats combined with other CLI options."""

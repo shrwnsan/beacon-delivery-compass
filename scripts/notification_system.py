@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 import smtplib
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -58,7 +58,8 @@ class NotificationSystem:
         except FileNotFoundError:
             return default_config
         except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON in config file: {e}")
+            msg = f"Invalid JSON in config file: {e}"
+            raise ValueError(msg)
 
     def _validate_config(self, config: Dict) -> None:
         """Validate configuration structure and values."""
@@ -66,18 +67,22 @@ class NotificationSystem:
         if "slack" in config and "webhook_url" in config["slack"]:
             webhook_url = config["slack"]["webhook_url"]
             if webhook_url and not webhook_url.startswith("https://hooks.slack.com/"):
-                raise ValueError("Invalid Slack webhook URL format")
+                msg = "Invalid Slack webhook URL format"
+                raise ValueError(msg)
 
         # Validate email settings
         if "email" in config:
             email_config = config["email"]
             if email_config.get("enabled", False):
                 if not email_config.get("username"):
-                    raise ValueError("Email username required when email is enabled")
+                    msg = "Email username required when email is enabled"
+                    raise ValueError(msg)
                 if not email_config.get("smtp_server"):
-                    raise ValueError("SMTP server required when email is enabled")
+                    msg = "SMTP server required when email is enabled"
+                    raise ValueError(msg)
                 if not isinstance(email_config.get("smtp_port"), int):
-                    raise ValueError("SMTP port must be an integer")
+                    msg = "SMTP port must be an integer"
+                    raise ValueError(msg)
 
     def process_insights(self, insights: Dict) -> None:
         """Process insights and trigger appropriate notifications."""
@@ -140,9 +145,7 @@ class NotificationSystem:
         )
 
         if self.config["email"]["enabled"]:
-            self._send_email_report(
-                report, recipients, "Weekly Product Development Report"
-            )
+            self._send_email_report(report, recipients, "Weekly Product Development Report")
 
         if self.config["slack"]["enabled"]:
             self._send_slack_report(report)
@@ -159,14 +162,14 @@ class NotificationSystem:
 **Current Metrics:**
 {json.dumps(insights['metrics'], indent=2)}
 
-**Timestamp:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+**Timestamp:** {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S %Z')}
 """
 
     def _format_weekly_report(self, insights: Dict) -> str:
         """Format comprehensive weekly report."""
         return f"""
 📊 **Weekly Product Development Report**
-Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S %Z')}
 
 **Key Metrics:**
 {json.dumps(insights['metrics'], indent=2)}
@@ -190,9 +193,7 @@ Review the attached insights and schedule follow-up discussions as needed.
             "text": message,
             "channel": channel,
             "username": "Product Insights Bot",
-            "icon_emoji": (
-                ":warning:" if severity == "critical" else ":information_source:"
-            ),
+            "icon_emoji": (":warning:" if severity == "critical" else ":information_source:"),
         }
 
         try:
@@ -211,9 +212,7 @@ Review the attached insights and schedule follow-up discussions as needed.
         subject = f"Product Development Alert - {severity.upper()}"
         self._send_email(recipients, subject, message)
 
-    def _send_email_report(
-        self, report: str, recipients: List[str], subject: str
-    ) -> None:
+    def _send_email_report(self, report: str, recipients: List[str], subject: str) -> None:
         """Send email report."""
         self._send_email(recipients, subject, report)
 
@@ -224,10 +223,9 @@ Review the attached insights and schedule follow-up discussions as needed.
 
         try:
             # Validate recipients
-            if not recipients or not all(
-                isinstance(r, str) and "@" in r for r in recipients
-            ):
-                raise ValueError("Invalid email recipients")
+            if not recipients or not all(isinstance(r, str) and "@" in r for r in recipients):
+                msg = "Invalid email recipients"
+                raise ValueError(msg)
 
             msg = MIMEMultipart()
             msg["From"] = self.config["email"]["username"]
@@ -242,9 +240,7 @@ Review the attached insights and schedule follow-up discussions as needed.
                 timeout=30,  # Add timeout to prevent hanging
             )
             server.starttls()
-            server.login(
-                self.config["email"]["username"], self.config["email"]["password"]
-            )
+            server.login(self.config["email"]["username"], self.config["email"]["password"])
 
             server.send_message(msg)
             server.quit()
@@ -328,10 +324,7 @@ class ActionTrigger:
 
         # Check customer focus
         customer_index = float(metrics.get("customer_driven_index", "0").split("%")[0])
-        if (
-            customer_index
-            < self.config["thresholds"]["customer_driven_index"]["critical"]
-        ):
+        if customer_index < self.config["thresholds"]["customer_driven_index"]["critical"]:
             triggers.append(
                 {
                     "trigger": "low_customer_focus",

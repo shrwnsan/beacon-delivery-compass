@@ -1,8 +1,7 @@
 """Tests for the JSON formatter."""
 
 import json
-from datetime import datetime
-
+from datetime import datetime, timezone
 import pytest
 
 from beaconled.core.models import CommitStats, FileStats, RangeStats
@@ -16,16 +15,16 @@ class TestJSONFormatter:
         """Set up test fixtures."""
         self.formatter = JSONFormatter()
 
-    def test_serialize_datetime(self):
+    def test_serialize_datetime(self, tzinfo=timezone.utc):
         """Test the _serialize_datetime method."""
         # Test with a datetime object
-        dt = datetime(2023, 1, 15, 10, 30, 0)
-        result = self.formatter._serialize_datetime(dt)
-        assert result == "2023-01-15T10:30:00"
+        dt = datetime(2023, 1, 15, 10, 30, 0, tzinfo=timezone.utc)
+        result = self.formatter._serialize_datetime(dt, tzinfo=timezone.utc)
+        assert result == "2023-01-15T10:30:00+00:00"
 
         # Test with a non-datetime object
         with pytest.raises(TypeError):
-            self.formatter._serialize_datetime("not a datetime")
+            self.formatter._serialize_datetime("not a datetime", tzinfo=timezone.utc)
 
     def test_format_commit_stats(self):
         """Test the format_commit_stats method."""
@@ -33,7 +32,7 @@ class TestJSONFormatter:
         commit = CommitStats(
             hash="abc123def456",
             author="John Doe <john@example.com>",
-            date=datetime(2023, 1, 15, 10, 30, 0),
+            date=datetime(2023, 1, 15, 10, 30, 0, tzinfo=timezone.utc),
             message="Add new feature",
             files_changed=2,
             lines_added=10,
@@ -69,7 +68,7 @@ class TestJSONFormatter:
         commit1 = CommitStats(
             hash="abc123def456",
             author="John Doe <john@example.com>",
-            date=datetime(2023, 1, 15, 10, 30, 0),
+            date=datetime(2023, 1, 15, 10, 30, 0, tzinfo=timezone.utc),
             message="Add new feature",
             files_changed=2,
             lines_added=10,
@@ -80,7 +79,7 @@ class TestJSONFormatter:
         commit2 = CommitStats(
             hash="def456abc123",
             author="Jane Smith <jane@example.com>",
-            date=datetime(2023, 1, 16, 14, 30, 0),
+            date=datetime(2023, 1, 16, 14, 30, 0, tzinfo=timezone.utc),
             message="Fix bug",
             files_changed=1,
             lines_added=2,
@@ -89,8 +88,8 @@ class TestJSONFormatter:
         )
 
         range_stats = RangeStats(
-            start_date=datetime(2023, 1, 1),
-            end_date=datetime(2023, 2, 1),
+            start_date=datetime(2023, 1, 1, tzinfo=timezone.utc),
+            end_date=datetime(2023, 2, 1, tzinfo=timezone.utc),
             total_commits=2,
             total_files_changed=3,
             total_lines_added=12,
@@ -133,7 +132,7 @@ class TestJSONFormatter:
         commit = CommitStats(
             hash="abc123def456",
             author="John Doe <john@example.com>",
-            date=datetime(2023, 1, 15, 10, 30, 0),
+            date=datetime(2023, 1, 15, 10, 30, 0, tzinfo=timezone.utc),
             message="Empty commit",
             files_changed=0,
             lines_added=0,
@@ -153,8 +152,8 @@ class TestJSONFormatter:
     def test_format_range_stats_no_commits(self):
         """Test formatting range stats with no commits."""
         range_stats = RangeStats(
-            start_date=datetime(2023, 1, 1),
-            end_date=datetime(2023, 2, 1),
+            start_date=datetime(2023, 1, 1, tzinfo=timezone.utc),
+            end_date=datetime(2023, 2, 1, tzinfo=timezone.utc),
             total_commits=0,
             total_files_changed=0,
             total_lines_added=0,

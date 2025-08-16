@@ -58,9 +58,7 @@ def main() -> None:
         default="standard",
         help="Output format (default: standard)",
     )
-    parser.add_argument(
-        "-r", "--range", action="store_true", help="Analyze range of commits"
-    )
+    parser.add_argument("-r", "--range", action="store_true", help="Analyze range of commits")
     parser.add_argument(
         "--since",
         default="7d",
@@ -147,7 +145,9 @@ def main() -> None:
         # Preserve domain-specific parse error messaging expected by tests
         error_msg = str(e)
         if "timezone" in error_msg.lower():
-            error_msg += "\nNote: All dates must be in UTC. Please convert local times to UTC before use."
+            error_msg += (
+                "\nNote: All dates must be in UTC. Please convert local times to UTC before use."
+            )
         try:
             print(f"Error: {error_msg}", file=sys.stderr)
         except UnicodeEncodeError:

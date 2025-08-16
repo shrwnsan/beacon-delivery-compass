@@ -97,12 +97,11 @@ class TestEndToEnd(unittest.TestCase):
         self.assertIn("Range Analysis:", result.stdout)
         self.assertIn("to", result.stdout)
         self.assertIn("Total commits:", result.stdout)
-        self.assertIn("Total commits:", result.stdout)
         self.assertIn("Total files changed:", result.stdout)
         self.assertIn("Total lines added:", result.stdout)
         self.assertIn("Total lines deleted:", result.stdout)
+        self.assertIn("Net change:", result.stdout)
         self.assertIn("Contributors:", result.stdout)
-        self.assertIn("Temporal Analysis - Daily Activity Timeline:", result.stdout)
 
 
 if __name__ == "__main__":

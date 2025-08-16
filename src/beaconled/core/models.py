@@ -60,7 +60,8 @@ class CommitStats:
         # Be flexible for unit tests/mocks: accept any non-empty string for hash.
         # Real repository validation occurs in analyzer/repo layer.
         if not isinstance(self.hash, str) or not self.hash.strip():
-            raise ValueError(f"Invalid commit hash: {self.hash}")
+            msg = f"Invalid commit hash: {self.hash}"
+            raise ValueError(msg)
         self.hash = self.hash.strip()
 
         if not self.files_changed and self.files:
@@ -98,7 +99,8 @@ class RangeStats:
     def __post_init__(self) -> None:
         """Validate and compute derived fields after initialization."""
         if self.start_date > self.end_date:
-            raise ValueError("start_date cannot be after end_date")
+            msg = "start_date cannot be after end_date"
+            raise ValueError(msg)
 
         if not self.commits:
             return
@@ -112,11 +114,7 @@ class RangeStats:
             author_counts[commit.author] += 1
         self.authors = dict(author_counts)
 
-        if not (
-            self.total_files_changed
-            or self.total_lines_added
-            or self.total_lines_deleted
-        ):
+        if not (self.total_files_changed or self.total_lines_added or self.total_lines_deleted):
             self.total_files_changed = sum(c.files_changed for c in self.commits)
             self.total_lines_added = sum(c.lines_added for c in self.commits)
             self.total_lines_deleted = sum(c.lines_deleted for c in self.commits)

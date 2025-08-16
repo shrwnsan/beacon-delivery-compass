@@ -5,8 +5,8 @@ This directory contains scripts for generating development analytics and commit 
 ## Scripts Overview
 
 ### `commit-analytics.sh`
-**Purpose**: Quick commit analysis with colored terminal output  
-**Language**: Bash  
+**Purpose**: Quick commit analysis with colored terminal output
+**Language**: Bash
 **Best for**: Daily development workflow, git hooks, quick stats
 
 **Quick Usage**:
@@ -22,8 +22,8 @@ This directory contains scripts for generating development analytics and commit 
 ```
 
 ### `analytics_reporter.py`
-**Purpose**: Advanced analytics with range analysis and detailed reporting  
-**Language**: Python  
+**Purpose**: Advanced analytics with range analysis and detailed reporting
+**Language**: Python
 **Best for**: Weekly reports, trend analysis, team metrics
 
 **Quick Usage**:

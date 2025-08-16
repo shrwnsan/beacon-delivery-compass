@@ -34,12 +34,12 @@ try:
     analyzer = GitAnalyzer('/path/to/repo')
     # This range might be empty if no commits exist in this period
     stats = analyzer.get_range_analytics("2026-01-01", "2026-01-31")
-    
+
     if stats.total_commits == 0:
         print("No commits found in the specified range")
     else:
         print(f"Found {stats.total_commits} commits")
-        
+
 except ValueError as e:
     print(f"Error analyzing range: {e}")
 ```
@@ -77,7 +77,7 @@ import json
 analyzer = GitAnalyzer()
 with open('custom_metrics.json') as f:
     metrics = json.load(f)
-    
+
 stats = analyzer.get_commit_stats()
 complexity_score = sum(
     metric['weight'] * len([f for f in stats.files if f.complexity > metric['threshold']])
@@ -147,7 +147,7 @@ plt.savefig('commit-trends.png')
 ### Code Health Evolution
 ```bash
 beaconled --range --since "1 year ago" --format json | \
-jq -s 'group_by(.start_date | fromdate | strftime("%Y-%m")) | 
+jq -s 'group_by(.start_date | fromdate | strftime("%Y-%m")) |
 map({
   month: .[0].start_date | fromdate | strftime("%Y-%m"),
   commits: length,
@@ -186,8 +186,8 @@ jq '.commits | group_by(.author) | map({
 ```bash
 # Track TypeScript file changes
 beaconled --range --since "2 weeks ago" --format json | \
-jq '[.commits[].files[] | select(.path | endswith(".ts"))] | 
-group_by(.path) | 
+jq '[.commits[].files[] | select(.path | endswith(".ts"))] |
+group_by(.path) |
 map({
   file: .[0].path,
   changes: length,
@@ -249,13 +249,13 @@ source .venv/bin/activate
 beaconled --range --since "$(git describe --tags --abbrev=0)" --format json | \
 jq -r '"# Release Notes\n",
   "## New Features",
-  (.commits[] | select(.message | test("feat"; "i")) | 
+  (.commits[] | select(.message | test("feat"; "i")) |
     "- \(.message) (by \(.author))"),
   "\n## Bug Fixes",
-  (.commits[] | select(.message | test("fix"; "i")) | 
+  (.commits[] | select(.message | test("fix"; "i")) |
     "- \(.message) (by \(.author))"),
   "\n## Documentation",
-  (.commits[] | select(.message | test("docs"; "i")) | 
+  (.commits[] | select(.message | test("docs"; "i")) |
     "- \(.message) (by \(.author))")' > RELEASE_NOTES.md
 ```
 

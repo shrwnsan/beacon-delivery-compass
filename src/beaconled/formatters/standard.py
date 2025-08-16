@@ -22,7 +22,8 @@ class StandardFormatter(BaseFormatter):
     def format_commit_stats(self, stats: CommitStats) -> str:
         """Format commit statistics as standard text."""
         net_change_str = self._format_net_change(
-            stats.lines_added, stats.lines_deleted,
+            stats.lines_added,
+            stats.lines_deleted,
         )
         output = [
             f"{Fore.CYAN}Commit:{Style.RESET_ALL} {stats.hash[:8]}",
@@ -50,7 +51,8 @@ class StandardFormatter(BaseFormatter):
     def format_range_stats(self, stats: RangeStats) -> str:
         """Format range statistics as standard text."""
         range_net_change = self._format_net_change(
-            stats.total_lines_added, stats.total_lines_deleted,
+            stats.total_lines_added,
+            stats.total_lines_deleted,
         )
         output = [
             f"{Fore.CYAN}Range Analysis:{Style.RESET_ALL} "
@@ -58,18 +60,9 @@ class StandardFormatter(BaseFormatter):
             f"{self._format_date(stats.end_date).split()[0]}",
             "",
             f"{Fore.YELLOW}Total commits:{Style.RESET_ALL} {stats.total_commits}",
-            (
-                f"{Fore.YELLOW}Total files changed:{Style.RESET_ALL} "
-                f"{stats.total_files_changed}"
-            ),
-            (
-                f"{Fore.GREEN}Total lines added:{Style.RESET_ALL} "
-                f"{stats.total_lines_added}"
-            ),
-            (
-                f"{Fore.RED}Total lines deleted:{Style.RESET_ALL} "
-                f"{stats.total_lines_deleted}"
-            ),
+            (f"{Fore.YELLOW}Total files changed:{Style.RESET_ALL} " f"{stats.total_files_changed}"),
+            (f"{Fore.GREEN}Total lines added:{Style.RESET_ALL} " f"{stats.total_lines_added}"),
+            (f"{Fore.RED}Total lines deleted:{Style.RESET_ALL} " f"{stats.total_lines_deleted}"),
             f"{Fore.YELLOW}Net change:{Style.RESET_ALL} {range_net_change}",
         ]
 
@@ -81,7 +74,9 @@ class StandardFormatter(BaseFormatter):
                     *[
                         self._format_author_stats(a, c)
                         for a, c in sorted(
-                            stats.authors.items(), key=lambda x: x[1], reverse=True,
+                            stats.authors.items(),
+                            key=lambda x: x[1],
+                            reverse=True,
                         )
                     ],
                 ],

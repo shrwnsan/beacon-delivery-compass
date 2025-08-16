@@ -154,13 +154,13 @@ Tests are automatically run on push and pull requests via GitHub Actions. The CI
 def test_parse_date():
     """Test date parsing with various formats."""
     analyzer = GitAnalyzer(".")
-    
+
     # Test relative dates
     assert analyzer._parse_date("1d") == ...
-    
+
     # Test absolute dates
     assert analyzer._parse_date("2025-01-01") == ...
-    
+
     # Test error cases
     with pytest.raises(DateParseError):
         analyzer._parse_date("invalid-date")
@@ -189,11 +189,11 @@ def test_large_repo_analysis(benchmark):
         # Setup test repository
         repo_path = os.path.join(temp_dir, 'test-repo')
         create_test_repo(repo_path, num_commits=1000, num_files=100)
-        
+
         # Run benchmark
         analyzer = GitAnalyzer(repo_path)
         result = benchmark(analyzer.get_range_analytics)
-        
+
         # Verify results
         assert result is not None
 ```
