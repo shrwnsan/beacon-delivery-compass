@@ -650,10 +650,13 @@ index 1234567..0000000
         mock_repo_instance.iter_commits.return_value = [mock_commit1, mock_commit2]
 
         # Mock _parse_date to return timezone-aware datetimes
-        with patch("beaconled.core.analyzer.GitAnalyzer._parse_date") as mock_parse, patch.object(
-            self.analyzer,
-            "get_commit_stats",
-        ) as mock_get_stats:
+        with (
+            patch("beaconled.core.analyzer.GitAnalyzer._parse_date") as mock_parse,
+            patch.object(
+                self.analyzer,
+                "get_commit_stats",
+            ) as mock_get_stats,
+        ):
             # Mock _parse_date to return timezone-aware datetimes
             mock_parse.side_effect = [
                 datetime(2025, 7, 20, 6, 0, 0, tzinfo=timezone.utc),  # 06:00 UTC (start)

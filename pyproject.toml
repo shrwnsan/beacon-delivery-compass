@@ -108,9 +108,11 @@ extend-exclude = '''
 [tool.ruff]
 line-length = 100
 
+[tool.ruff.lint]
 # Ignore these rules globally
 ignore = [
     "ANN401",  # Allow dynamically typed expressions (Any)
+    "COM812",  # Trailing comma prohibited (conflicts with ruff format)
 ]
 
 # Enable all available rules
@@ -150,7 +152,7 @@ select = [
 ]
 
 # Relax rules for source files and scripts
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 # Source files
 "src/beaconled/**/*.py" = [
   "ANN101",  # missing type annotation for self in methods

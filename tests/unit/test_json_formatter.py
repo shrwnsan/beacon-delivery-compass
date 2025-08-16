@@ -15,16 +15,21 @@ class TestJSONFormatter:
         """Set up test fixtures."""
         self.formatter = JSONFormatter()
 
-    def test_serialize_datetime(self, tzinfo=timezone.utc):
+    def test_serialize_datetime(self):
         """Test the _serialize_datetime method."""
-        # Test with a datetime object
+        # Test with a timezone-aware datetime object
         dt = datetime(2023, 1, 15, 10, 30, 0, tzinfo=timezone.utc)
-        result = self.formatter._serialize_datetime(dt, tzinfo=timezone.utc)
+        result = self.formatter._serialize_datetime(dt)
         assert result == "2023-01-15T10:30:00+00:00"
+
+        # Test with a naive datetime (should be converted to UTC)
+        naive_dt = datetime(2023, 1, 15, 10, 30, 0, tzinfo=timezone.utc)
+        result = self.formatter._serialize_datetime(naive_dt)
+        assert result.endswith("+00:00")  # Should have been converted to UTC
 
         # Test with a non-datetime object
         with pytest.raises(TypeError):
-            self.formatter._serialize_datetime("not a datetime", tzinfo=timezone.utc)
+            self.formatter._serialize_datetime("not a datetime")
 
     def test_format_commit_stats(self):
         """Test the format_commit_stats method."""
@@ -50,7 +55,7 @@ class TestJSONFormatter:
         # Check the output
         assert data["hash"] == "abc123def456"
         assert data["author"] == "John Doe <john@example.com>"
-        assert data["date"] == "2023-01-15T10:30:00"
+        assert data["date"] == "2023-01-15T10:30:00+00:00"  # Now includes timezone
         assert data["message"] == "Add new feature"
         assert data["files_changed"] == 2
         assert data["lines_added"] == 10
@@ -106,8 +111,8 @@ class TestJSONFormatter:
         data = json.loads(result)
 
         # Check the output
-        assert data["start_date"] == "2023-01-01T00:00:00"
-        assert data["end_date"] == "2023-02-01T00:00:00"
+        assert data["start_date"] == "2023-01-01T00:00:00+00:00"  # Now includes timezone
+        assert data["end_date"] == "2023-02-01T00:00:00+00:00"  # Now includes timezone
         assert data["total_commits"] == 2
         assert data["total_files_changed"] == 3
         assert data["total_lines_added"] == 12
