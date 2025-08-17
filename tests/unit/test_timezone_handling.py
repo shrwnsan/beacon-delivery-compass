@@ -177,8 +177,8 @@ class TestUTCOnlyHandling:
         test_cases: list[tuple[str, str]] = [
             ("", "Date string cannot be None or empty"),
             ("not-a-date", "Unsupported date format"),
-            ("2025-13-01", "invalid date"),
-            ("2025-01-32", "invalid date"),
+            ("2025-13-01", "Could not parse date:"),
+            ("2025-01-32", "Could not parse date:"),
             ("2025-01-15 25:00", "Could not parse datetime"),
             ("2025-01-15 14:60", "Could not parse datetime"),
             # Timezone offsets not allowed
@@ -189,7 +189,7 @@ class TestUTCOnlyHandling:
         for date_str, error_msg in test_cases:
             with pytest.raises(
                 DateParseError,
-                match=rf".*{re.escape(error_msg)}.*",
+                match=re.escape(error_msg),
             ) as exc_info:
                 DateParser.parse_date(date_str)
 
