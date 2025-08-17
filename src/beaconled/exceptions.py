@@ -48,6 +48,7 @@ class ErrorCode(str, Enum):
     INTEGRATION_ERROR = "integration_error"
     DATE_ERROR = "date_error"
     DATE_PARSE_ERROR = "date_parse_error"
+    DATE_RANGE_ERROR = "date_range_error"
 
 
 class BeaconError(Exception):
