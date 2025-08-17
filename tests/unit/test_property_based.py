@@ -91,8 +91,8 @@ class TestPropertyBasedDateParsing:
 
     @given(
         st.datetimes(
-            min_value=datetime(2000, 1, 1, tzinfo=timezone.utc),
-            max_value=datetime(2100, 12, 31, 23, 59, 59, tzinfo=timezone.utc),
+            min_value=datetime(2000, 1, 1),  # noqa: DTZ001
+            max_value=datetime(2100, 12, 31, 23, 59, 59),  # noqa: DTZ001
         ),
     )
     @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
@@ -133,8 +133,8 @@ class TestPropertyBasedDateParsing:
 
     @given(
         st.datetimes(
-            min_value=datetime(1970, 1, 2, tzinfo=timezone.utc),
-            max_value=datetime(2038, 1, 1, tzinfo=timezone.utc),
+            min_value=datetime(1970, 1, 2),  # noqa: DTZ001
+            max_value=datetime(2038, 1, 1),  # noqa: DTZ001
         ),
     )
     @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])

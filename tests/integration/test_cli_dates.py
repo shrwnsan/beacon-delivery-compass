@@ -146,7 +146,7 @@ class TestCLIDateFormats(unittest.TestCase):
 
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("Error:", result.stderr)
-        self.assertIn("cannot be before start date", result.stderr)
+        self.assertIn("is before start date", result.stderr)
 
     def test_combined_with_other_options(self):
         """Test date formats combined with other CLI options."""
