@@ -497,13 +497,15 @@ class GitAnalyzer:
                     end_date = self._parse_date(end_date)
 
             # Record whether caller provided an explicit end time
-            original_end_dt = end_date if isinstance(end_date, datetime) else None
-            isinstance(original_end_dt, datetime) and (
-                original_end_dt.hour != 0
-                or original_end_dt.minute != 0
-                or original_end_dt.second != 0
-                or original_end_dt.microsecond != 0
-            )
+            # Use type() to avoid issues when datetime module is mocked in tests
+            original_end_dt = end_date if type(end_date).__name__ == "datetime" else None
+            if original_end_dt is not None and hasattr(original_end_dt, "hour"):
+                _ = (
+                    original_end_dt.hour != 0
+                    or original_end_dt.minute != 0
+                    or original_end_dt.second != 0
+                    or original_end_dt.microsecond != 0
+                )
 
             # Validate and normalize the date range (library may set end to end-of-day)
             start_date, end_date = DateUtils.validate_date_range(start_date, end_date)
