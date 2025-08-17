@@ -85,7 +85,7 @@ class DateRangeError(DateError):
         end_date: The end date of the invalid range
     """
 
-    DEFAULT_ERROR_CODE = ErrorCode.INVALID_DATE
+    DEFAULT_ERROR_CODE = ErrorCode.DATE_RANGE_ERROR
 
     def __init__(
         self,

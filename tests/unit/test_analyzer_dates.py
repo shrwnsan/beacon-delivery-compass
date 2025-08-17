@@ -21,11 +21,11 @@ class TestGitAnalyzerDates(unittest.TestCase):
         ):
             self.analyzer = GitAnalyzer("dummy_path")
 
-    @patch("beaconled.core.analyzer.DateParser")
-    def test_parse_git_date_with_timezone(self, mock_date_parser):
+    @patch("beaconled.utils.date_utils.DateUtils._parse_git_date")
+    def test_parse_git_date_with_timezone(self, mock_parse_git_date):
         """Test parsing git date with timezone information."""
         # Setup mock return values
-        mock_date_parser.parse_git_date.side_effect = [
+        mock_parse_git_date.side_effect = [
             datetime(2025, 1, 15, 6, 30, 45, tzinfo=timezone.utc),
             datetime(2025, 1, 15, 19, 30, 45, tzinfo=timezone.utc),
         ]
@@ -34,7 +34,7 @@ class TestGitAnalyzerDates(unittest.TestCase):
         date_str1 = "2025-01-15 14:30:45 +0800"
         result1 = self.analyzer._parse_git_date(date_str1)
         self.assertEqual(result1, datetime(2025, 1, 15, 6, 30, 45, tzinfo=timezone.utc))
-        mock_date_parser.parse_git_date.assert_called_with(date_str1)
+        mock_parse_git_date.assert_called_with(date_str1)
 
         # Test with negative timezone
         date_str2 = "2025-01-15 14:30:45 -0500"
@@ -43,26 +43,27 @@ class TestGitAnalyzerDates(unittest.TestCase):
             result2,
             datetime(2025, 1, 15, 19, 30, 45, tzinfo=timezone.utc),
         )
-        mock_date_parser.parse_git_date.assert_called_with(date_str2)
+        mock_parse_git_date.assert_called_with(date_str2)
 
-    @patch("beaconled.core.analyzer.DateParser")
-    def test_parse_git_date_without_timezone(self, mock_date_parser):
+    @patch("beaconled.utils.date_utils.DateUtils._parse_git_date")
+    def test_parse_git_date_without_timezone(self, mock_parse_git_date):
         """Test parsing git date without timezone (assumes UTC)."""
         # Setup mock return value
         expected = datetime(2025, 1, 15, 14, 30, 45, tzinfo=timezone.utc)
-        mock_date_parser.parse_git_date.return_value = expected
+        mock_parse_git_date.return_value = expected
 
         date_str = "2025-01-15 14:30:45"
         result = self.analyzer._parse_git_date(date_str)
 
         self.assertEqual(result, expected)
-        mock_date_parser.parse_git_date.assert_called_once_with(date_str)
+        mock_parse_git_date.assert_called_once_with(date_str)
 
-    @patch("beaconled.core.analyzer.DateParser")
-    def test_parse_git_date_invalid_format(self, mock_date_parser):
+    @patch("beaconled.utils.date_utils.DateUtils._parse_git_date")
+    def test_parse_git_date_invalid_format(self, mock_parse_git_date):
         """Test parsing invalid git date formats."""
         # Setup mock to raise DateParseError for invalid formats
-        mock_date_parser.parse_git_date.side_effect = DateParseError(
+        mock_parse_git_date.side_effect = DateParseError(
+            "not-a-date",
             "Invalid date format",
         )
 
@@ -71,8 +72,8 @@ class TestGitAnalyzerDates(unittest.TestCase):
         result = self.analyzer._parse_git_date("not-a-date")
         self.assertIsInstance(result, datetime)
 
-        # Check that the warning was logged
-        mock_date_parser.parse_git_date.assert_called_once_with("not-a-date")
+        # Check that the method was called
+        mock_parse_git_date.assert_called_once_with("not-a-date")
 
     @patch("beaconled.core.analyzer.datetime")
     def test_parse_git_date_handles_parse_error(self, mock_datetime):
@@ -81,27 +82,27 @@ class TestGitAnalyzerDates(unittest.TestCase):
         mock_now = datetime(2025, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
         mock_datetime.now.return_value = mock_now
 
-        # Mock DateParser to raise an exception
-        with patch("beaconled.core.analyzer.DateParser.parse_git_date") as mock_parse:
-            mock_parse.side_effect = DateParseError("Invalid date")
+        # Mock DateUtils to raise an exception
+        with patch("beaconled.utils.date_utils.DateUtils._parse_git_date") as mock_parse:
+            mock_parse.side_effect = DateParseError("invalid-date", "Invalid date")
 
             # Should return current time on error
             result = self.analyzer._parse_git_date("invalid-date")
             self.assertEqual(result, mock_now)
 
-    @patch("beaconled.core.analyzer.DateParser")
-    def test_is_valid_commit_hash(self, mock_date_parser):
+    @patch("beaconled.utils.date_utils.DateUtils.is_valid_commit_hash")
+    def test_is_valid_commit_hash(self, mock_is_valid_commit_hash):
         """Test validation of commit hashes."""
-        # Setup mock for DateParser.is_valid_commit_hash
-        # The actual implementation just delegates to DateParser, so we'll mock that
-        mock_date_parser.is_valid_commit_hash.return_value = True
+        # Setup mock for DateUtils.is_valid_commit_hash
+        # The actual implementation delegates to DateUtils, so we'll mock that
+        mock_is_valid_commit_hash.return_value = True
 
-        # Test that the method delegates to DateParser
+        # Test that the method delegates to DateUtils
         self.assertTrue(self.analyzer._is_valid_commit_hash("a1b2c3d"))
-        mock_date_parser.is_valid_commit_hash.assert_called_once_with("a1b2c3d")
+        mock_is_valid_commit_hash.assert_called_once_with("a1b2c3d")
 
         # Test with None/empty values
-        mock_date_parser.is_valid_commit_hash.return_value = False
+        mock_is_valid_commit_hash.return_value = False
         self.assertFalse(self.analyzer._is_valid_commit_hash(""))
         self.assertFalse(self.analyzer._is_valid_commit_hash(" "))
 
