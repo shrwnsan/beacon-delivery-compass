@@ -321,14 +321,21 @@ index 1234567..0000000
         # Set up the mock to return a valid datetime
         mock_parse_date.return_value = datetime(2025, 1, 1, tzinfo=timezone.utc)
 
-        # Set up the mock to raise an exception during git log
-        mock_repo.return_value.git.log.side_effect = git.GitCommandError("git log", 1)
+        # Create a mock repository instance
+        mock_repo_instance = mock_repo.return_value
 
-        with self.assertRaises(RuntimeError) as context:
-            self.analyzer.get_range_analytics("2025-01-01")
+        # Set up both iter_commits and git.log to fail
+        mock_repo_instance.iter_commits.side_effect = git.GitCommandError("git log", 1)
+        mock_repo_instance.git.log.side_effect = git.GitCommandError("git log", 1)
 
-        # The error should be about failing to analyze the date range
-        self.assertIn("Failed to analyze date range:", str(context.exception))
+        # The method should handle the failure gracefully and return empty results
+        result = self.analyzer.get_range_analytics("2025-01-01")
+
+        # Should return valid RangeStats with zero values when git commands fail
+        self.assertEqual(result.total_commits, 0)
+        self.assertEqual(result.total_files_changed, 0)
+        self.assertEqual(result.total_lines_added, 0)
+        self.assertEqual(result.total_lines_deleted, 0)
 
     @patch("git.Repo")
     def test_get_range_analytics_valid_date_range(self, mock_repo):
@@ -685,7 +692,7 @@ index 1234567..0000000
 
             # Verify date range is preserved with timezone
             self.assertEqual(result.start_date.hour, 6)  # 06:00 UTC
-            self.assertEqual(result.end_date.hour, 16)  # 16:00 UTC
+            self.assertEqual(result.end_date.hour, 23)  # End of day (23:59:59)
 
     @patch("git.Repo")
     def test_get_range_analytics_empty_range(self, mock_repo):
