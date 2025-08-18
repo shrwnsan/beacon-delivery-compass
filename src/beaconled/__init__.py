@@ -37,5 +37,8 @@ __all__ = [
     "RepositoryError",
     "InvalidRepositoryError",
     "CommitError",
+    "CommitNotFoundError",
+    "CommitParseError",
+    "DateError",
     "DateRangeError",
 ]

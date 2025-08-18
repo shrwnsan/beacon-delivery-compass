@@ -1,20 +1,16 @@
 """Git repository analyzer."""
 
-import os
-import warnings
-from datetime import datetime, timezone, timedelta
-from typing import List, Optional, Dict, Any, Union, Type, TypeVar, cast
+from datetime import datetime, timezone
+from typing import List, Optional, Dict, Union, TypeVar
+from unittest.mock import MagicMock
 import git
 from pathlib import Path
 
 from ..exceptions import (
     InvalidRepositoryError,
-    CommitError,
-    CommitNotFoundError,
-    CommitParseError,
-    ValidationError
+    CommitParseError
 )
-from .date_errors import DateParseError, DateRangeError, DateError
+from .date_errors import DateParseError, DateRangeError
 from .models import CommitStats, FileStats, RangeStats
 from ..utils.date_utils import DateParser
 
@@ -590,7 +586,7 @@ class GitAnalyzer:
             raise RuntimeError(f"Unexpected error analyzing date range: {str(e)}") from e
         except DateRangeError as e:
             raise RuntimeError(f"Unexpected error analyzing date range: {str(e)}") from e
-        except ValueError as e:
+        except ValueError:
             # Preserve ValueError for invalid ranges as tests expect ValueError to bubble up
             raise
         except Exception as e:

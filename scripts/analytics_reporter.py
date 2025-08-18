@@ -8,10 +8,9 @@ import argparse
 import json
 import subprocess
 import sys
-from collections import defaultdict, Counter
-from datetime import datetime, timedelta
+from collections import Counter
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 import re
 
 class GitAnalytics:
@@ -343,16 +342,16 @@ Date: {commit['date']}"""
             output += f"\n{len(file_changes['deleted'])} deprecated features removed"
         
         if product_focus:
-            output += f"\n\n--🎯 Product Focus Areas:"
+            output += "\n\n--🎯 Product Focus Areas:"
             for focus in product_focus:
                 output += f"\n  • {focus}"
         
-        output += f"\n\n--🏗️ Component Impact:"
+        output += "\n\n--🏗️ Component Impact:"
         for component, count in components.items():
             if count > 0 and component in ["backend", "frontend", "api", "tests"]:
                 output += f"\n{component.title()}: {count} files affected"
         
-        output += f"\n\n--⚡ Development Impact:"
+        output += "\n\n--⚡ Development Impact:"
         if impact['high_impact'] > 0:
             output += f"\n🔴 High Impact: {impact['high_impact']} files (core services)"
         if impact['medium_impact'] > 0:
@@ -401,29 +400,29 @@ def main():
                 avg_files_per_commit = stats['summary']['total_files_changed'] / max(stats['total_commits'], 1)
                 
                 # Product velocity indicators
-                velocity_score = min(100, (stats['total_commits'] * 10) + (avg_files_per_commit * 5))
+                # velocity_score = min(100, (stats['total_commits'] * 10) + (avg_files_per_commit * 5))
                 
-                print(f"🚀 Weekly Product Development Report")
+                print("🚀 Weekly Product Development Report")
                 print(f"Period: {args.since} to {args.until}")
                 print()
-                print(f"📊 Development Velocity:")
+                print("📊 Development Velocity:")
                 print(f"   {stats['total_commits']} commits this week")
                 print(f"   {stats['summary']['total_files_changed']} files updated")
                 print(f"   {total_changes} total code changes")
                 print(f"   {avg_files_per_commit:.1f} files per commit (avg)")
                 
-                print(f"\n🎯 Product Impact Areas:")
+                print("\n🎯 Product Impact Areas:")
                 component_summary = stats['summary']['components']
                 for component in ['frontend', 'backend', 'api', 'tests']:
                     count = component_summary.get(component, 0)
                     if count > 0:
                         print(f"   • {component.title()}: {count} files")
                 
-                print(f"\n👥 Team Contributions:")
+                print("\n👥 Team Contributions:")
                 for author, count in stats['summary']['authors'].most_common():
                     print(f"   • {author}: {count} commits")
                 
-                print(f"\n📈 Key Insights:")
+                print("\n📈 Key Insights:")
                 if stats['total_commits'] > 10:
                     print("   ✅ High development velocity - great momentum!")
                 elif stats['total_commits'] > 5:
@@ -436,7 +435,7 @@ def main():
                 elif component_summary.get('backend', 0) > component_summary.get('frontend', 0):
                     print("   ⚙️ Emphasis on core functionality")
                 
-                print(f"\n💡 Recommendations:")
+                print("\n💡 Recommendations:")
                 if component_summary.get('tests', 0) < stats['total_commits'] * 0.5:
                     print("   • Consider adding more tests")
                 if stats['summary']['total_files_changed'] > 50:

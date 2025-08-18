@@ -9,18 +9,7 @@ class TestEndToEnd(unittest.TestCase):
 
     def setUp(self):
         """Set up test environment."""
-        import sys
-        import os
-        # Use sys.executable to get the Python interpreter path,
-        # then construct the path to beaconled
-        if sys.platform == "win32":
-            self.beacon_cmd = [
-                os.path.join(os.getcwd(), ".venv", "Scripts", "beaconled")
-            ]
-        else:
-            self.beacon_cmd = [
-                os.path.join(os.getcwd(), ".venv", "bin", "beaconled")
-            ]
+        self.beacon_cmd = ["beaconled"]
 
     def test_beaconled_help(self):
         """Test that beaconled help command works."""
@@ -64,27 +53,12 @@ class TestEndToEnd(unittest.TestCase):
             print(result.stdout)
         self.assertEqual(result.returncode, 0, "Command failed with non-zero exit code")
         try:
-            json.loads(result.stdout)
-        except json.JSONDecodeError as e:
-            self.fail(f"Output is not valid JSON: {e}")
-
-    def test_beaconled_extended_output(self):
-        """Test extended output format."""
-        result = subprocess.run(
-            self.beacon_cmd + ["--format", "json"],
-            capture_output=True,
-            text=True
-        )
-        self.assertEqual(result.returncode, 0)
-
-        # Verify it's valid JSON
-        try:
             data = json.loads(result.stdout)
             self.assertIn("hash", data)
             self.assertIn("author", data)
             self.assertIn("files_changed", data)
-        except json.JSONDecodeError:
-            self.fail("Output is not valid JSON")
+        except json.JSONDecodeError as e:
+            self.fail(f"Output is not valid JSON: {e}")
 
     def test_beaconled_range_analysis(self):
         """Test range analysis functionality."""

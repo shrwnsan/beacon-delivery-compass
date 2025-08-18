@@ -1,12 +1,11 @@
 """Extended output formatter with additional analytics."""
 
 from collections import defaultdict
-from datetime import datetime, timedelta
 from colorama import Fore, Style
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 from .base_formatter import BaseFormatter
-from ..core.models import CommitStats, RangeStats, FileStats
+from ..core.models import CommitStats, RangeStats
 
 class ExtendedFormatter(BaseFormatter):
     """Extended text formatter with additional analytics.

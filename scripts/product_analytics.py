@@ -4,10 +4,7 @@ Product Analytics Engine
 Transforms commit analytics into actionable business intelligence for product-led teams.
 """
 
-import json
-import re
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 from dataclasses import dataclass
 from enum import Enum
 
@@ -223,7 +220,7 @@ class ProductAnalytics:
     
     def _get_period_days(self) -> int:
         """Calculate the period in days."""
-        since = self.data.get('period', {}).get('since', '1 week ago')
+        # since = self.data.get('period', {}).get('since', '1 week ago')
         # Simplified calculation - would need proper date parsing
         return 7
 

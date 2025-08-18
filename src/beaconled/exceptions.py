@@ -3,8 +3,17 @@
 This module defines custom exceptions with error codes for better programmatic handling.
 Each exception includes a unique error code and a human-readable message.
 """
-from typing import Any, Optional, Dict, Type, Union
-from enum import Enum, auto
+from typing import Any, Optional, Dict
+from enum import Enum
+
+# Re-export date-related errors for backward compatibility.
+# Prefer importing from beaconled.core.date_errors in new code.
+from .core.date_errors import DateParseError, DateRangeError
+
+__all__ = [
+    "DateParseError",
+    "DateRangeError",
+]
 
 class ErrorCode(Enum):
     """Error codes for different types of exceptions."""
@@ -81,15 +90,6 @@ class ValidationError(BeaconError):
             error_code=error_code or self.DEFAULT_ERROR_CODE,
             details=details
         )
-
-# Re-export date-related errors for backward compatibility.
-# Prefer importing from beaconled.core.date_errors in new code.
-from .core.date_errors import DateParseError, DateRangeError
-
-__all__ = [
-    "DateParseError",
-    "DateRangeError",
-]
 
 class RepositoryError(BeaconError):
     """Base class for repository-related errors."""

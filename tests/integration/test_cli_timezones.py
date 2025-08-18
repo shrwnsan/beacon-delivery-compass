@@ -10,16 +10,7 @@ class TestCLITimezoneHandling(unittest.TestCase):
 
     def setUp(self):
         """Set up test environment."""
-        # Use sys.executable to get the Python interpreter path,
-        # then construct the path to beaconled
-        if sys.platform == "win32":
-            self.beacon_cmd = [
-                os.path.join(os.getcwd(), ".venv", "Scripts", "beaconled")
-            ]
-        else:
-            self.beacon_cmd = [
-                os.path.join(os.getcwd(), ".venv", "bin", "beaconled")
-            ]
+        self.beacon_cmd = ["beaconled"]
 
     def run_cli(self, args):
         """Run CLI command and return result."""

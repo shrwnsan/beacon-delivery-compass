@@ -104,8 +104,8 @@ class TestExtendedFormatter:
 
     @freeze_time("2023-01-31")
     def test_format_range_stats_with_temporal_analysis(self, sample_range_stats):
-        result = self.formatter.format_range_stats(sample_range_stats)
-        import re
-        clean_result = re.sub(r'\x1b\[[0-9;]*m', '', result)
+        self.formatter.format_range_stats(sample_range_stats)
+        # import re
+        # clean_result = re.sub(r'\x1b\[[0-9;]*m', '', result)
         # This section is currently not produced by the formatter, so we don't assert for it.
         # assert "Temporal Analysis - Daily Activity Timeline:" in clean_result
