@@ -66,7 +66,7 @@ class TestCLI(unittest.TestCase):
 
     @patch("beaconled.cli.StandardFormatter")
     @patch("beaconled.cli.GitAnalyzer")
-    @patch("sys.argv", ["beaconled", "--range", "v1.0.0..HEAD"])
+    @patch("sys.argv", ["beaconled", "--since", "1w"])
     def test_range_analysis(self, mock_analyzer, mock_formatter):
         """Test range analysis."""
         # Mock the analyzer to return test data for range analysis
@@ -82,6 +82,8 @@ class TestCLI(unittest.TestCase):
             main()
             output = mock_stdout.getvalue()
             self.assertEqual(output, "Mocked range stats output\n")
+            # Verify that get_range_analytics was called with "1w" and "now"
+            mock_analyzer.return_value.get_range_analytics.assert_called_once_with("1w", "now")
 
     @patch("beaconled.cli.ExtendedFormatter")
     @patch("beaconled.cli.GitAnalyzer")
@@ -188,7 +190,7 @@ class TestCLI(unittest.TestCase):
             )
 
     @patch("beaconled.cli.GitAnalyzer")
-    @patch("sys.argv", ["beaconled", "--range", "--since", "1w", "--until", "now"])
+    @patch("sys.argv", ["beaconled", "--since", "1w", "--until", "now"])
     @patch("beaconled.cli.StandardFormatter")
     def test_range_with_relative_dates(self, mock_formatter, mock_analyzer):
         """Test range analysis with relative dates."""
@@ -214,7 +216,7 @@ class TestCLI(unittest.TestCase):
     @patch("beaconled.cli.StandardFormatter")
     @patch(
         "sys.argv",
-        ["beaconled", "--range", "--since", "2025-01-01", "--until", "2025-01-31"],
+        ["beaconled", "--since", "2025-01-01", "--until", "2025-01-31"],
     )
     def test_range_with_absolute_dates(self, mock_formatter, mock_analyzer):
         """Test range analysis with absolute dates."""
@@ -256,7 +258,7 @@ class TestCLI(unittest.TestCase):
             self.assertEqual(mock_stdout.getvalue().strip(), "Range stats output")
 
     @patch("beaconled.cli.GitAnalyzer")
-    @patch("sys.argv", ["beaconled", "--range", "--since", "invalid-date"])
+    @patch("sys.argv", ["beaconled", "--since", "invalid-date"])
     def test_invalid_date_format(self, mock_analyzer):
         """Test handling of invalid date format."""
         # Mock the analyzer to raise DateParseError
@@ -273,7 +275,7 @@ class TestCLI(unittest.TestCase):
     @patch("beaconled.cli.GitAnalyzer")
     @patch(
         "sys.argv",
-        ["beaconled", "--range", "--since", "2025-01-31", "--until", "2025-01-01"],
+        ["beaconled", "--since", "2025-01-31", "--until", "2025-01-01"],
     )
     def test_invalid_date_range(self, mock_analyzer):
         """Test handling of invalid date range (end before start)."""
@@ -401,7 +403,7 @@ class TestCLI(unittest.TestCase):
             )  # Escaped Unicode in JSON
 
     @patch("beaconled.cli.GitAnalyzer")
-    @patch("sys.argv", ["beaconled", "--range", "--since", "2025-01-01"])
+    @patch("sys.argv", ["beaconled", "--since", "2025-01-01"])
     def test_error_message_handling(self, mock_analyzer):
         """Test proper error message handling and formatting."""
         # Mock the analyzer to raise an exception
@@ -415,6 +417,16 @@ class TestCLI(unittest.TestCase):
                 main()
             self.assertEqual(cm.exception.code, 1)
             self.assertIn(error_msg, mock_stderr.getvalue())
+
+    @patch("beaconled.cli.GitAnalyzer")
+    @patch("sys.argv", ["beaconled", "--until", "now"])
+    def test_until_without_since_raises_error(self, mock_analyzer):
+        """Test that using --until without --since raises an error."""
+        with self.assertRaises(SystemExit) as cm:
+            main()
+        self.assertEqual(cm.exception.code, 2)
+        self.assertIn("usage:", sys.stderr.getvalue())
+        self.assertIn("error: --until cannot be used without --since", sys.stderr.getvalue())
 
 
 if __name__ == "__main__":
