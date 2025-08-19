@@ -186,7 +186,7 @@ Beacon uses UTC for all date handling to ensure consistency:
 Example:
 ```bash
 # Analyze commits between 9 AM to 5 PM UTC
-beaconled --range --since "2025-01-15 09:00" --until "2025-01-15 17:00"
+beaconled --since "2025-01-15 09:00" --until "2025-01-15 17:00"
 ```
 
 ### Basic Usage
@@ -198,7 +198,7 @@ beaconled /path/to/repo
 
 Generate a weekly team report:
 ```bash
-beaconled --range --since "1w" --until "now"
+beaconled --since "1w" --until "now"
 ```
 
 ### Examples
@@ -206,26 +206,26 @@ beaconled --range --since "1w" --until "now"
 #### Basic Usage
 Analyze changes in the last 3 days:
 ```bash
-beaconled --range --since "3d"
+beaconled --since "3d"
 ```
 
 #### Date Range Analysis
 Analyze changes between specific dates with timezone support:
 ```bash
 # Using relative dates
-beaconled --range --since "1w" --until "now"
+beaconled --since "1w" --until "now"
 
 # Using absolute dates in UTC
-beaconled --range --since "2025-01-01 00:00" --until "2025-01-31 23:59"
+beaconled --since "2025-01-01 00:00" --until "2025-01-31 23:59"
 
 # Using date only (assumes 00:00 UTC)
-beaconled --range --since "2025-01-01" --until "2025-01-31"
+beaconled --since "2025-01-01" --until "2025-01-31"
 ```
 
 #### Team Performance Analysis
 Generate a detailed team performance report for the last 2 weeks:
 ```bash
-beaconled --range --since "2w" --format extended
+beaconled --since "2w" --format extended
 ```
 
 #### Integration with CI/CD
