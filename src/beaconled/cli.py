@@ -29,11 +29,11 @@ def main() -> None:
             "  # Analyze a specific commit\n"
             "  beaconled abc1234\n\n"
             "  # Analyze changes in the last week (UTC)\n"
-            '  beaconled --range --since "1w"\n\n'
+            '  beaconled --since "1w"\n\n'
             "  # Analyze changes between specific dates (UTC)\n"
-            '  beaconled --range --since "2025-01-01" --until "2025-01-31 23:59:59"\n\n'
+            '  beaconled --since "2025-01-01" --until "2025-01-31 23:59:59"\n\n'
             "  # Analyze changes with explicit UTC times\n"
-            '  beaconled --range --since "2025-01-01 00:00:00" --until "2025-01-31 23:59:59"\n\n'
+            '  beaconled --since "2025-01-01 00:00:00" --until "2025-01-31 23:59:59"\n\n'
             "  # Output in JSON format\n"
             "  beaconled --format json"
         ),
@@ -58,10 +58,9 @@ def main() -> None:
         default="standard",
         help="Output format (default: standard)",
     )
-    parser.add_argument("-r", "--range", action="store_true", help="Analyze range of commits")
     parser.add_argument(
         "--since",
-        default="7d",
+        default=None,
         help=(
             "Start date for range analysis (interpreted as UTC).\n"
             "\n"
@@ -78,12 +77,11 @@ def main() -> None:
             "  YYYY-MM-DDTHH:MM:SS+00:00  - Explicit UTC timezone\n"
             "\n"
             "Note: All times must be in UTC. Convert local times to UTC before use.\n"
-            "Default: 7d (last 7 days in UTC)"
         ),
     )
     parser.add_argument(
         "--until",
-        default="now",
+        default=None,
         help=(
             "End date for range analysis (interpreted as UTC).\n"
             "\n"
@@ -102,13 +100,20 @@ def main() -> None:
 
     args = parser.parse_args()
 
+    # If --since is not provided, but --until is, that's an error
+    if not args.since and args.until:
+        parser.error("--until cannot be used without --since")
+
     try:
         analyzer = GitAnalyzer(args.repo)
         output: str
 
-        if args.range:
-            # For range analysis, we need to parse the date strings
-            range_stats = analyzer.get_range_analytics(args.since, args.until)
+        # If --since is provided, perform a range analysis
+        if args.since:
+            since = args.since
+            until = args.until or "now"  # Default to "now" if not provided
+
+            range_stats = analyzer.get_range_analytics(since, until)
             if args.format == "json":
                 json_formatter = JSONFormatter()
                 output = json_formatter.format_range_stats(range_stats)
