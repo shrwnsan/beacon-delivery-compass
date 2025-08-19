@@ -25,7 +25,7 @@ class TestCLITimezoneHandling(unittest.TestCase):
 
         for date_str, desc in test_cases:
             with self.subTest(f"Reject timezone-aware input with {desc}"):
-                result = self.run_cli(["--range", "--since", date_str])
+                result = self.run_cli(["--since", date_str])
                 self.assertNotEqual(
                     result.returncode,
                     0,
@@ -55,7 +55,7 @@ class TestCLITimezoneHandling(unittest.TestCase):
             with self.subTest(f"Accept naive input with {desc}"):
                 # We expect these to fail with a different error (no repo),
                 # but not with a timezone error
-                result = self.run_cli(["--range", "--since", date_str])
+                result = self.run_cli(["--since", date_str])
                 self.assertNotIn(
                     "timezone",
                     result.stderr.lower(),

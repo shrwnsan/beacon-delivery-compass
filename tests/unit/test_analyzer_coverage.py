@@ -72,7 +72,8 @@ class TestGitAnalyzerCoverage(unittest.TestCase):
             # Verify the error message contains both reason and path
             error_msg = str(cm.exception)
             self.assertIn("is not a directory", error_msg)
-            self.assertIn("/fake/file.txt", error_msg)
+            # Check for path component (cross-platform compatible)
+            self.assertIn("file.txt", error_msg)
 
     @patch("beaconled.core.analyzer.Path")
     @patch("beaconled.core.analyzer.git.Repo")

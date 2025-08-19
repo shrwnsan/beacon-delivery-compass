@@ -32,7 +32,7 @@ class TestCLIDateFormats(unittest.TestCase):
         for unit in ["d", "w", "m", "y"]:
             for value in [1, 2, 5]:
                 with self.subTest(f"{value}{unit}"):
-                    result = self.run_cli(["--range", "--since", f"{value}{unit}"])
+                    result = self.run_cli(["--since", f"{value}{unit}"])
                     self.assertEqual(result.returncode, 0)
                     self.assertIn("Range Analysis:", result.stdout)
 
@@ -44,13 +44,13 @@ class TestCLIDateFormats(unittest.TestCase):
         yesterday = (now - timedelta(days=1)).strftime("%Y-%m-%d")
 
         # Test YYYY-MM-DD format
-        result = self.run_cli(["--range", "--since", yesterday, "--until", today])
+        result = self.run_cli(["--since", yesterday, "--until", today])
         self.assertEqual(result.returncode, 0)
         self.assertIn("Range Analysis:", result.stdout)
 
         # Test with time component
         result = self.run_cli(
-            ["--range", "--since", f"{yesterday} 00:00", "--until", f"{today} 23:59"],
+            ["--since", f"{yesterday} 00:00", "--until", f"{today} 23:59"],
         )
         self.assertEqual(result.returncode, 0)
         self.assertIn("Range Analysis:", result.stdout)
@@ -75,7 +75,7 @@ class TestCLIDateFormats(unittest.TestCase):
         for date_str, error_patterns in test_cases:
             with self.subTest(invalid_format=date_str):
                 result = self.run_cli(
-                    ["--range", "--since", date_str],
+                    ["--since", date_str],
                     expect_success=False,
                 )
                 self.assertNotEqual(
@@ -104,7 +104,7 @@ class TestCLIDateFormats(unittest.TestCase):
         for date_str, expected_code in edge_cases:
             with self.subTest(edge_case=date_str):
                 result = self.run_cli(
-                    ["--range", "--since", date_str],
+                    ["--since", date_str],
                     expect_success=(expected_code == 0),
                 )
                 self.assertEqual(
@@ -124,7 +124,7 @@ class TestCLIDateFormats(unittest.TestCase):
         ]  # Include uppercase D for case-insensitive test
         for fmt in valid_formats:
             with self.subTest(valid_format=fmt):
-                result = self.run_cli(["--range", "--since", fmt])
+                result = self.run_cli(["--since", fmt])
                 self.assertEqual(
                     result.returncode,
                     0,
@@ -140,7 +140,7 @@ class TestCLIDateFormats(unittest.TestCase):
 
         # Test with end date before start date
         result = self.run_cli(
-            ["--range", "--since", today, "--until", yesterday],
+            ["--since", today, "--until", yesterday],
             expect_success=False,
         )
 
@@ -151,7 +151,7 @@ class TestCLIDateFormats(unittest.TestCase):
     def test_combined_with_other_options(self):
         """Test date formats combined with other CLI options."""
         # Test with JSON output
-        result = self.run_cli(["--range", "--since", "1w", "--format", "json"])
+        result = self.run_cli(["--since", "1w", "--format", "json"])
         self.assertEqual(result.returncode, 0)
         try:
             data = json.loads(result.stdout)
@@ -162,7 +162,7 @@ class TestCLIDateFormats(unittest.TestCase):
             self.fail(f"Output is not valid JSON: {e}")
 
         # Test with extended format
-        result = self.run_cli(["--range", "--since", "1w", "--format", "extended"])
+        result = self.run_cli(["--since", "1w", "--format", "extended"])
         self.assertEqual(result.returncode, 0)
         self.assertIn("Range Analysis:", result.stdout)
         self.assertIn("Total commits:", result.stdout)
