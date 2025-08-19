@@ -53,7 +53,7 @@ Get analytics for a range of commits.
 **Example:**
 ```python
 # Get stats for the last month
-stats = analyzer.get_range_analytics("1 month ago")
+stats = analyzer.get_range_analytics("1m")
 print(f"{stats.total_commits} commits in the last month")
 
 # Get stats for a specific date range
@@ -116,7 +116,7 @@ print(f"Files changed: {commit.files_changed}")
 print(f"Lines added/deleted: +{commit.lines_added}/-{commit.lines_deleted}")
 
 # Get stats for a date range
-stats = analyzer.get_range_analytics("2 weeks ago", "now")
+stats = analyzer.get_range_analytics("2w")
 print(f"\nLast 2 weeks summary:")
 print(f"Commits: {stats.total_commits}")
 print(f"Files changed: {stats.total_files_changed}")

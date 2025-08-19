@@ -198,7 +198,7 @@ beaconled /path/to/repo
 
 Generate a weekly team report:
 ```bash
-beaconled --since "1w" --until "now"
+beaconled --since 1w --until "now"
 ```
 
 ### Examples
@@ -249,7 +249,7 @@ jobs:
         run: pip install beaconled
       - name: Generate weekly report
         run: |
-          beaconled --range --since "1w" --format json > weekly-report.json
+          beaconled --since "1w" --format json > weekly-report.json
           # Upload report artifact
           gh release upload weekly weekly-report.json
 ```
@@ -310,7 +310,7 @@ Low Impact Commits: 7 (23%)
 For range analysis with contributor breakdown and commit frequency:
 
 ```bash
-beaconled --range --since "1w" --format standard
+beaconled --since "1w" --format standard
 ```
 
 ```bash
