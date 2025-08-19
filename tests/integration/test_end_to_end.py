@@ -53,7 +53,7 @@ class TestEndToEnd(unittest.TestCase):
 
     def test_beaconled_range_analysis(self):
         """Test range analysis functionality."""
-        args = ["--range", "--since", "7d"]
+        args = ["--since", "7d"]
         print(f"\nRunning command: beaconled {' '.join(args)}")
         result = run_beaconled(args, capture_output=True, text=True)
         print(f"Return code: {result.returncode}")
@@ -89,7 +89,7 @@ class TestEndToEnd(unittest.TestCase):
     def test_beaconled_range_analysis_extended(self):
         """Test range analysis with extended output."""
         result = run_beaconled(
-            ["--range", "--since", "7d", "--format", "extended"],
+            ["--since", "7d", "--format", "extended"],
             capture_output=True,
             text=True,
         )

@@ -163,7 +163,9 @@ class TestExtendedFormatter:
         clean_result = self._strip_ansi_codes(result)
 
         assert "Files changed: 0" in clean_result
-        assert "File type breakdown:" not in clean_result  # Shouldn't show empty breakdown
+        # File type breakdown should always be shown in extended format for consistency
+        assert "File type breakdown:" in clean_result
+        assert "No files changed" in clean_result
 
     def _strip_ansi_codes(self, text):
         """Helper method to strip ANSI color codes from text."""

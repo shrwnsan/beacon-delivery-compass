@@ -8,16 +8,19 @@ Your delivery compass for empowered product builders. A comprehensive toolkit fo
 
 ## Features
 
-- **Commit-level analytics** with detailed breakdowns
-- **Component and file type analysis**
-- **Impact assessment** (high/medium/low)
-- **Range analysis** for teams and sprints
-- **Multiple output formats** (standard, extended, JSON)
-- **Timezone-aware date handling** for global teams
-- **Flexible date parsing** supporting multiple formats
-- **Comprehensive test coverage** ensuring reliability
-- **Type-safe codebase** with full mypy support
-- **Comprehensive type hints** for better IDE support and maintainability
+- **Commit-Level Analytics**: Get detailed breakdowns of commit activity, including impact and component analysis.
+- **Product Analytics**: Gain deeper insights with a comprehensive product analytics system.
+- **Team & Sprint Analysis**: Analyze development patterns for specific teams and time ranges.
+- **Multiple Output Formats**: Choose from standard, extended, and JSON formats to fit your needs.
+- **Flexible Date Handling**:
+  - Timezone-aware date processing, standardized to UTC.
+  - Support for both relative (`1d`, `2w`) and absolute (`YYYY-MM-DD`) dates.
+- **Reliable Git Integration**: Built on `GitPython` for robust and secure repository operations.
+- **Rich Output**: Enjoy colorized and well-formatted terminal output, powered by `rich`.
+- **Code Quality**:
+  - Fully type-safe codebase with strict `mypy` checking.
+  - Comprehensive test suite with high coverage.
+  - Consistent code style enforced by `ruff` and `black`.
 
 ## Development & Contribution
 
@@ -220,9 +223,9 @@ beaconled --range --since "2025-01-01" --until "2025-01-31"
 ```
 
 #### Team Performance Analysis
-Generate a detailed team performance report for the last sprint:
+Generate a detailed team performance report for the last 2 weeks:
 ```bash
-beaconled --range --since "sprint_start" --until "sprint_end" --format extended
+beaconled --range --since "2w" --format extended
 ```
 
 #### Integration with CI/CD
@@ -307,7 +310,7 @@ Low Impact Commits: 7 (23%)
 For range analysis with contributor breakdown and commit frequency:
 
 ```bash
-beaconled --range --since "1 week ago" --format standard
+beaconled --range --since "1w" --format standard
 ```
 
 ```bash
@@ -364,22 +367,22 @@ Most Changed Components:
 
 ## Documentation
 
-- [Installation Guide](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/installation.md) - Detailed setup instructions and troubleshooting
-- [Usage Guide](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/examples/basic-usage.md) - Comprehensive usage documentation
+- [Installation Guide](docs/installation.md) - Detailed setup instructions and troubleshooting
+- [Usage Guide](docs/examples/basic-usage.md) - Comprehensive usage documentation
 - [System Architecture](docs/development/architecture/overview.md) - High-level system design and component relationships
-- [Roadmap](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/ROADMAP.md) - Development plans and upcoming features
-- [Integration Guide](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/docs/delivery/integrations.md) - Instructions for integrating with CI/CD pipelines and git hooks
+- [Roadmap](ROADMAP.md) - Development plans and upcoming features
+- [Integration Guide](docs/delivery/integrations.md) - Instructions for integrating with CI/CD pipelines and git hooks
 - [API Reference](docs/api/api.md) - Detailed API documentation
-- [Changelog](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/CHANGELOG.md) - Release notes and version history
+- [Changelog](CHANGELOG.md) - Release notes and version history
 
 ## Contributing
 
-Contributions are welcome! Please see our [Contributing Guidelines](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/CONTRIBUTING.md) for details.
+Contributions are welcome! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Roadmap
 
-Check out our [Roadmap](https://github.com/shrwnsan/beacon-delivery-compass/blob/main/ROADMAP.md) to see what we're working on and what's coming next!
+Check out our [Roadmap](ROADMAP.md) to see what we're working on and what's coming next!
