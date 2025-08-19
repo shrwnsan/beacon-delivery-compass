@@ -375,9 +375,12 @@ def main():
         default="standard",
         help="Output format",
     )
-    parser.add_argument("-r", "--range", action="store_true", help="Analyze range of commits")
-    parser.add_argument("--since", default="1 week ago", help="Start date for range analysis")
-    parser.add_argument("--until", default="HEAD", help="End date for range analysis")
+    parser.add_argument(
+        "--since", help="Start date for range analysis (e.g., '1 week ago', '2023-01-01')"
+    )
+    parser.add_argument(
+        "--until", default="HEAD", help="End date for range analysis (default: HEAD)"
+    )
     parser.add_argument("--repo", default=".", help="Repository path")
 
     args = parser.parse_args()
@@ -385,7 +388,7 @@ def main():
     analytics = GitAnalytics(args.repo)
 
     try:
-        if args.range:
+        if args.since:
             stats = analytics.get_range_analytics(args.since, args.until)
             if args.format == "json":
                 print(json.dumps(stats, indent=2, default=str))
