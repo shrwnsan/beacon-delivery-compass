@@ -45,7 +45,11 @@ venv.bak/
 .Trashes
 ehthumbs.db
 Thumbs.db
-tmp/
+
+# Temporary files
+tmp/*
+!tmp/.gitkeep
+!tmp/.coverage
 
 # Testing
 .coverage
@@ -55,16 +59,9 @@ coverage.xml
 *.py,cover
 .pytest_cache/
 .mypy_cache/
-.pytest_cache/
 htmlcov/
-
-.coverage
-.coverage.*
-.pytest_cache/
 .tox/
-htmlcov/
 .hypothesis/
-.pytest_cache/
 
 # Documentation
 docs/_build/
