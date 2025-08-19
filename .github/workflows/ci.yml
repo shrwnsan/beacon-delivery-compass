@@ -52,7 +52,7 @@ jobs:
 
       - name: Type checking with mypy
         run: |
-          mypy beaconled
+          mypy src/beaconled
 
       - name: Run unit tests
         run: |
@@ -99,4 +99,4 @@ jobs:
         run: safety check --full-report
 
       - name: Run security linter
-        run: bandit -r beaconled -c pyproject.toml
+        run: bandit -r src/beaconled -c pyproject.toml
