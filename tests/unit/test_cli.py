@@ -178,7 +178,7 @@ class TestCLI(unittest.TestCase):
         mock_analyzer.return_value.get_commit_stats.return_value = mock_commit
         mock_formatter.return_value.format_commit_stats.return_value = "Formatted output"
 
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+        with patch("sys.stdout", new_callable=StringIO):
             main()
             # Verify the analyzer was called with the custom repo path
             mock_analyzer.assert_called_once_with("/custom/repo/path")
@@ -198,7 +198,7 @@ class TestCLI(unittest.TestCase):
         mock_analyzer.return_value.get_range_analytics.return_value = mock_stats
         mock_formatter.return_value.format_range_stats.return_value = "Mocked output"
 
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+        with patch("sys.stdout", new_callable=StringIO):
             main()
             # Verify get_range_analytics was called with the correct arguments
             mock_analyzer.return_value.get_range_analytics.assert_called_once()

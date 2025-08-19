@@ -190,7 +190,7 @@ class TestUTCOnlyHandling:
             with pytest.raises(
                 DateParseError,
                 match=re.escape(error_msg),
-            ) as exc_info:
+            ):
                 DateParser.parse_date(date_str)
 
             # The error message is already checked by the pytest.raises match pattern
