@@ -88,7 +88,7 @@ Welcome to the Beacon documentation! This is your delivery compass for empowered
    #   README.md          (+0 -7)
 
    # Weekly team report
-   beaconled --range --since "1 week ago"
+   beaconled --since 1w
 
    # Example output:
    # 📊 Range Analysis: 2025-07-13 to 2025-07-20

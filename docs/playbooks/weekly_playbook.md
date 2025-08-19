@@ -28,8 +28,8 @@ Agenda (30 minutes)
 How to produce the signals
 ```bash
 # From repo root with venv active
-beaconled --range --since "1 week ago" --format extended > weekly_report.txt
-beaconled --range --since "1 week ago" --format json > weekly_report.json
+beaconled --since 1w --format extended > weekly_report.txt
+beaconled --since 1w --format json > weekly_report.json
 ```
 
 What “good” looks like
