@@ -27,7 +27,7 @@ Review your changes before pushing:
 # .git/hooks/pre-push
 source .venv/bin/activate
 echo "📊 Changes since last push:"
-beaconled --range --since "1 day ago" --format extended
+beaconled --since "1 day ago" --format extended
 ```
 
 ### Integrating with `pre-commit` Framework
@@ -152,13 +152,13 @@ jobs:
 
     - name: Generate weekly report
       run: |
-        beaconled --range --since "1 week ago" --format json > weekly-report.json
+        beaconled --since "2 weeks ago" --until "1 day ago" --format json > sprint-report.json
 
     - name: Upload report
       uses: actions/upload-artifact@v3
       with:
         name: weekly-analytics-${{ matrix.python-version }}
-        path: weekly-report.json
+        path: sprint-report.json
 
     - name: Send to Slack
       if: matrix.python-version == '3.8'
@@ -195,7 +195,7 @@ weekly_report:
     - schedules
   script:
     - pip install beaconled
-    - beaconled --range --since "1 week ago" --format extended > weekly-report.txt
+    - beaconled --since "1 week ago" --format extended > weekly-report.txt
     - echo "Weekly report generated"
   artifacts:
     paths:
@@ -215,10 +215,10 @@ source .venv/bin/activate
 
 echo "🚀 Daily Development Summary"
 echo "=========================="
-beaconled --range --since "1 day ago" --format extended
+beaconled --since "1 day ago" --format extended
 
 # Save to file for sharing
-beaconled --range --since "1 day ago" --format json > daily-report.json
+beaconled --since "1 day ago" --format json > daily-report.json
 ```
 
 ### Sprint Planning Integration
@@ -230,10 +230,10 @@ source .venv/bin/activate
 
 echo "📈 Sprint Analytics"
 echo "=================="
-beaconled --range --since "2 weeks ago" --format extended
+beaconled --since "2 weeks ago" --format extended
 
 # Generate team velocity metrics
-beaconled --range --since "2 weeks ago" --format json | jq '.summary'
+beaconled --since "1 week ago" --format json | jq '.total_commits'
 ```
 
 ### Code Review Process
@@ -337,13 +337,13 @@ Create `.vscode/tasks.json`:
         {
             "label": "Beacon: Weekly Report",
             "type": "shell",
-            "command": "source .venv/bin/activate && beaconled --range --since '1 week ago' --format extended",
+            "command": "source .venv/bin/activate && beaconled --since '1 week ago' --format extended",
             "group": "build"
         },
         {
             "label": "Beacon: Custom Range",
             "type": "shell",
-            "command": "source .venv/bin/activate && beaconled --range --since '${input:sinceDate}' --format extended",
+            "command": "source .venv/bin/activate && beaconled --since '${input:sinceDate}' --format extended",
             "group": "build",
             "problemMatcher": []
         }

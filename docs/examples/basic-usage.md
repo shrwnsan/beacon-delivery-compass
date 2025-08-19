@@ -403,13 +403,13 @@ if __name__ == "__main__":
 ### Custom Filtering
 ```bash
 # Filter by author
-beaconled --range --since "1 week ago" --format json | jq 'select(.author == "John Doe")'
+beaconled --since "1 week ago" --format json | jq 'select(.author == "John Doe")'
 
 # Filter by file type
-beaconled --range --since "1 week ago" --format json | jq '.files[] | select(.path | endswith(".py"))'
+beaconled --since "1 week ago" --format json | jq '.files[] | select(.path | endswith(".py"))'
 
 # Filter by impact
-beaconled --range --since "1 week ago" --format json | jq 'select(.total_insertions > 100)'
+beaconled --since "1 week ago" --format json | jq 'select(.total_insertions > 100)'
 ```
 
 ### Batch Processing
@@ -422,7 +422,7 @@ PERIODS=("1 day ago" "1 week ago" "1 month ago" "3 months ago")
 
 for period in "${PERIODS[@]}"; do
     echo "=== Analysis since $period ==="
-    beaconled --range --since "$period" --format json > "report-${period// /-}.json"
+    beaconled --since "$period" --format json > "report-${period// /-}.json"
 done
 ```
 
@@ -436,7 +436,7 @@ LOG_FILE="development-velocity.log"
 DATE=$(date +%Y-%m-%d)
 
 # Get weekly stats
-stats=$(beaconled --range --since "1 week ago" --format json)
+stats=$(beaconled --since "1 week ago" --format json)
 commits=$(echo $stats | jq '.total_commits')
 files=$(echo $stats | jq '.total_files_changed')
 insertions=$(echo $stats | jq '.total_insertions')
