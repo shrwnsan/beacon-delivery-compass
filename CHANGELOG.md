@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2025-08-19
+
+### Fixed
+- Streamlined ignore rules and removed stray files
+- Ensured File type breakdown always appears in extended format
+- Updated pytest.ini coverage configuration
+
+## [0.2.0] - 2025-08-19
 ### Added
 - **New Date Parser Utility**: Added a dedicated `DateParser` class in `utils.date_utils` for better code organization and maintainability.
   - Centralized date parsing, validation, and manipulation logic
@@ -28,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enhanced security by avoiding shell command injection risks
   - More reliable repository operations
 
-## [0.2.0] - Unreleased
+## [0.2.0] - 2025-08-19
 
 ### Changed
 - **Refactored Git Integration**: Migrated from direct subprocess calls to GitPython for:
