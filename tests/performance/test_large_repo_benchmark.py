@@ -8,7 +8,6 @@ from datetime import datetime, timedelta, timezone
 
 import git
 import pytest
-from datetime import datetime, timedelta, timezone
 
 # Skip these tests by default as they're performance benchmarks
 pytestmark = pytest.mark.performance
