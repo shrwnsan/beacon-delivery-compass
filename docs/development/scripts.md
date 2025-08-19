@@ -32,7 +32,7 @@ This directory contains scripts for generating development analytics and commit 
 python docs/scripts/analytics_reporter.py
 
 # Weekly team report
-python docs/scripts/analytics_reporter.py --range --since "1 week ago"
+python docs/scripts/analytics_reporter.py --since 1w
 
 # JSON output for dashboards
 python docs/scripts/analytics_reporter.py --format json
@@ -89,7 +89,7 @@ echo "📊 Commit Analytics:"
 ### Weekly Automation
 ```bash
 # Crontab entry for Monday 9 AM reports
-0 9 * * 1 cd /project && python docs/scripts/analytics_reporter.py --range --since "1 week ago"
+0 9 * * 1 cd /project && python docs/scripts/analytics_reporter.py --since 1w
 ```
 
 ## Requirements

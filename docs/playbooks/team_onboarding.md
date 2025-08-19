@@ -3,13 +3,13 @@
 ## Day 1: Initial Setup and First Run
 1. Install Beacon Delivery Compass using the [installation guide](../installation.md)
 2. Run your first weekly report:
-   `beaconled --range --since "1 week ago" --format extended > weekly_report.txt`
+   `beaconled --since 1w --format extended > weekly_report.txt`
 3. Share the report with your team using the [share template](../weekly_playbook.md#share-template)
 4. Assign owners for key findings
 
 ## Day 2-3: Data Collection and Trend Analysis
 1. Run the report again to collect JSON data:
-   `beaconled --range --since "1 week ago" --format json > weekly_report.json`
+   `beaconled --since 1w --format json > weekly_report.json`
 2. Store this JSON file in your team's dashboard directory
 3. Keep the last 4 JSON files to track trends over time
 

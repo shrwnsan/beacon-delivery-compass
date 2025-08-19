@@ -27,7 +27,7 @@ Review your changes before pushing:
 # .git/hooks/pre-push
 source .venv/bin/activate
 echo "📊 Changes since last push:"
-beaconled --since "1 day ago" --format extended
+beaconled --since 1d --format extended
 ```
 
 ### Integrating with `pre-commit` Framework
@@ -152,7 +152,7 @@ jobs:
 
     - name: Generate weekly report
       run: |
-        beaconled --since "2 weeks ago" --until "1 day ago" --format json > sprint-report.json
+        beaconled --since 2w --until 1d --format json > sprint-report.json
 
     - name: Upload report
       uses: actions/upload-artifact@v3
@@ -195,7 +195,7 @@ weekly_report:
     - schedules
   script:
     - pip install beaconled
-    - beaconled --since "1 week ago" --format extended > weekly-report.txt
+    - beaconled --since 1w --format extended > weekly-report.txt
     - echo "Weekly report generated"
   artifacts:
     paths:
@@ -215,10 +215,10 @@ source .venv/bin/activate
 
 echo "🚀 Daily Development Summary"
 echo "=========================="
-beaconled --since "1 day ago" --format extended
+beaconled --since 1d --format extended
 
 # Save to file for sharing
-beaconled --since "1 day ago" --format json > daily-report.json
+beaconled --since 1d --format json > daily-report.json
 ```
 
 ### Sprint Planning Integration
@@ -230,10 +230,10 @@ source .venv/bin/activate
 
 echo "📈 Sprint Analytics"
 echo "=================="
-beaconled --since "2 weeks ago" --format extended
+beaconled --since 2w --format extended
 
 # Generate team velocity metrics
-beaconled --since "1 week ago" --format json | jq '.total_commits'
+beaconled --since 1w --format json | jq '.total_commits'
 ```
 
 ### Code Review Process
@@ -243,11 +243,11 @@ beaconled --since "1 week ago" --format json | jq '.total_commits'
 # pre-review-check.sh
 source .venv/bin/activate
 
-# Analyze the PR branch
-beaconled --range --since "main" --format extended
+# Analyze changes since main branch
+beaconled --since main --format extended
 
 # Check for large changes
-stats=$(beaconled --range --since "main" --format json)
+stats=$(beaconled --since main --format json)
 files_changed=$(echo $stats | jq '.total_files_changed')
 
 if [ "$files_changed" -gt 50 ]; then
@@ -270,7 +270,7 @@ from beaconled.formatters.json_format import JSONFormatter
 
 def send_to_slack(webhook_url, channel="#dev-updates"):
     analyzer = GitAnalyzer()
-    stats = analyzer.analyze_range(since="1 day ago")
+    stats = analyzer.analyze_range(since="1d")
 
     # Format for Slack
     message = {
@@ -311,7 +311,7 @@ def handle_beaconled_command(ack, say, command):
 
     text = command["text"]
     if "weekly" in text:
-        stats = analyzer.analyze_range(since="1 week ago")
+        stats = analyzer.analyze_range(since="1w")
         say(f"Weekly stats: {stats.total_commits} commits")
     else:
         stats = analyzer.analyze_commit()
@@ -366,16 +366,16 @@ Create `.idea/beaconled.xml`:
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Beacon Weekly" type="PythonConfigurationType">
     <option name="SCRIPT_NAME" value="beaconled" />
-    <option name="PARAMETERS" value="--range --since '1 week ago' --format extended" />
+    <option name="PARAMETERS" value="--since 1w --format extended" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
   </configuration>
   <configuration default="false" name="Beacon Custom" type="PythonConfigurationType">
     <option name="SCRIPT_NAME" value="beaconled" />
-    <option name="PARAMETERS" value="--range --since $since$ --format $format$" />
+    <option name="PARAMETERS" value="--since $since$ --format $format$" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     <option name="PARAM_ENV">
       <map>
-        <entry key="since" value="1 week ago" />
+        <entry key="since" value="1w" />
         <entry key="format" value="extended" />
       </map>
     </option>

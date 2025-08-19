@@ -61,7 +61,7 @@ beaconled --repo /path/to/your/git/repo
 ### Slow Analysis on Large Repos
 1) Limit the date range:
 ```bash
-beaconled --range --since "1 month ago"
+beaconled --since 1m
 ```
 2) Exclude large directories via .gitignore
 3) Sample or narrow scope where possible

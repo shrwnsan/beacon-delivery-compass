@@ -93,7 +93,7 @@ complexity_score = sum(
 # generate-executive-report.sh
 source .venv/bin/activate
 
-beaconled --range --since "1 month ago" --format json | \
+beaconled --since 1m --format json | \
 jq '{
   period: "\(.start_date) to \(.end_date)",
   total_commits: .total_commits,
@@ -109,7 +109,7 @@ jq '{
 # team-report.sh
 source .venv/bin/activate
 
-beaconled --range --since "1 week ago" --format json | \
+beaconled --since 1w --format json | \
 jq '.commits[] | {
   author: .author,
   date: .date,
@@ -132,8 +132,9 @@ months = []
 commits = []
 
 for i in range(6, 0, -1):
-    since = f"{i} months ago"
-    stats = analyzer.get_range_analytics(since, "1 month ago")
+    since = f"{i}m"
+    until = f"{i-1}m" if i > 1 else "1m"
+    stats = analyzer.get_range_analytics(since, until)
     months.append(stats.start_date.strftime("%b %Y"))
     commits.append(stats.total_commits)
 
@@ -146,7 +147,7 @@ plt.savefig('commit-trends.png')
 
 ### Code Health Evolution
 ```bash
-beaconled --range --since "1 year ago" --format json | \
+beaconled --since 1y --format json | \
 jq -s 'group_by(.start_date | fromdate | strftime("%Y-%m")) |
 map({
   month: .[0].start_date | fromdate | strftime("%Y-%m"),
@@ -173,7 +174,7 @@ beaconled --format json | jq '{
 ### Author Impact Analysis
 ```bash
 # Show impact by author
-beaconled --range --since "1 month ago" --format json | \
+beaconled --since 1m --format json | \
 jq '.commits | group_by(.author) | map({
   author: .[0].author,
   commits: length,
@@ -185,7 +186,7 @@ jq '.commits | group_by(.author) | map({
 ### File Type Focus
 ```bash
 # Track TypeScript file changes
-beaconled --range --since "2 weeks ago" --format json | \
+beaconled --since 2w --format json | \
 jq '[.commits[].files[] | select(.path | endswith(".ts"))] |
 group_by(.path) |
 map({
@@ -205,7 +206,7 @@ from datetime import datetime, timedelta
 
 analyzer = GitAnalyzer()
 yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
-stats = analyzer.get_range_analytics("1 day ago")
+stats = analyzer.get_range_analytics("1d")
 
 print(f"🚀 Daily Development Report - {yesterday}")
 print(f"Total commits: {stats.total_commits}")
@@ -246,7 +247,7 @@ else:
 # generate-release-notes.sh
 source .venv/bin/activate
 
-beaconled --range --since "$(git describe --tags --abbrev=0)" --format json | \
+beaconled --since "$(git describe --tags --abbrev=0)" --format json | \
 jq -r '"# Release Notes\n",
   "## New Features",
   (.commits[] | select(.message | test("feat"; "i")) |

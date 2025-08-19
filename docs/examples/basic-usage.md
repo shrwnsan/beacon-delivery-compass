@@ -120,7 +120,7 @@ beaconled HEAD~3
 ### 3. Range Analysis Examples
 ```bash
 # Last week
-beaconled --range --since "1 week ago"
+beaconled --since 1w
 
 # Example output:
 # 📊 Range Analysis: 2025-07-13 to 2025-07-20
@@ -144,7 +144,7 @@ beaconled --range --since "1 week ago"
 #   Friday: 5
 
 # Last month
-beaconled --range --since "1 month ago"
+beaconled --since 1m
 
 # Example output:
 # 📊 Range Analysis: 2025-06-20 to 2025-07-20
@@ -167,10 +167,10 @@ beaconled --range --since "1 month ago"
 #   Week 4 (Jul 11-17): 22 commits
 
 # Custom date range
-beaconled --range --since "2025-07-01" --until "2025-07-31"
+beaconled --since "2025-07-01" --until "2025-07-31"
 
 # Since last tag
-beaconled --range --since "v1.0.0"
+beaconled --since "v1.0.0"
 
 # Example output:
 # 📊 Range Analysis: 2025-06-15 to 2025-07-20
@@ -251,39 +251,36 @@ beaconled --format json | jq '.files_changed'
 # daily-summary.sh
 echo "📊 Yesterday's Development Summary"
 echo "================================="
-beaconled --range --since "1 day ago" --format extended
+beaconled --since 1d --format extended
 
 # Save for team sharing
-beaconled --range --since "1 day ago" --format json > daily-report.json
+beaconled --since 1d --format json > daily-report.json
 ```
 
 ### Weekly Report Generation
 ```bash
 #!/bin/bash
 # weekly-report.sh
-WEEK_START=$(date -d "last Monday" +%Y-%m-%d)
-WEEK_END=$(date -d "last Sunday" +%Y-%m-%d)
-
-echo "📈 Weekly Development Report ($WEEK_START to $WEEK_END)"
+echo "📈 Weekly Development Report (Last Week)"
 echo "======================================================"
-beaconled --range --since "$WEEK_START" --until "$WEEK_END" --format extended
+beaconled --since 1w --format extended
 
 # Generate JSON for dashboard
-beaconled --range --since "$WEEK_START" --until "$WEEK_END" --format json > weekly-dashboard.json
+beaconled --since 1w --format json > weekly-dashboard.json
 ```
 
 ### Sprint Retrospective
 ```bash
 #!/bin/bash
 # sprint-retro.sh
-SPRINT_LENGTH=14  # days
+SPRINT_LENGTH=2w  # 2 weeks
 
 echo "🎯 Sprint Retrospective Analysis"
 echo "==============================="
-beaconled --range --since "${SPRINT_LENGTH} days ago" --format extended
+beaconled --since $SPRINT_LENGTH --format extended
 
 # Team member contributions
-beaconled --range --since "${SPRINT_LENGTH} days ago" --format json | jq '.authors'
+beaconled --since $SPRINT_LENGTH --format json | jq '.authors'
 ```
 
 ## Repository Analysis Examples
@@ -300,7 +297,7 @@ REPOS=(
 
 for repo in "${REPOS[@]}"; do
     echo "=== Analyzing $(basename $repo) ==="
-    beaconled --repo "$repo" --range --since "1 week ago" --format json
+    beaconled --repo "$repo" --since 1w --format json
 done
 ```
 
@@ -311,13 +308,13 @@ done
 # Analyze specific directories
 
 # Backend changes
-beaconled --range --since "1 week ago" --format json | jq '.files[] | select(.path | startswith("src/backend"))'
+beaconled --since 1w --format json | jq '.files[] | select(.path | startswith("src/backend"))'
 
 # Frontend changes
-beaconled --range --since "1 week ago" --format json | jq '.files[] | select(.path | endswith(".tsx") or endswith(".ts"))'
+beaconled --since 1w --format json | jq '.files[] | select(.path | endswith(".tsx") or endswith(".ts"))'
 
 # Documentation changes
-beaconled --range --since "1 week ago" --format json | jq '.files[] | select(.path | endswith(".md"))'
+beaconled --since 1w --format json | jq '.files[] | select(.path | endswith(".md"))'
 ```
 
 ## Integration Examples
@@ -349,7 +346,7 @@ jobs:
 
       - name: Generate Daily Report
         run: |
-          beaconled --range --since "1 day ago" --format json > daily-report.json
+          beaconled --since 1d --format json > daily-report.json
 
       - name: Upload Report
         uses: actions/upload-artifact@v3
@@ -403,13 +400,13 @@ if __name__ == "__main__":
 ### Custom Filtering
 ```bash
 # Filter by author
-beaconled --since "1 week ago" --format json | jq 'select(.author == "John Doe")'
+beaconled --since 1w --format json | jq 'select(.author == "John Doe")'
 
 # Filter by file type
-beaconled --since "1 week ago" --format json | jq '.files[] | select(.path | endswith(".py"))'
+beaconled --since 1w --format json | jq '.files[] | select(.path | endswith(".py"))'
 
 # Filter by impact
-beaconled --since "1 week ago" --format json | jq 'select(.total_insertions > 100)'
+beaconled --since 1w --format json | jq 'select(.total_insertions > 100)'
 ```
 
 ### Batch Processing
@@ -418,11 +415,14 @@ beaconled --since "1 week ago" --format json | jq 'select(.total_insertions > 10
 # batch-analysis.sh
 # Process multiple time periods
 
-PERIODS=("1 day ago" "1 week ago" "1 month ago" "3 months ago")
+PERIODS=("1d" "1w" "1m" "3m")
+PERIOD_NAMES=("1day" "1week" "1month" "3months")
 
-for period in "${PERIODS[@]}"; do
+for i in "${!PERIODS[@]}"; do
+    period="${PERIODS[$i]}"
+    name="${PERIOD_NAMES[$i]}"
     echo "=== Analysis since $period ==="
-    beaconled --since "$period" --format json > "report-${period// /-}.json"
+    beaconled --since "$period" --format json > "report-$name.json"
 done
 ```
 
@@ -436,7 +436,7 @@ LOG_FILE="development-velocity.log"
 DATE=$(date +%Y-%m-%d)
 
 # Get weekly stats
-stats=$(beaconled --since "1 week ago" --format json)
+stats=$(beaconled --since 1w --format json)
 commits=$(echo $stats | jq '.total_commits')
 files=$(echo $stats | jq '.total_files_changed')
 insertions=$(echo $stats | jq '.total_insertions')
@@ -451,22 +451,22 @@ echo "$DATE,$commits,$files,$insertions,$deletions" >> $LOG_FILE
 |------|---------|
 | Latest commit | `beaconled` |
 | Specific commit | `beaconled abc123` |
-| Last week | `beaconled --range --since "1 week ago"` |
-| Last month | `beaconled --range --since "1 month ago"` |
+| Last week | `beaconled --since 1w` |
+| Last month | `beaconled --since 1m` |
 | JSON output | `beaconled --format json` |
 | Extended details | `beaconled --format extended` |
 | Custom repo | `beaconled --repo /path/to/repo` |
-| Date range | `beaconled --range --since "2025-07-01" --until "2025-07-31"` |
-| Analyze last 5 commits | `beaconled --range --count 5` |
-| Analyze between commits | `beaconled --range abc123..xyz789` |
-| Analyze by date range (UTC) | `beaconled --range --since "2025-07-01 00:00" --until "2025-07-31 23:59"` |
-| Using date only (assumes 00:00 UTC) | `beaconled --range --since "2025-07-01" --until "2025-07-31"` |
-| Using relative dates | `beaconled --range --since "1 week ago" --until "now"` |
+| Date range | `beaconled --since 2025-07-01 --until 2025-07-31` |
+| Analyze last 5 commits | `beaconled --count 5` |
+| Analyze between commits | `beaconled abc123..xyz789` |
+| Analyze by date range (UTC) | `beaconled --since 2025-07-01T00:00 --until 2025-07-31T23:59` |
+| Using date only (assumes 00:00 UTC) | `beaconled --since 2025-07-01 --until 2025-07-31` |
+| Using relative dates | `beaconled --since 1w` |
 
 ## Date Format Reference
 
 ### Default Behavior
-- When using `--range` without `--since` or `--until`:
+- When no date range is specified:
   - `--since` defaults to `7d` (7 days ago in UTC)
   - `--until` defaults to `now` (current time in UTC)
 - When using `--since` without `--until`, `--until` defaults to `now`
@@ -500,5 +500,5 @@ now        # Current time in UTC
 Example with timezone handling:
 ```bash
 # Analyze commits between 9 AM to 5 PM UTC
-beaconled --range --since "2025-01-15 09:00" --until "2025-01-15 17:00"
+beaconled --since 2025-01-15T09:00 --until 2025-01-15T17:00
 ```

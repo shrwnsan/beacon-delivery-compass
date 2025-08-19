@@ -111,7 +111,7 @@ beaconled /path/to/your/git/repo
 **Solution**:
 1. Use `--since` to limit the date range:
    ```bash
-   beaconled --since "1 month ago"
+   beaconled --since 1m
    ```
 2. Exclude large directories with `.gitignore`
 3. For very large repos, consider using `--limit` to restrict the number of commits
