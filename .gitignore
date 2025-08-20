@@ -78,3 +78,6 @@ secrets/
 *.pem
 *.p12
 *.pfx
+
+# Organized test output directory
+scripts/test_outputs/
