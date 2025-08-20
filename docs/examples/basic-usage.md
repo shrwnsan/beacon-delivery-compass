@@ -1,8 +1,8 @@
-# Basic Usage Examples
+# Basic Usage Example
 
 This document provides practical examples for getting started with Beacon, including date handling and output formats. All dates are handled in UTC.
 
-## Quick Start Examples
+## Quick Start Example
 
 ### 1. Analyze Latest Commit
 ```bash
@@ -13,7 +13,7 @@ beaconled
 # 📊 Commit: abc12345
 # 👤 Author: John Doe
 # 📅 Date: 2025-07-20 10:30:00+08:00
-# 💬 Message: Add new feature for user analytics
+# 💬 Message: Add new feature for user analytic
 #
 # 📂 Files changed: 3
 # ➕ Lines added: 45
@@ -106,7 +106,7 @@ beaconled HEAD~3
 # 📊 Commit: def456ghi789
 # 👤 Author: Bob Wilson
 # 📅 Date: 2025-07-18 09:15:30
-# 💬 Message: Update documentation for new API endpoints
+# 💬 Message: Update documentation for new API endpoint
 #
 # 📂 Files changed: 1
 # ➕ Lines added: 42
@@ -117,7 +117,7 @@ beaconled HEAD~3
 #   docs/api-reference.md (+42 -0)
 ```
 
-### 3. Range Analysis Examples
+### 3. Range Analysis Example
 ```bash
 # Last week
 beaconled --since 1w
@@ -132,9 +132,9 @@ beaconled --since 1w
 # 🔀 Net change: 667
 #
 # 👥 Contributors:
-#   John Doe: 8 commits
-#   Jane Smith: 4 commits
-#   Bob Wilson: 3 commits
+#   John Doe: 8 commit
+#   Jane Smith: 4 commit
+#   Bob Wilson: 3 commit
 #
 # 📊 Commit frequency:
 #   Monday: 2
@@ -156,18 +156,22 @@ beaconled --since 1m
 # 🔀 Net change: 5,727
 #
 # 👥 Contributors:
-#   John Doe: 32 commits
-#   Jane Smith: 21 commits
-#   Bob Wilson: 14 commits
+#   John Doe: 32 commit
+#   Jane Smith: 21 commit
+#   Bob Wilson: 14 commit
 #
 # 📊 Weekly breakdown:
-#   Week 1 (Jun 20-26): 12 commits
-#   Week 2 (Jun 27-Jul 3): 18 commits
-#   Week 3 (Jul 4-10): 15 commits
-#   Week 4 (Jul 11-17): 22 commits
+#   Week 1 (Jun 20-26): 12 commit
+#   Week 2 (Jun 27-Jul 3): 18 commit
+#   Week 3 (Jul 4-10): 15 commit
+#   Week 4 (Jul 11-17): 22 commit
 
 # Custom date range
-beaconled --since "2025-07-01" --until "2025-07-31"
+# Using space separator
+beaconled --since "2025-07-01 00:00" --until "2025-07-31 23:59"
+
+# Using ISO 8601 format with 'T' separator
+beaconled --since "2025-07-01T00:00:00" --until "2025-07-31T23:59:59"
 
 # Since last tag
 beaconled --since "v1.0.0"
@@ -182,12 +186,12 @@ beaconled --since "v1.0.0"
 # 🔀 Net change: 4,444
 #
 # 👥 Contributors:
-#   John Doe: 21 commits
-#   Jane Smith: 15 commits
-#   Bob Wilson: 9 commits
+#   John Doe: 21 commit
+#   Jane Smith: 15 commit
+#   Bob Wilson: 9 commit
 ```
 
-### 4. Different Output Formats
+### 4. Different Output Format
 ```bash
 # Standard format (default)
 beaconled --format standard
@@ -196,7 +200,7 @@ beaconled --format standard
 # 📊 Commit: abc12345
 # 👤 Author: John Doe
 # 📅 Date: 2025-07-20 10:30:00
-# 💬 Message: Add new feature for user analytics
+# 💬 Message: Add new feature for user analytic
 #
 # 📂 Files changed: 3
 # ➕ Lines added: 45
@@ -208,14 +212,14 @@ beaconled --format standard
 #   tests/test_analytics.py (+15 -0)
 #   README.md          (+0 -7)
 
-# Extended format with details
+# Extended format with detail
 beaconled --format extended
 
 # Example output:
 # 📊 Commit: abc12345
 # 👤 Author: John Doe
 # 📅 Date: 2025-07-20 10:30:00
-# 💬 Message: Add new feature for user analytics
+# 💬 Message: Add new feature for user analytic
 #
 # 📂 Files changed: 3
 # ➕ Lines added: 45
@@ -243,7 +247,7 @@ beaconled --format json | jq '.files_changed'
 # 3
 ```
 
-## Team Workflow Examples
+## Team Workflow Example
 
 ### Daily Standup Script
 ```bash
@@ -273,19 +277,19 @@ beaconled --since 1w --format json > weekly-dashboard.json
 ```bash
 #!/bin/bash
 # sprint-retro.sh
-SPRINT_LENGTH=2w  # 2 weeks
+SPRINT_LENGTH=2w  # 2 week
 
 echo "🎯 Sprint Retrospective Analysis"
 echo "==============================="
 beaconled --since $SPRINT_LENGTH --format extended
 
-# Team member contributions
+# Team member contribution
 beaconled --since $SPRINT_LENGTH --format json | jq '.authors'
 ```
 
-## Repository Analysis Examples
+## Repository Analysis Example
 
-### Multi-Repository Analysis
+### Multi-Repository Analysi
 ```bash
 #!/bin/bash
 # multi-repo-analysis.sh
@@ -301,28 +305,28 @@ for repo in "${REPOS[@]}"; do
 done
 ```
 
-### Component Analysis
+### Component Analysi
 ```bash
 #!/bin/bash
 # component-analysis.sh
-# Analyze specific directories
+# Analyze specific directorie
 
-# Backend changes
+# Backend change
 beaconled --since 1w --format json | jq '.files[] | select(.path | startswith("src/backend"))'
 
-# Frontend changes
+# Frontend change
 beaconled --since 1w --format json | jq '.files[] | select(.path | endswith(".tsx") or endswith(".ts"))'
 
-# Documentation changes
+# Documentation change
 beaconled --since 1w --format json | jq '.files[] | select(.path | endswith(".md"))'
 ```
 
-## Integration Examples
+## Integration Example
 
 ### GitHub Actions Integration
 ```yaml
 # .github/workflows/daily-beaconled.yml
-name: Daily Beacon Analysis
+name: Daily Beacon Analysi
 
 on:
   schedule:
@@ -360,7 +364,7 @@ jobs:
 #!/usr/bin/env python3
 # slack-daily-report.py
 import json
-import requests
+import request
 from datetime import datetime, timedelta
 from beaconled.core.analyzer import GitAnalyzer
 from beaconled.formatters.json_format import JSONFormatter
@@ -368,7 +372,7 @@ from beaconled.formatters.json_format import JSONFormatter
 def send_daily_report(webhook_url):
     analyzer = GitAnalyzer()
 
-    # Yesterday's stats
+    # Yesterday's stat
     yesterday = datetime.now() - timedelta(days=1)
     stats = analyzer.analyze_range(
         since=yesterday.strftime("%Y-%m-%d"),
@@ -391,7 +395,7 @@ def send_daily_report(webhook_url):
     requests.post(webhook_url, json=message)
 
 if __name__ == "__main__":
-    import sys
+    import sy
     send_daily_report(sys.argv[1])
 ```
 
@@ -413,7 +417,7 @@ beaconled --since 1w --format json | jq 'select(.total_insertions > 100)'
 ```bash
 #!/bin/bash
 # batch-analysis.sh
-# Process multiple time periods
+# Process multiple time period
 
 PERIODS=("1d" "1w" "1m" "3m")
 PERIOD_NAMES=("1day" "1week" "1month" "3months")
@@ -435,7 +439,7 @@ done
 LOG_FILE="development-velocity.log"
 DATE=$(date +%Y-%m-%d)
 
-# Get weekly stats
+# Get weekly stat
 stats=$(beaconled --since 1w --format json)
 commits=$(echo $stats | jq '.total_commits')
 files=$(echo $stats | jq '.total_files_changed')
@@ -445,7 +449,7 @@ deletions=$(echo $stats | jq '.total_deletions')
 echo "$DATE,$commits,$files,$insertions,$deletions" >> $LOG_FILE
 ```
 
-## Quick Reference Commands
+## Quick Reference Command
 
 | Task | Command |
 |------|---------|
@@ -462,6 +466,7 @@ echo "$DATE,$commits,$files,$insertions,$deletions" >> $LOG_FILE
 | Analyze by date range (UTC) | `beaconled --since 2025-07-01T00:00 --until 2025-07-31T23:59` |
 | Using date only (assumes 00:00 UTC) | `beaconled --since 2025-07-01 --until 2025-07-31` |
 | Using relative dates | `beaconled --since 1w` |
+| Using ISO 8601 format with 'T' separator | `beaconled --since 2025-01-01T00:00:00 --until 2025-01-31T23:59:59` |
 
 ## Date Format Reference
 
@@ -470,35 +475,48 @@ echo "$DATE,$commits,$files,$insertions,$deletions" >> $LOG_FILE
   - `--since` defaults to `7d` (7 days ago in UTC)
   - `--until` defaults to `now` (current time in UTC)
 - When using `--since` without `--until`, `--until` defaults to `now`
-- When using `--until` without `--since`, `--since` defaults to `7d`
+- When using `--until` without `--since`, `--since` defaults to `7d` before `--until`
 
-### Relative Formats
-```
-1d      # 1 day ago from now in UTC
-2w      # 2 weeks ago from now in UTC
-3m      # 3 months ago from now in UTC (approximate, using 4 weeks/month)
-1y      # 1 year ago from now in UTC (approximate, using 52 weeks/year)
-```
+### Supported Date Format
 
-### Absolute Formats (UTC Only)
-```
-2025-01-15              # January 15, 2025 at 00:00 UTC
-2025-01-15 14:30        # January 15, 2025 at 14:30 UTC
-2025-01-15 14:30:45     # January 15, 2025 at 14:30:45 UTC
-```
+#### Relative Formats (Single Unit Only)
+- `1d` - 1 day ago
+- `2w` - 2 weeks ago
+- `3m` - 3 months ago (approximate, 30 days/month)
+- `1y` - 1 year ago (approximate, 52 weeks/year)
 
-### Special Keywords
-```
-now        # Current time in UTC
-```
+#### Absolute Format
+- `YYYY-MM-DD` - Date only (midnight UTC)
+- `YYYY-MM-DD HH:MM` - Date and time (24-hour format, UTC, no seconds)
+
+#### Special Value
+- `now` - Current time in UTC
+- `HEAD` - Most recent commit in the repository
+
+### Unsupported Format
+The following formats are **not** supported:
+- Combined relative dates (e.g., `1w2d`, `1w 2d`)
+- ISO datetime with seconds (e.g., `2025-01-15 14:30:45`)
+- ISO datetime with `T` separator (e.g., `2025-01-15T14:30:45`)
+- Timezone offsets (all times are in UTC)
+- Date formats with slashes (e.g., `01/15/2025`)
+- Time-only formats (e.g., `14:30`)
 
 ### Timezone Handling
 - All input dates are interpreted as UTC
 - Results are displayed in UTC
 - No timezone conversion is performed
 
-Example with timezone handling:
+### Example
 ```bash
 # Analyze commits between 9 AM to 5 PM UTC
-beaconled --since 2025-01-15T09:00 --until 2025-01-15T17:00
+beaconled --since "2025-01-15 09:00" --until "2025-01-15 17:00"
+
+# Analyze commits from the last 7 days (UTC)
+beaconled --since 7d
+
+# Analyze commits using ISO date format (UTC)
+beaconled --since 2025-01-01 --until 2025-01-31
 ```
+
+**Note**: All times are in UTC.
