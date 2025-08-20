@@ -3,7 +3,8 @@
 import re
 from datetime import datetime, timezone
 
-from beaconled.core.date_errors import DateError, DateParseError, DateRangeError
+from beaconled.core.date_errors import (DateError, DateParseError,
+                                        DateRangeError)
 from beaconled.exceptions import ErrorCode, ValidationError
 
 
