@@ -107,11 +107,9 @@ def sample_range_stats():
 
 
 class TestStandardFormatter:
-    def setup_method(self):
-        self.formatter = StandardFormatter()
-
     def test_format_commit_stats(self, sample_commit_stats):
-        result = self.formatter.format_commit_stats(sample_commit_stats)
+        formatter = StandardFormatter()
+        result = formatter.format_commit_stats(sample_commit_stats)
         import re
 
         clean_result = re.sub(r"\x1b\[[0-9;]*m", "", result)
@@ -124,8 +122,9 @@ class TestStandardFormatter:
 
     def test_format_range_stats(self, sample_range_stats):
         # Calculate extended stats for enhanced formatting
+        formatter = StandardFormatter()
         sample_range_stats.calculate_extended_stats()
-        result = self.formatter.format_range_stats(sample_range_stats)
+        result = formatter.format_range_stats(sample_range_stats)
         import re
 
         clean_result = re.sub(r"\x1b\[[0-9;]*m", "", result)
@@ -137,6 +136,34 @@ class TestStandardFormatter:
         assert "Total lines added: 156" in clean_result
         assert "Total lines deleted: 45" in clean_result
         assert "Net change: 111" in clean_result
+
+    def test_format_commit_stats_with_emoji(self, sample_commit_stats):
+        formatter = StandardFormatter(no_emoji=False)
+        result = formatter.format_commit_stats(sample_commit_stats)
+        # Assuming a UTF-8 environment for testing emojis
+        assert "📊" in result
+        assert "👤" in result
+
+    def test_format_commit_stats_no_emoji(self, sample_commit_stats):
+        formatter = StandardFormatter(no_emoji=True)
+        result = formatter.format_commit_stats(sample_commit_stats)
+        assert "📊" not in result
+        assert "👤" not in result
+
+    def test_format_range_stats_with_emoji(self, sample_range_stats):
+        formatter = StandardFormatter(no_emoji=False)
+        sample_range_stats.calculate_extended_stats()
+        result = formatter.format_range_stats(sample_range_stats)
+        # Assuming a UTF-8 environment for testing emojis
+        assert "🗓️" in result
+        assert "🚀" in result
+
+    def test_format_range_stats_no_emoji(self, sample_range_stats):
+        formatter = StandardFormatter(no_emoji=True)
+        sample_range_stats.calculate_extended_stats()
+        result = formatter.format_range_stats(sample_range_stats)
+        assert "🗓️" not in result
+        assert "🚀" not in result
 
 
 class TestExtendedFormatter:

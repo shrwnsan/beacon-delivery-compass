@@ -78,7 +78,9 @@ class TestPropertyBasedDateParsing:
             else:
                 # Date only - should be at midnight UTC
                 expected_date = (
-                    datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc).date()
+                    datetime.strptime(date_str, "%Y-%m-%d")
+                    .replace(tzinfo=timezone.utc)
+                    .date()
                 )
                 assert result.date() == expected_date
                 assert result.hour == 0

@@ -42,10 +42,15 @@ def fix_datetime_issues(file_path: Path) -> bool:
 
     # Look for strptime calls without timezone handling
     strptime_pattern = r"^(\s*\w+\s*=\s*datetime\.strptime\([^)]+\))(?!\s*\.(replace|astimezone)\([^)]*tzinfo[^)]*\))"
-    new_content = re.sub(strptime_pattern, fix_strptime, new_content, flags=re.MULTILINE)
+    new_content = re.sub(
+        strptime_pattern, fix_strptime, new_content, flags=re.MULTILINE
+    )
 
     # Add timezone import if not present
-    if "from datetime import timezone" not in new_content and "import datetime" not in new_content:
+    if (
+        "from datetime import timezone" not in new_content
+        and "import datetime" not in new_content
+    ):
         new_content = new_content.replace(
             "from datetime import datetime", "from datetime import datetime, timezone"
         )

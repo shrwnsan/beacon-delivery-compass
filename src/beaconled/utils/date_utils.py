@@ -182,9 +182,7 @@ class DateUtils:
         try:
             dt = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
             if not (cls.YEAR_MIN <= dt.year <= cls.YEAR_MAX):
-                msg = (
-                    f"Year {dt.year} is outside the supported range ({cls.YEAR_MIN}-{cls.YEAR_MAX})"
-                )
+                msg = f"Year {dt.year} is outside the supported range ({cls.YEAR_MIN}-{cls.YEAR_MAX})"
                 raise ValidationError(
                     msg,
                     field="date",
@@ -210,7 +208,9 @@ class DateUtils:
             # Try parsing with space separator first (YYYY-MM-DD HH:MM)
             try:
                 # Parse naive datetime and make it timezone-aware
-                dt = datetime.strptime(datetime_str, "%Y-%m-%d %H:%M").replace(tzinfo=timezone.utc)
+                dt = datetime.strptime(datetime_str, "%Y-%m-%d %H:%M").replace(
+                    tzinfo=timezone.utc
+                )
             except ValueError:
                 # Try parsing with 'T' separator (ISO 8601 format: YYYY-MM-DDTHH:MM:SS)
                 try:
@@ -227,9 +227,7 @@ class DateUtils:
 
             # Validate year range
             if dt.year < cls.YEAR_MIN or dt.year > cls.YEAR_MAX:
-                msg = (
-                    f"Year {dt.year} is outside the supported range ({cls.YEAR_MIN}-{cls.YEAR_MAX})"
-                )
+                msg = f"Year {dt.year} is outside the supported range ({cls.YEAR_MIN}-{cls.YEAR_MAX})"
                 raise ValidationError(
                     msg,
                     field="datetime",

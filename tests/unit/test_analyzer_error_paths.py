@@ -97,6 +97,8 @@ def test_validate_repo_path_with_git_python(mock_repo, *args):
 
         # Verify the mock was called with the resolved path
         mock_repo.assert_called_once()
-        assert len(mock_repo.call_args[0]) > 0  # Make sure there's at least one positional arg
+        assert (
+            len(mock_repo.call_args[0]) > 0
+        )  # Make sure there's at least one positional arg
         called_path = mock_repo.call_args[0][0]
         assert os.path.samefile(called_path, resolved_temp_dir)

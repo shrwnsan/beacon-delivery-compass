@@ -35,7 +35,9 @@ class TestRangeAnalytics(unittest.TestCase):
         if os.path.exists(self.test_dir):
             shutil.rmtree(self.test_dir)
 
-    def _create_mock_commit(self, hexsha, date, author_name, author_email, message, files=None):
+    def _create_mock_commit(
+        self, hexsha, date, author_name, author_email, message, files=None
+    ):
         """Helper to create a mock commit."""
         if files is None:
             files = [
@@ -114,7 +116,9 @@ class TestRangeAnalytics(unittest.TestCase):
         self.analyzer.get_commit_stats = MagicMock(return_value=commit_stats)
 
         # Mock the file stats
-        file_stats = FileStats(path="test.py", lines_added=5, lines_deleted=2, lines_changed=7)
+        file_stats = FileStats(
+            path="test.py", lines_added=5, lines_deleted=2, lines_changed=7
+        )
         commit_stats.files = [file_stats]
         commit_stats.files_changed = 1
         commit_stats.lines_added = 5
@@ -143,7 +147,9 @@ class TestRangeAnalytics(unittest.TestCase):
             result.start_date,
             start_date.replace(hour=0, minute=0, second=0, microsecond=0),
         )
-        expected_end = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
+        expected_end = end_date.replace(
+            hour=23, minute=59, second=59, microsecond=999999
+        )
         self.assertEqual(
             result.end_date,
             expected_end,

@@ -121,7 +121,9 @@ def discover_tests() -> dict:
     for root, _, files in os.walk(TEST_DIR):
         category = os.path.basename(root)
         if category in ["unit", "integration", "performance"]:
-            test_files = [f for f in files if f.startswith("test_") and f.endswith(".py")]
+            test_files = [
+                f for f in files if f.startswith("test_") and f.endswith(".py")
+            ]
             if test_files:
                 test_data[category] = {
                     "files": [os.path.join(root, f) for f in test_files],
@@ -157,21 +159,27 @@ def print_test_menu():
 
 def main():
     """Main entry point for the test runner."""
-    parser = argparse.ArgumentParser(description="Run tests for beacon-delivery-compass")
+    parser = argparse.ArgumentParser(
+        description="Run tests for beacon-delivery-compass"
+    )
     parser.add_argument(
         "test_paths",
         nargs="*",
         default=None,
         help="Test files or directories to run (default: interactive mode)",
     )
-    parser.add_argument("--simple", action="store_true", help="Run only a simple environment test")
+    parser.add_argument(
+        "--simple", action="store_true", help="Run only a simple environment test"
+    )
     parser.add_argument(
         "--no-verbose",
         action="store_false",
         dest="verbose",
         help="Disable verbose output",
     )
-    parser.add_argument("--env", action="store_true", help="Show environment information and exit")
+    parser.add_argument(
+        "--env", action="store_true", help="Show environment information and exit"
+    )
 
     args = parser.parse_args()
 
