@@ -12,7 +12,7 @@ from .exceptions import (
     ValidationError,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.3.0"
 __author__ = "Your Name"
 __email__ = "your.email@example.com"
 

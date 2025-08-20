@@ -4,13 +4,14 @@
 import argparse
 import sys
 
+from . import __version__
 from .core.analyzer import GitAnalyzer
-from .formatters.extended import ExtendedFormatter
-from .formatters.json_format import JSONFormatter
-from .formatters.standard import StandardFormatter
 
 # Domain-specific date errors for clearer CLI messages
 from .core.date_errors import DateParseError, DateRangeError
+from .formatters.extended import ExtendedFormatter
+from .formatters.json_format import JSONFormatter
+from .formatters.standard import StandardFormatter
 
 
 def main() -> None:
@@ -42,7 +43,7 @@ def main() -> None:
     parser.add_argument(
         "--version",
         action="version",
-        version="beaconled 0.2.0",
+        version=f"beaconled {__version__}",
         help="Show program's version number and exit",
     )
     parser.add_argument(

@@ -6,12 +6,12 @@ Generates comprehensive development analytics and reports for the Crypto Analysi
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 from collections import Counter
 from pathlib import Path
 from typing import Dict, List
-import re
 
 
 class GitAnalytics:
@@ -376,7 +376,8 @@ def main():
         help="Output format",
     )
     parser.add_argument(
-        "--since", help="Start date for range analysis (e.g., '1 week ago', '2023-01-01')"
+        "--since",
+        help="Start date for range analysis (e.g., '1 week ago', '2023-01-01')",
     )
     parser.add_argument(
         "--until", default="HEAD", help="End date for range analysis (default: HEAD)"

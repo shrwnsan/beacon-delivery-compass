@@ -636,9 +636,10 @@ class GitAnalyzer:
                 authors=authors,
             )
 
-            # Add additional stats as attributes if needed
-            if hasattr(range_stats, "commits_by_day"):
-                range_stats.commits_by_day = commits_by_day
+            # Calculate extended statistics for enhanced formatting
+            range_stats.calculate_extended_stats()
+
+            # Add additional stats as attributes if needed (for backward compatibility)
             if hasattr(range_stats, "file_types"):
                 range_stats.file_types = file_types
 

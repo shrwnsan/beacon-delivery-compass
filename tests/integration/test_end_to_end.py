@@ -64,7 +64,7 @@ class TestEndToEnd(unittest.TestCase):
         print("=============")
 
         self.assertEqual(result.returncode, 0)
-        self.assertIn("Range Analysis:", result.stdout)
+        self.assertIn("Analysis Period:", result.stdout)
         self.assertIn("Total commits:", result.stdout)
 
     def test_beaconled_invalid_commit(self):

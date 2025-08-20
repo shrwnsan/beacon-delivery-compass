@@ -85,6 +85,10 @@ class RangeStats:
         total_lines_deleted: Total lines deleted across all commits
         commits: List of CommitStats objects in chronological order
         authors: Dictionary mapping author names to commit counts
+        author_impact_stats: Dictionary mapping author names to impact breakdown
+        author_activity_by_day: Dictionary mapping author names to day-of-week activity
+        component_stats: Dictionary with component activity statistics
+        commits_by_day: Dictionary mapping dates to commit counts
     """
 
     start_date: datetime
@@ -95,6 +99,10 @@ class RangeStats:
     total_lines_deleted: int = 0
     commits: list[CommitStats] = field(default_factory=list)
     authors: dict[str, int] = field(default_factory=dict)
+    author_impact_stats: dict[str, dict[str, int]] = field(default_factory=dict)
+    author_activity_by_day: dict[str, dict[str, int]] = field(default_factory=dict)
+    component_stats: dict[str, dict[str, int]] = field(default_factory=dict)
+    commits_by_day: dict[str, int] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         """Validate and compute derived fields after initialization."""
@@ -118,3 +126,94 @@ class RangeStats:
             self.total_files_changed = sum(c.files_changed for c in self.commits)
             self.total_lines_added = sum(c.lines_added for c in self.commits)
             self.total_lines_deleted = sum(c.lines_deleted for c in self.commits)
+
+    @staticmethod
+    def categorize_commit_impact(commit: "CommitStats") -> str:
+        """Categorize a commit's impact level based on files changed and lines modified.
+
+        Args:
+            commit: CommitStats object to categorize
+
+        Returns:
+            str: Impact level ("high", "medium", or "low")
+        """
+        files_changed = getattr(commit, "files_changed", 0)
+        lines_changed = getattr(commit, "lines_added", 0) + getattr(commit, "lines_deleted", 0)
+
+        # High Impact: >15 files changed OR >100 lines added/deleted
+        if files_changed > 15 or lines_changed > 100:
+            return "high"
+        # Medium Impact: 5-15 files changed OR 25-100 lines added/deleted
+        elif files_changed >= 5 or lines_changed >= 25:
+            return "medium"
+        # Low Impact: <5 files changed AND <25 lines added/deleted
+        else:
+            return "low"
+
+    @staticmethod
+    def get_component_name(file_path: str) -> str:
+        """Extract component name from file path.
+
+        Args:
+            file_path: Relative file path
+
+        Returns:
+            str: Component name (top-level directory or "root" for root files)
+        """
+        if not file_path or "/" not in file_path:
+            return "root"
+        return file_path.split("/")[0] + "/"
+
+    def calculate_extended_stats(self) -> None:
+        """Calculate extended statistics for enhanced formatting.
+
+        This method populates the author_impact_stats, author_activity_by_day,
+        and component_stats fields based on the commits data.
+        """
+        if not self.commits:
+            return
+
+        # Initialize tracking dictionaries with type annotations
+        author_impact_stats: dict[str, dict[str, int]] = defaultdict(
+            lambda: {"high": 0, "medium": 0, "low": 0}
+        )
+        author_activity_by_day: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+        component_stats: dict[str, dict[str, int]] = defaultdict(lambda: {"commits": 0, "lines": 0})
+        commits_by_day: dict[str, int] = defaultdict(int)
+
+        # Process each commit
+        for commit in self.commits:
+            # Impact categorization
+            impact = self.categorize_commit_impact(commit)
+            author = getattr(commit, "author", "Unknown")
+            author_impact_stats[author][impact] += 1
+
+            # Day of week activity tracking
+            if hasattr(commit, "date") and commit.date:
+                day_name = commit.date.strftime("%A")  # Full day name (Monday, Tuesday, etc.)
+                author_activity_by_day[author][day_name] += 1
+
+                # Overall daily activity
+                date_key = commit.date.strftime("%Y-%m-%d")
+                commits_by_day[date_key] += 1
+
+            # Component analysis
+            if hasattr(commit, "files") and commit.files:
+                commit_components = set()
+                for file_stat in commit.files:
+                    if hasattr(file_stat, "path"):
+                        component = self.get_component_name(file_stat.path)
+                        commit_components.add(component)
+                        component_stats[component]["lines"] += getattr(
+                            file_stat, "lines_added", 0
+                        ) + getattr(file_stat, "lines_deleted", 0)
+
+                # Count this commit for each unique component it touches
+                for component in commit_components:
+                    component_stats[component]["commits"] += 1
+
+        # Convert defaultdicts to regular dicts and store
+        self.author_impact_stats = {k: dict(v) for k, v in author_impact_stats.items()}
+        self.author_activity_by_day = {k: dict(v) for k, v in author_activity_by_day.items()}
+        self.component_stats = {k: dict(v) for k, v in component_stats.items()}
+        self.commits_by_day = dict(commits_by_day)

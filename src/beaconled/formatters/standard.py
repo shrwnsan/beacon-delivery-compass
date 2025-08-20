@@ -31,9 +31,9 @@ class StandardFormatter(BaseFormatter):
             f"{Fore.CYAN}Date:{Style.RESET_ALL} {self._format_date(stats.date)}",
             f"{Fore.CYAN}Message:{Style.RESET_ALL} {stats.message}",
             "",
-            f"{Fore.YELLOW}Files changed:{Style.RESET_ALL} {stats.files_changed}",
-            f"{Fore.GREEN}Lines added:{Style.RESET_ALL} {stats.lines_added}",
-            f"{Fore.RED}Lines deleted:{Style.RESET_ALL} {stats.lines_deleted}",
+            f"{Fore.YELLOW}Files changed:{Style.RESET_ALL} {stats.files_changed:,}",
+            f"{Fore.GREEN}Lines added:{Style.RESET_ALL} {stats.lines_added:,}",
+            f"{Fore.RED}Lines deleted:{Style.RESET_ALL} {stats.lines_deleted:,}",
             f"{Fore.YELLOW}Net change:{Style.RESET_ALL} {net_change_str}",
         ]
 
@@ -49,37 +49,106 @@ class StandardFormatter(BaseFormatter):
         return "\n".join(output)
 
     def format_range_stats(self, stats: RangeStats) -> str:
-        """Format range statistics as standard text."""
-        range_net_change = self._format_net_change(
-            stats.total_lines_added,
-            stats.total_lines_deleted,
-        )
+        """Format range statistics as enhanced standard text."""
+        # Calculate duration in days - for relative dates, use actual span
+        # to match user expectations (e.g., --since 9d should show "9 days")
+        duration_days = (stats.end_date.date() - stats.start_date.date()).days
+        if duration_days == 0:  # Same day
+            duration_days = 1
+
+        # Enhanced header
         output = [
-            f"{Fore.CYAN}Range Analysis:{Style.RESET_ALL} "
+            f"{Fore.CYAN}Analysis Period:{Style.RESET_ALL} "
             f"{self._format_date(stats.start_date).split()[0]} to "
-            f"{self._format_date(stats.end_date).split()[0]}",
+            f"{self._format_date(stats.end_date).split()[0]} ({duration_days} days)",
             "",
-            f"{Fore.YELLOW}Total commits:{Style.RESET_ALL} {stats.total_commits}",
-            (f"{Fore.YELLOW}Total files changed:{Style.RESET_ALL} {stats.total_files_changed}"),
-            (f"{Fore.GREEN}Total lines added:{Style.RESET_ALL} {stats.total_lines_added}"),
-            (f"{Fore.RED}Total lines deleted:{Style.RESET_ALL} {stats.total_lines_deleted}"),
-            f"{Fore.YELLOW}Net change:{Style.RESET_ALL} {range_net_change}",
+            # Total statistics with comma formatting
+            f"Total commits: {stats.total_commits:,}",
+            f"Total files changed: {stats.total_files_changed:,}",
+            f"Total lines added: {stats.total_lines_added:,}",
+            f"Total lines deleted: {stats.total_lines_deleted:,}",
+            "Net change: "
+            + self._format_net_change(stats.total_lines_added, stats.total_lines_deleted),
         ]
 
+        # Team Overview Section
         if stats.authors:
+            active_days = len(getattr(stats, "commits_by_day", {}))
+            avg_commits_per_day = round(stats.total_commits / max(duration_days, 1), 1)
+
             output.extend(
                 [
                     "",
-                    f"{Fore.MAGENTA}Contributors:{Style.RESET_ALL}",
-                    *[
-                        self._format_author_stats(a, c)
-                        for a, c in sorted(
-                            stats.authors.items(),
-                            key=lambda x: x[1],
-                            reverse=True,
-                        )
-                    ],
-                ],
+                    f"{Fore.YELLOW}=== TEAM OVERVIEW ==={Style.RESET_ALL}",
+                    f"Total Contributors: {len(stats.authors)}",
+                    f"Total Commits: {stats.total_commits}",
+                    f"Average Commits/Day: {avg_commits_per_day}",
+                    f"Active Days: {active_days}/{duration_days}",
+                ]
             )
+
+        # Contributor Breakdown Section
+        if stats.authors and hasattr(stats, "author_impact_stats"):
+            output.extend(
+                [
+                    "",
+                    f"{Fore.YELLOW}=== CONTRIBUTOR BREAKDOWN ==={Style.RESET_ALL}",
+                ]
+            )
+
+            # Sort authors by commit count and take top 3
+            top_contributors = sorted(stats.authors.items(), key=lambda x: x[1], reverse=True)[:3]
+
+            for author, commit_count in top_contributors:
+                percentage = round((commit_count / stats.total_commits) * 100)
+                output.append(f"{author}: {commit_count} commits ({percentage}%)")
+
+                # Add impact breakdown
+                if author in stats.author_impact_stats:
+                    impact_stats = stats.author_impact_stats[author]
+                    output.extend(
+                        [
+                            f"  - High Impact: {impact_stats.get('high', 0)} commits",
+                            f"  - Medium Impact: {impact_stats.get('medium', 0)} commits",
+                            f"  - Low Impact: {impact_stats.get('low', 0)} commits",
+                        ]
+                    )
+
+                # Add most active days
+                if (
+                    hasattr(stats, "author_activity_by_day")
+                    and author in stats.author_activity_by_day
+                ):
+                    day_activity = stats.author_activity_by_day[author]
+                    if day_activity:
+                        # Get top 2 most active days
+                        top_days = sorted(day_activity.items(), key=lambda x: x[1], reverse=True)[
+                            :2
+                        ]
+                        most_active = ", ".join([day for day, _ in top_days])
+                        output.append(f"  - Most Active: {most_active}")
+
+                output.append("")  # Empty line between contributors
+
+        # Component Activity Section
+        if hasattr(stats, "component_stats") and stats.component_stats:
+            output.extend(
+                [
+                    f"{Fore.YELLOW}=== COMPONENT ACTIVITY ==={Style.RESET_ALL}",
+                    "Most Changed Components:",
+                ]
+            )
+
+            # Sort components by commits, then by lines
+            sorted_components = sorted(
+                stats.component_stats.items(),
+                key=lambda x: (x[1]["commits"], x[1]["lines"]),
+                reverse=True,
+            )[:5]  # Top 5 components
+
+            for component, component_stats in sorted_components:
+                commits = component_stats["commits"]
+                lines = component_stats["lines"]
+                output.append(f"  {component} {commits} commits, {lines:,} lines")
 
         return "\n".join(output)

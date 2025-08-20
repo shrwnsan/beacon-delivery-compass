@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Diagnostic script to check Python environment and imports."""
 
-import sys
 import os
+import sys
 
 
 def check_import(module_name):

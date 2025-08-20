@@ -15,7 +15,10 @@ class TestDateParser(unittest.TestCase):
         test_cases: list[tuple[str, datetime]] = [
             # (input_string, expected_datetime)
             ("2023-10-05", datetime(2023, 10, 5, 0, 0, tzinfo=timezone.utc)),
-            ("2023-10-05T14:30:00", datetime(2023, 10, 5, 14, 30, 0, tzinfo=timezone.utc)),
+            (
+                "2023-10-05T14:30:00",
+                datetime(2023, 10, 5, 14, 30, 0, tzinfo=timezone.utc),
+            ),
             ("2024-01-01", datetime(2024, 1, 1, 0, 0, tzinfo=timezone.utc)),
         ]
 
