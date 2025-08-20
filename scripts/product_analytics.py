@@ -369,7 +369,7 @@ if __name__ == "__main__":
     from scripts.analytics_reporter import GitAnalytics
 
     analytics = GitAnalytics()
-    data = analytics.get_range_analytics("1 week ago")
+    data = analytics.get_range_analytics("1w")
 
     product_analytics = ProductAnalytics(data)
     insights = product_analytics.generate_product_insights()

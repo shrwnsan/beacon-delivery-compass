@@ -7,14 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.2.1] - 2025-08-19
+### Added
+- Support for combined time units in concise format (e.g., "1w2d" for 1 week and 2 days)
+
+### Changed
+- **Time Format Standardization**: Updated all time-related parameters to support concise format (e.g., "1w" instead of "1 week ago")
+  - Added support for formats like "1d" (1 day), "2w" (2 weeks), "3m" (3 months), "1y" (1 year)
+  - Maintained backward compatibility with verbose formats ("1 week ago", "2 days ago", etc.)
+  - Updated documentation and examples to use the new concise format
+  - Modified all scripts and GitHub Actions workflows to use the new format
+  - Updated test cases to verify both old and new formats work correctly
+
+### Fixed
+- Improved date parsing performance by simplifying the regular expressions
+- Ensured consistent timezone handling across all date-related functions
+- Updated help text and documentation to clearly explain the supported time formats
+
+## [v0.2.1] - 2025-08-19
 
 ### Fixed
 - Streamlined ignore rules and removed stray files
 - Ensured File type breakdown always appears in extended format
 - Updated pytest.ini coverage configuration
 
-## [0.2.0] - 2025-08-19
+## [v0.2.0] - 2025-07-25
 ### Added
 - **New Date Parser Utility**: Added a dedicated `DateParser` class in `utils.date_utils` for better code organization and maintainability.
   - Centralized date parsing, validation, and manipulation logic
@@ -36,17 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enhanced security by avoiding shell command injection risks
   - More reliable repository operations
 
-## [0.2.0] - 2025-08-19
-
-### Changed
-- **Refactored Git Integration**: Migrated from direct subprocess calls to GitPython for:
-  - Better error handling and exception management
-  - Improved cross-platform compatibility
-  - More maintainable and testable code
-  - Enhanced security by avoiding shell command injection risks
-  - More reliable repository operations
-
-## [0.1.1] - 2025-07-25
+## [v0.1.1] - 2025-07-25
 
 ### Added
 - Comprehensive product analytics system implementation
@@ -80,7 +86,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - Old egg-info directory
 
-## [0.1.0] - 2025-07-24
+## [v0.1.0] - 2025-07-24
 
 ### Added
 - Initial public release on PyPI
