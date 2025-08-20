@@ -40,7 +40,7 @@ class TestCLI(unittest.TestCase):
         with self.assertRaises(SystemExit) as cm:
             main()
         self.assertEqual(cm.exception.code, 0)
-        self.assertIn("beaconled 0.2.0", sys.stdout.getvalue())
+        self.assertIn("beaconled 0.3.0", sys.stdout.getvalue())
 
     @patch("beaconled.cli.GitAnalyzer")
     @patch("sys.argv", ["beaconled", "--format", "json"])

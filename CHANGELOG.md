@@ -7,8 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.3.0] - 2025-08-20
+
 ### Added
-- Support for combined time units in concise format (e.g., "1w2d" for 1 week and 2 days)
+- **Advanced Usage Framework**: Comprehensive advanced usage examples and testing infrastructure
+  - Added `docs/examples/advanced-usage.md` with 10+ advanced use cases including executive reporting, team health analysis, and technical debt tracking
+  - Created `scripts/test_advanced_usage.sh` with 10 comprehensive test scenarios covering all documented features
+  - Added organized output management in `scripts/test_outputs/` directory with flag-based cleanup system
+  - Implemented interpretive scoring guidance for health metrics with 0-100 scales and clear explanations
+- **Strategic Product Vision**: Added comprehensive product strategy documentation
+  - Created `docs/development/product-strategy.md` with market analysis, user personas, and implementation roadmap
+  - Added "Built-in Product Delivery Health Reports" stretch goal to development roadmap
+  - Established clear path from custom scripts to native CLI features
+- **Enhanced Documentation Structure**: Reorganized and improved documentation
+  - Streamlined README.md with user-focused structure prioritizing installation and usage examples
+  - Added comprehensive sample outputs with realistic data
+  - Improved documentation cross-references and navigation
 
 ### Changed
 - **Time Format Standardization**: Updated all time-related parameters to support concise format (e.g., "1w" instead of "1 week ago")
@@ -17,11 +31,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated documentation and examples to use the new concise format
   - Modified all scripts and GitHub Actions workflows to use the new format
   - Updated test cases to verify both old and new formats work correctly
+- **README Structure**: Reorganized README.md for better user adoption
+  - Moved installation and quick start sections to the top
+  - Prioritized sample outputs and usage examples over development details
+  - Reduced content by ~50% while maintaining essential information
+  - Improved "show, don't tell" approach with concrete examples
 
 ### Fixed
-- Improved date parsing performance by simplifying the regular expressions
-- Ensured consistent timezone handling across all date-related functions
-- Updated help text and documentation to clearly explain the supported time formats
+- **Number Formatting**: Implemented comprehensive comma formatting for better readability
+  - Added comma separators to all large numbers (1,000+) across all output formats
+  - Fixed individual commit statistics formatting (Lines added, Lines deleted, Net change)
+  - Fixed range analysis statistics formatting (Total commits, Total lines, etc.)
+  - Fixed component activity lines formatting (e.g., "docs/ 7 commits, 1,348 lines")
+  - Fixed file type breakdown formatting in extended output
+  - Applied consistent formatting to all numeric displays throughout the application
+- **Duration Calculation**: Fixed off-by-one error in date range calculations
+  - `--since 9d` now correctly displays "(9 days)" instead of "(10 days)"
+  - Updated duration logic to match user expectations for relative dates
+  - Maintained accuracy for same-day analyses
+- **Date Parsing Performance**: Improved date parsing performance by simplifying regular expressions
+- **Timezone Handling**: Ensured consistent timezone handling across all date-related functions
+- **Documentation**: Updated help text and documentation to clearly explain supported time formats
 
 ## [v0.2.1] - 2025-08-19
 

@@ -1,6 +1,6 @@
 """Additional tests for ExtendedFormatter to improve coverage."""
 
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 
 from beaconled.core.models import CommitStats, RangeStats
 from beaconled.formatters.extended import ExtendedFormatter

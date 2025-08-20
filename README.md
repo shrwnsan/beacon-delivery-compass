@@ -109,27 +109,45 @@ beaconled --since "1w" --format standard
 ```
 
 ```
-Weekly Team Report
 Analysis Period: 2025-01-16 to 2025-01-23 (7 days)
+
+Total commits: 23
+Total files changed: 156
+Total lines added: 2,847
+Total lines deleted: 1,234
+Net change: 1,613
 
 === TEAM OVERVIEW ===
 Total Contributors: 4
 Total Commits: 23
-Average Commits/Day: 3.3
+Average Commits/Day: 2.9
 Active Days: 6/7
 
 === CONTRIBUTOR BREAKDOWN ===
-John Doe: 9 commits (39%)
+John Doe <john@company.com>: 9 commits (39%)
   - High Impact: 3 commits
   - Medium Impact: 4 commits
   - Low Impact: 2 commits
   - Most Active: Monday, Wednesday
 
+Jane Smith <jane@company.com>: 7 commits (30%)
+  - High Impact: 2 commits
+  - Medium Impact: 3 commits
+  - Low Impact: 2 commits
+  - Most Active: Tuesday, Friday
+
+Bob Wilson <bob@company.com>: 7 commits (30%)
+  - High Impact: 1 commits
+  - Medium Impact: 4 commits
+  - Low Impact: 2 commits
+  - Most Active: Wednesday, Thursday
+
 === COMPONENT ACTIVITY ===
 Most Changed Components:
-  frontend/: 8 commits, 234 lines
-  backend/api/: 6 commits, 189 lines
-  tests/: 5 commits, 156 lines
+  frontend/: 8 commits, 1,234 lines
+  backend/api/: 6 commits, 892 lines
+  tests/: 5 commits, 567 lines
+  docs/: 4 commits, 154 lines
 ```
 
 ## Features

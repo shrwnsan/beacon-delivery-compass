@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from unittest.mock import MagicMock
 
 import pytest
 from freezegun import freeze_time
@@ -43,12 +42,58 @@ def sample_commit_stats():
 @pytest.fixture
 def sample_range_stats():
     """Provides a sample RangeStats object for testing."""
-    mock_commits = [
-        MagicMock(author="John Doe", date=datetime(2023, 1, 10, tzinfo=timezone.utc)),
-        MagicMock(author="Jane Smith", date=datetime(2023, 1, 12, tzinfo=timezone.utc)),
-        MagicMock(author="John Doe", date=datetime(2023, 1, 15, tzinfo=timezone.utc)),
-        MagicMock(author="Jane Smith", date=datetime(2023, 1, 20, tzinfo=timezone.utc)),
-        MagicMock(author="Bob Johnson", date=datetime(2023, 1, 25, tzinfo=timezone.utc)),
+    # Create proper CommitStats objects instead of mocks
+    commits = [
+        CommitStats(
+            hash="commit1",
+            author="John Doe",
+            date=datetime(2023, 1, 10, tzinfo=timezone.utc),
+            message="First commit",
+            files_changed=3,
+            lines_added=30,
+            lines_deleted=5,
+            files=[FileStats("src/file1.py", 30, 5, 35)],
+        ),
+        CommitStats(
+            hash="commit2",
+            author="Jane Smith",
+            date=datetime(2023, 1, 12, tzinfo=timezone.utc),
+            message="Second commit",
+            files_changed=2,
+            lines_added=20,
+            lines_deleted=10,
+            files=[FileStats("src/file2.py", 20, 10, 30)],
+        ),
+        CommitStats(
+            hash="commit3",
+            author="John Doe",
+            date=datetime(2023, 1, 15, tzinfo=timezone.utc),
+            message="Third commit",
+            files_changed=4,
+            lines_added=50,
+            lines_deleted=15,
+            files=[FileStats("src/file3.py", 50, 15, 65)],
+        ),
+        CommitStats(
+            hash="commit4",
+            author="Jane Smith",
+            date=datetime(2023, 1, 20, tzinfo=timezone.utc),
+            message="Fourth commit",
+            files_changed=2,
+            lines_added=25,
+            lines_deleted=8,
+            files=[FileStats("docs/file4.md", 25, 8, 33)],
+        ),
+        CommitStats(
+            hash="commit5",
+            author="Bob Johnson",
+            date=datetime(2023, 1, 25, tzinfo=timezone.utc),
+            message="Fifth commit",
+            files_changed=1,
+            lines_added=31,
+            lines_deleted=7,
+            files=[FileStats("tests/file5.py", 31, 7, 38)],
+        ),
     ]
     return RangeStats(
         start_date=datetime(2023, 1, 1, tzinfo=timezone.utc),
@@ -57,7 +102,7 @@ def sample_range_stats():
         total_files_changed=12,
         total_lines_added=156,
         total_lines_deleted=45,
-        commits=mock_commits,
+        commits=commits,
     )
 
 
@@ -78,20 +123,20 @@ class TestStandardFormatter:
         assert "Lines deleted: 12" in clean_result
 
     def test_format_range_stats(self, sample_range_stats):
+        # Calculate extended stats for enhanced formatting
+        sample_range_stats.calculate_extended_stats()
         result = self.formatter.format_range_stats(sample_range_stats)
         import re
 
         clean_result = re.sub(r"\x1b\[[0-9;]*m", "", result)
-        assert "Range Analysis: 2023-01-01 to 2023-01-31" in clean_result
+        assert "Analysis Period: 2023-01-01 to 2023-01-31" in clean_result
         assert "Total commits: 5" in clean_result
-        assert "Total files changed: 12" in clean_result
+        assert "John Doe: 2 commits (40%)" in clean_result
+        assert "=== TEAM OVERVIEW ===" in clean_result
+        assert "=== CONTRIBUTOR BREAKDOWN ===" in clean_result
         assert "Total lines added: 156" in clean_result
         assert "Total lines deleted: 45" in clean_result
         assert "Net change: 111" in clean_result
-        assert "Contributors:" in clean_result
-        assert "John Doe: 2 commits" in clean_result
-        assert "Jane Smith: 2 commits" in clean_result
-        assert "Bob Johnson: 1 commit" in clean_result
 
 
 class TestExtendedFormatter:

@@ -34,7 +34,7 @@ class TestCLIDateFormats(unittest.TestCase):
                 with self.subTest(f"{value}{unit}"):
                     result = self.run_cli(["--since", f"{value}{unit}"])
                     self.assertEqual(result.returncode, 0)
-                    self.assertIn("Range Analysis:", result.stdout)
+                    self.assertIn("Analysis Period:", result.stdout)
 
     def test_absolute_date_formats(self):
         """Test various absolute date formats."""
@@ -46,30 +46,45 @@ class TestCLIDateFormats(unittest.TestCase):
         # Test YYYY-MM-DD format
         result = self.run_cli(["--since", yesterday, "--until", today])
         self.assertEqual(result.returncode, 0)
-        self.assertIn("Range Analysis:", result.stdout)
+        self.assertIn("Analysis Period:", result.stdout)
 
         # Test with time component
         result = self.run_cli(
             ["--since", f"{yesterday} 00:00", "--until", f"{today} 23:59"],
         )
         self.assertEqual(result.returncode, 0)
-        self.assertIn("Range Analysis:", result.stdout)
+        self.assertIn("Analysis Period:", result.stdout)
 
     def test_invalid_date_formats(self):
         """Test handling of invalid date formats."""
         # Test various invalid formats with their expected error patterns
         test_cases = [
-            ("2023/01/01", ["Could not parse date", "Unsupported date format"]),  # Wrong separator
-            ("01-01-2023", ["Could not parse date", "Unsupported date format"]),  # Wrong order
-            ("2023-13-01", ["Could not parse date", "Unsupported date format"]),  # Invalid month
-            ("2023-01-32", ["Could not parse date", "Unsupported date format"]),  # Invalid day
+            (
+                "2023/01/01",
+                ["Could not parse date", "Unsupported date format"],
+            ),  # Wrong separator
+            (
+                "01-01-2023",
+                ["Could not parse date", "Unsupported date format"],
+            ),  # Wrong order
+            (
+                "2023-13-01",
+                ["Could not parse date", "Unsupported date format"],
+            ),  # Invalid month
+            (
+                "2023-01-32",
+                ["Could not parse date", "Unsupported date format"],
+            ),  # Invalid day
             (
                 "1 d",
                 ["Could not parse date", "Unsupported date format"],
             ),  # Space between number and unit
             ("1x", ["Could not parse date", "Unsupported date format"]),  # Invalid unit
             ("0d", ["Could not parse date", "Unsupported date format"]),  # Zero value
-            ("1.5d", ["Could not parse date", "Unsupported date format"]),  # Decimal value
+            (
+                "1.5d",
+                ["Could not parse date", "Unsupported date format"],
+            ),  # Decimal value
         ]
 
         for date_str, error_patterns in test_cases:
@@ -130,7 +145,7 @@ class TestCLIDateFormats(unittest.TestCase):
                     0,
                     f"Expected success for valid date format: {fmt}",
                 )
-                self.assertIn("Range Analysis:", result.stdout)
+                self.assertIn("Analysis Period:", result.stdout)
 
     def test_date_range_validation(self):
         """Test that end date must be after start date."""

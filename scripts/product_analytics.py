@@ -4,9 +4,9 @@ Product Analytics Engine
 Transforms commit analytics into actionable business intelligence for product-led teams.
 """
 
-from typing import Dict, List
 from dataclasses import dataclass
 from enum import Enum
+from typing import Dict, List
 
 
 class CommitType(Enum):

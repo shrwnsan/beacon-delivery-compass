@@ -4,8 +4,8 @@ Setup Script for Product Analytics System
 One-time setup to configure the product-led analytics system.
 """
 
-import os
 import json
+import os
 from pathlib import Path
 
 

@@ -5,13 +5,14 @@ Automated notifications for product insights and alerts.
 """
 
 import json
-from pathlib import Path
-import smtplib
 import os
+import smtplib
 from datetime import datetime, timezone
-from typing import Dict, List
-from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from pathlib import Path
+from typing import Dict, List
+
 import requests
 
 
