@@ -46,6 +46,12 @@ This document tracks the development progress and future plans for Beacon Delive
 - [ ] Integration tests for large repositories
 
 ### User Experience
+- [x] Enhanced standard format with contributor impact and component activity
+  - [x] Contributor breakdown with impact categorization (high/medium/low)
+  - [x] Most active days tracking for each contributor
+  - [x] Component activity analysis showing most changed directories
+  - [x] Team overview with metrics like average commits per day
+  - [ ] **Future Enhancement**: Revisit "Impact" categorization to focus on outcome-based metrics rather than quantity-based (lines/files changed). Consider measuring actual product value delivered, bug fixes vs features, user-facing changes, etc.
 - [ ] Add emoji support for better visual scanning
   - [ ] Make it configurable via --no-emoji flag
   - [ ] Ensure proper fallback for terminals without emoji support
@@ -143,7 +149,7 @@ See [Security Roadmap](./security/roadmap.md) for detailed security-related impr
 
 ## Version History
 
-### v0.2.0 (Current)
+### v0.3.0 (Current)
 - Initial public release
 - Core repository analysis functionality
 - Multiple output formatters

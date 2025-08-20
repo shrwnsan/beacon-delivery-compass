@@ -28,10 +28,7 @@ except ImportError:
 
     GIT_AVAILABLE = False
 
-from beaconled.core.analyzer import (
-    GitAnalyzer,
-    InvalidRepositoryError,
-)
+from beaconled.core.analyzer import GitAnalyzer, InvalidRepositoryError
 
 
 class TestGitAnalyzerCoverage(unittest.TestCase):

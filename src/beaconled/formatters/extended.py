@@ -29,9 +29,9 @@ class ExtendedFormatter(BaseFormatter):
             f"{Fore.CYAN}Date:{Style.RESET_ALL} {self._format_date(stats.date)}",
             f"{Fore.CYAN}Message:{Style.RESET_ALL} {stats.message}",
             "",
-            f"{Fore.YELLOW}Files changed:{Style.RESET_ALL} {stats.files_changed}",
-            f"{Fore.GREEN}Lines added:{Style.RESET_ALL} {stats.lines_added}",
-            f"{Fore.RED}Lines deleted:{Style.RESET_ALL} {stats.lines_deleted}",
+            f"{Fore.YELLOW}Files changed:{Style.RESET_ALL} {stats.files_changed:,}",
+            f"{Fore.GREEN}Lines added:{Style.RESET_ALL} {stats.lines_added:,}",
+            f"{Fore.RED}Lines deleted:{Style.RESET_ALL} {stats.lines_deleted:,}",
             f"{Fore.YELLOW}Net change:{Style.RESET_ALL} {net_change_str}",
         ]
 
@@ -70,7 +70,7 @@ class ExtendedFormatter(BaseFormatter):
         added = counts["added"]
         deleted = counts["deleted"]
         count = counts["count"]
-        return f"  {ext}: {count} files, +{added}/-{deleted}"
+        return f"  {ext}: {count} files, +{added:,}/-{deleted:,}"
 
     def format_range_stats(self, stats: RangeStats) -> str:
         """Format range statistics with extended details."""
@@ -83,10 +83,10 @@ class ExtendedFormatter(BaseFormatter):
             f"{self._format_date(stats.start_date).split()[0]} to "
             f"{self._format_date(stats.end_date).split()[0]}",
             "",
-            f"{Fore.YELLOW}Total commits:{Style.RESET_ALL} {stats.total_commits}",
-            (f"{Fore.YELLOW}Total files changed:{Style.RESET_ALL} {stats.total_files_changed}"),
-            (f"{Fore.GREEN}Total lines added:{Style.RESET_ALL} {stats.total_lines_added}"),
-            (f"{Fore.RED}Total lines deleted:{Style.RESET_ALL} {stats.total_lines_deleted}"),
+            f"{Fore.YELLOW}Total commits:{Style.RESET_ALL} {stats.total_commits:,}",
+            (f"{Fore.YELLOW}Total files changed:{Style.RESET_ALL} {stats.total_files_changed:,}"),
+            (f"{Fore.GREEN}Total lines added:{Style.RESET_ALL} {stats.total_lines_added:,}"),
+            (f"{Fore.RED}Total lines deleted:{Style.RESET_ALL} {stats.total_lines_deleted:,}"),
             f"{Fore.YELLOW}Net change:{Style.RESET_ALL} {range_net_change}",
         ]
 

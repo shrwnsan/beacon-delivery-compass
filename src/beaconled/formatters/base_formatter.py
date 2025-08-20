@@ -22,8 +22,8 @@ class BaseFormatter:
         """Format a single file's statistics."""
         return (
             f"  {file_stat.path}: "
-            f"{Fore.GREEN}+{file_stat.lines_added}{Style.RESET_ALL} "
-            f"{Fore.RED}-{file_stat.lines_deleted}{Style.RESET_ALL}"
+            f"{Fore.GREEN}+{file_stat.lines_added:,}{Style.RESET_ALL} "
+            f"{Fore.RED}-{file_stat.lines_deleted:,}{Style.RESET_ALL}"
         )
 
     def _format_author_stats(self, author: str, count: int) -> str:
@@ -34,7 +34,7 @@ class BaseFormatter:
         """Format net change with appropriate color coding."""
         net_change = added - deleted
         net_color = Fore.GREEN if net_change >= 0 else Fore.RED
-        return f"{net_color}{net_change}{Style.RESET_ALL}"
+        return f"{net_color}{net_change:,}{Style.RESET_ALL}"
 
     def _get_file_type_breakdown(
         self,

@@ -2,6 +2,7 @@
 
 import json
 from datetime import datetime, timezone
+
 import pytest
 
 from beaconled.core.models import CommitStats, FileStats, RangeStats

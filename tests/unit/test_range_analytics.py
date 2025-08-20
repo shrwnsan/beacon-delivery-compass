@@ -124,7 +124,10 @@ class TestRangeAnalytics(unittest.TestCase):
         result = self.analyzer.get_range_analytics("2025-01-01", "2025-12-31")
 
         # Debug: Print the actual calls made to the mock
-        print("\nMock calls to get_commit_stats:", self.analyzer.get_commit_stats.mock_calls)
+        print(
+            "\nMock calls to get_commit_stats:",
+            self.analyzer.get_commit_stats.mock_calls,
+        )
         print(
             "Result commits:",
             (
