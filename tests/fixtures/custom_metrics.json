@@ -1,0 +1,18 @@
+{
+  "complexity_metrics": {
+    "cyclomatic_complexity": {
+      "threshold": 15,
+      "weight": 0.8
+    },
+    "cognitive_complexity": {
+      "threshold": 25,
+      "weight": 0.9
+    }
+  },
+  "documentation_metrics": {
+    "doc_coverage": {
+      "target": 85,
+      "extensions": [".py", ".js", ".ts"]
+    }
+  }
+}
