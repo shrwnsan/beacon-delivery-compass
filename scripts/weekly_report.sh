@@ -6,7 +6,7 @@ cd "$(dirname "$0")/.."
 source .venv/bin/activate 2>/dev/null || true
 
 echo "Generating weekly product insights..."
-python scripts/product_insights_cli.py weekly --since "1 week ago" > reports/weekly_report.txt
+python scripts/product_insights_cli.py weekly --since 1w > reports/weekly_report.txt
 
 # Send notifications if configured
 python scripts/notification_system.py process insights.json

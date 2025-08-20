@@ -241,7 +241,7 @@ class GitAnalytics:
             "files": impact,
         }
 
-    def get_range_analytics(self, since: str = "1 week ago", until: str = "HEAD") -> Dict:
+    def get_range_analytics(self, since: str = "1w", until: str = "HEAD") -> Dict:
         """Get analytics for a range of commits."""
         # Get commit list
         commit_list = self.run_git_command(
