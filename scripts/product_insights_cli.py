@@ -24,7 +24,7 @@ class ProductInsightsCLI:
         self.git_analytics = GitAnalytics()
         self.product_analytics = None
 
-    def run_weekly_report(self, since: str = "1 week ago") -> str:
+    def run_weekly_report(self, since: str = "1w") -> str:
         """Generate comprehensive weekly product report."""
         # Get raw analytics
         analytics_data = self.git_analytics.get_range_analytics(since)
@@ -51,7 +51,7 @@ class ProductInsightsCLI:
 
         return format_product_report(insights)
 
-    def generate_executive_summary(self, since: str = "1 week ago") -> Dict:
+    def generate_executive_summary(self, since: str = "1w") -> Dict:
         """Generate executive summary for leadership."""
         analytics_data = self.git_analytics.get_range_analytics(since)
         self.product_analytics = ProductAnalytics(analytics_data)
@@ -148,7 +148,11 @@ def main():
         help="Command to run",
     )
 
-    parser.add_argument("--since", default="1 week ago", help="Start date for analysis")
+    parser.add_argument(
+        "--since",
+        default="1w",
+        help="Start date for analysis (e.g., '1w' for 1 week, '2d' for 2 days, '3m' for 3 months, '1y' for 1 year)",
+    )
     parser.add_argument("--commit", default="HEAD", help="Commit hash for single commit analysis")
     parser.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
     parser.add_argument("--repo", default=".", help="Repository path")

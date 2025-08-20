@@ -676,24 +676,40 @@ class GitAnalyzer:
         return DateUtils.is_valid_commit_hash(commit_hash)
 
     def _is_valid_date_string(self, date_str: str) -> bool:
-        """Validate date string format to prevent injection."""
+        """Validate date string format to prevent injection.
+
+        Supported formats:
+        - Relative dates: '1d', '2w', '3m', '1y' (case insensitive)
+        - ISO date: 'YYYY-MM-DD'
+        - ISO datetime: 'YYYY-MM-DD HH:MM' (no seconds)
+        - Special: 'HEAD'
+
+        Returns:
+            bool: True if the date string matches a supported format, False otherwise.
+        """
         # Reject empty or overly long inputs
         if not date_str or len(date_str) > DATE_STR_MAX_LEN:
             return False
 
-        # Allow relative dates (e.g., "1 week ago", "2 days ago")
-        if re.match(
-            r"^\d+\s+(second|minute|hour|day|week|month|year)s?\s+ago$",
-            date_str,
-            re.IGNORECASE,
-        ):
+        # Allow single-unit relative dates (e.g., "1w", "2d", "3m", "1y")
+        if re.match(r"^\d+[dwmy]$", date_str, re.IGNORECASE):
             return True
+
         # Allow ISO dates (YYYY-MM-DD)
         if re.match(r"^\d{4}-\d{2}-\d{2}$", date_str):
             return True
-        # Allow ISO datetime (YYYY-MM-DD HH:MM:SS)
-        if re.match(r"^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}$", date_str):
-            return True
+
+        # Allow ISO datetime (YYYY-MM-DD HH:MM)
+        if re.match(r"^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}$", date_str):
+            # Validate time components
+            try:
+                time_part = date_str.split()[1]
+                hours, minutes = map(int, time_part.split(":"))
+                if not (0 <= hours < 24 and 0 <= minutes < 60):
+                    return False
+                return True
+            except (ValueError, IndexError):
+                return False
         # Allow HEAD
         if date_str == "HEAD":
             return True

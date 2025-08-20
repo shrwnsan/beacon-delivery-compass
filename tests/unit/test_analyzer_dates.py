@@ -108,35 +108,37 @@ class TestGitAnalyzerDates(unittest.TestCase):
 
     def test_is_valid_date_string(self):
         """Test validation of date strings with comprehensive test cases."""
-        # Valid relative dates
-        self.assertTrue(self.analyzer._is_valid_date_string("1 second ago"))
-        self.assertTrue(self.analyzer._is_valid_date_string("2 minutes ago"))
-        self.assertTrue(self.analyzer._is_valid_date_string("3 hours ago"))
-        self.assertTrue(self.analyzer._is_valid_date_string("4 days ago"))
-        self.assertTrue(self.analyzer._is_valid_date_string("5 weeks ago"))
-        self.assertTrue(self.analyzer._is_valid_date_string("6 months ago"))
-        self.assertTrue(self.analyzer._is_valid_date_string("1 year ago"))
-        self.assertTrue(self.analyzer._is_valid_date_string("1 week ago"))
+        # Test relative dates (single unit only)
+        self.assertTrue(self.analyzer._is_valid_date_string("1d"))  # 1 day
+        self.assertTrue(self.analyzer._is_valid_date_string("2w"))  # 2 weeks
+        self.assertTrue(self.analyzer._is_valid_date_string("3m"))  # 3 months
+        self.assertTrue(self.analyzer._is_valid_date_string("1y"))  # 1 year
 
         # Valid date formats
-        self.assertTrue(self.analyzer._is_valid_date_string("2025-01-15"))
-        self.assertTrue(self.analyzer._is_valid_date_string("2025-01-15 14:30:45"))
-        self.assertTrue(self.analyzer._is_valid_date_string("2025-01-15 23:59:59"))
+        self.assertTrue(self.analyzer._is_valid_date_string("2025-01-15"))  # Date only
+        self.assertFalse(
+            self.analyzer._is_valid_date_string("2025-01-15 14:30:45")
+        )  # With seconds (not supported)
+        self.assertTrue(
+            self.analyzer._is_valid_date_string("2025-01-15 23:59")
+        )  # Without seconds (supported)
+        self.assertFalse(self.analyzer._is_valid_date_string("2025-01-15 24:00"))  # Invalid hour
+        self.assertFalse(self.analyzer._is_valid_date_string("2025-01-15 23:60"))  # Invalid minute
 
         # Special cases
         self.assertTrue(self.analyzer._is_valid_date_string("HEAD"))
 
         # Edge cases with valid but unusual inputs
         self.assertTrue(
-            self.analyzer._is_valid_date_string("9999-12-31 23:59:59"),
+            self.analyzer._is_valid_date_string("9999-12-31 23:59"),
         )  # Far future date
         self.assertTrue(
-            self.analyzer._is_valid_date_string("1970-01-01 00:00:00"),
-        )  # Unix epoch
+            self.analyzer._is_valid_date_string("1970-01-01 00:00"),
+        )  # Unix epoch (without seconds)
 
         # Test case insensitivity for relative dates
-        self.assertTrue(self.analyzer._is_valid_date_string("1 WEEK AGO"))
-        self.assertTrue(self.analyzer._is_valid_date_string("2 Weeks Ago"))
+        self.assertTrue(self.analyzer._is_valid_date_string("1D"))  # Uppercase unit
+        self.assertTrue(self.analyzer._is_valid_date_string("2W"))  # Uppercase unit
 
         # Invalid date strings
         self.assertFalse(self.analyzer._is_valid_date_string(""))
@@ -151,44 +153,46 @@ class TestGitAnalyzerDates(unittest.TestCase):
             self.analyzer._is_valid_date_string("15-01-2025"),
         )  # Wrong format
 
-        # Note: The current implementation only checks the format, not the semantic validity
-        # of the date values. So these should actually pass the format check.
+        # The implementation only checks the format, not the semantic validity
+        # So these should pass the format check even if they're not valid dates
         self.assertTrue(
             self.analyzer._is_valid_date_string("2025-13-01"),
         )  # Invalid month, but correct format
         self.assertTrue(
             self.analyzer._is_valid_date_string("2025-01-32"),
         )  # Invalid day, but correct format
-        self.assertTrue(
-            self.analyzer._is_valid_date_string("2025-01-15 25:00:00"),
-        )  # Invalid hour, but correct format
-        self.assertTrue(
-            self.analyzer._is_valid_date_string("2025-01-15 14:60:00"),
-        )  # Invalid minute, but correct format
-        self.assertTrue(
-            self.analyzer._is_valid_date_string("2025-01-15 14:30:60"),
-        )  # Invalid second, but correct format
 
-        # These should still fail as they don't match any valid pattern
+        # Time format must be in valid 24-hour format (without seconds)
+        self.assertFalse(
+            self.analyzer._is_valid_date_string("2025-01-15 25:00"),  # Invalid hour
+        )
+        self.assertFalse(
+            self.analyzer._is_valid_date_string("2025-01-15 14:60"),  # Invalid minute
+        )
+        self.assertFalse(
+            self.analyzer._is_valid_date_string(
+                "2025-01-15 14:30:45"
+            ),  # With seconds (not supported)
+        )
+        self.assertFalse(
+            self.analyzer._is_valid_date_string("2025-01-15T14:30"),  # T separator (not supported)
+        )
+        # Invalid concise formats
         self.assertFalse(self.analyzer._is_valid_date_string("1x"))  # Invalid unit
-        self.assertFalse(
-            self.analyzer._is_valid_date_string("1.5 days ago"),
-        )  # Non-integer value
-        self.assertFalse(
-            self.analyzer._is_valid_date_string("one day ago"),
-        )  # Non-numeric value
-        self.assertFalse(self.analyzer._is_valid_date_string("1 day"))  # Missing 'ago'
-        self.assertFalse(
-            self.analyzer._is_valid_date_string("1 day before"),
-        )  # Wrong keyword
-        self.assertFalse(
-            self.analyzer._is_valid_date_string("HEAD2"),
-        )  # Invalid HEAD reference
+        self.assertFalse(self.analyzer._is_valid_date_string("1.5d"))  # Non-integer value
+        self.assertFalse(self.analyzer._is_valid_date_string("d"))  # Missing number
+        self.assertFalse(self.analyzer._is_valid_date_string("1"))  # Missing unit
+        self.assertFalse(self.analyzer._is_valid_date_string("1d2"))  # No unit for second part
+
+        # Other invalid formats
+        self.assertFalse(self.analyzer._is_valid_date_string("HEAD2"))  # Invalid HEAD reference
+        self.assertFalse(self.analyzer._is_valid_date_string(""))  # Empty string
+        self.assertFalse(self.analyzer._is_valid_date_string(" "))  # Whitespace
 
         # Test length limit (50 characters)
-        # The date string "2025-01-01 12:00:00" is 19 characters long
-        # Add 31 more characters to reach exactly 50 characters
-        long_valid_date = "2025-01-01 12:00:00" + "x" * 31  # 19 + 31 = 50 chars
+        # The date string "2025-01-01 12:00" is 16 characters long
+        # Add 34 more characters to reach exactly 50 characters
+        long_valid_date = "2025-01-01 12:00" + "x" * 34  # 16 + 34 = 50 chars
         self.assertEqual(
             len(long_valid_date),
             50,
