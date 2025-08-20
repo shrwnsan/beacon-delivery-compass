@@ -247,6 +247,26 @@ beaconled --format json | jq '.files_changed'
 # 3
 ```
 
+### 5. Disabling Emojis
+For terminals that don't support emojis or for a plain text experience, use the `--no-emoji` flag.
+
+```bash
+# Disable emoji output
+beaconled --no-emoji
+```
+
+# Example output without emojis:
+# Commit: abc12345
+# Author: John Doe
+# Date: 2025-07-20 10:30:00
+# Message: Add new feature for user analytics
+#
+# Files changed: 3
+# Lines added: 45
+# Lines deleted: 12
+# Net change: 33
+```
+
 ## Team Workflow Examples
 
 ### Daily Standup Script
@@ -459,6 +479,7 @@ echo "$DATE,$commits,$files,$insertions,$deletions" >> $LOG_FILE
 | Last month | `beaconled --since 1m` |
 | JSON output | `beaconled --format json` |
 | Extended details | `beaconled --format extended` |
+| Disable emojis | `beaconled --no-emoji` |
 | Custom repo | `beaconled --repo /path/to/repo` |
 | Date range | `beaconled --since 2025-07-01 --until 2025-07-31` |
 | Analyze last 5 commits | `beaconled --count 5` |
