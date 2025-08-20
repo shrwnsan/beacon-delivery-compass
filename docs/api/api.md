@@ -43,7 +43,11 @@ Get analytics for a range of commits.
 
 **Parameters:**
 - `start_date`: Start date for the range (inclusive)
-  - Can be a datetime object or a string in format "YYYY-MM-DD" or relative format (e.g., "1d", "2w", "3m", "1y")
+  - Can be a datetime object or a string in formats:
+    - `YYYY-MM-DD` (date only, assumes 00:00:00 UTC)
+    - `YYYY-MM-DD HH:MM` (date with time, space separator, seconds default to 00)
+    - `YYYY-MM-DDTHH:MM:SS` (ISO 8601 format with 'T' separator; seconds are accepted but truncated to minutes)
+    - Relative format (e.g., "1d", "2w", "3m", "1y")
 - `end_date`: End date for the range (inclusive)
   - Same format as start_date, or "now" for current time
 

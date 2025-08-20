@@ -46,28 +46,30 @@ class DateUtils:
             dt = cls._parse_iso_date(original_date_str)
             return dt.replace(tzinfo=timezone.utc)
 
-        # Handle ISO datetime (YYYY-MM-DD HH:MM)
-        if re.match(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$", original_date_str):
+        # Handle ISO datetime (YYYY-MM-DD HH:MM or YYYY-MM-DDTHH:MM:SS)
+        if re.match(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$", original_date_str) or re.match(
+            r"^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?$", original_date_str
+        ):
             dt = cls._parse_iso_datetime(original_date_str)
-            return dt.replace(tzinfo=timezone.utc)
+            return (
+                dt.replace(tzinfo=timezone.utc)
+                if dt.tzinfo is None
+                else dt.astimezone(timezone.utc)
+            )
 
-        # Handle ISO datetime with T separator (YYYY-MM-DDTHH:MM:SS)
-        if re.match(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$", original_date_str):
-            dt = cls._parse_iso_datetime_t(original_date_str)
-            return dt.replace(tzinfo=timezone.utc)
-
-        # Handle git date format (Unix timestamp with optional offset)
+        # Match timestamps with at least 10 digits (to avoid matching single digits as timestamps)
+        # or Unix timestamp with timezone offset
         if re.match(r"^\d+\s*[+-]?\d{4}$", original_date_str) or re.match(
-            r"^\d+$",
-            original_date_str,
+            r"^\d{10,}$", original_date_str
         ):
             return cls._parse_git_date(original_date_str)
 
-        raise DateParseError(
-            date_str,
-            "Unsupported date format. Expected formats: 'now', '1d'/'2w'/'3m'/'1y', \
-            'YYYY-MM-DD', or 'YYYY-MM-DD HH:MM'",
+        error_msg = (
+            "Unsupported date format. Expected formats: 'now', '1d'/'2w'/'3m'/'1y' (relative), "
+            "'YYYY-MM-DD' (date), or 'YYYY-MM-DD HH:MM' (datetime; seconds are accepted "
+            "but truncated to minutes)"
         )
+        raise DateParseError(date_str, error_msg)
 
     @classmethod
     def _parse_git_date(cls, date_str: str) -> datetime:
@@ -199,10 +201,29 @@ class DateUtils:
 
     @classmethod
     def _parse_iso_datetime(cls, datetime_str: str) -> datetime:
-        """Parse an ISO datetime string (YYYY-MM-DD HH:MM) and ensure it's timezone-aware."""
+        """Parse an ISO datetime string.
+
+        Handles both space and 'T' separators, with or without seconds.
+        Returns a timezone-aware datetime in UTC.
+        """
         try:
-            # Parse the datetime string with timezone
-            dt = datetime.strptime(datetime_str, "%Y-%m-%d %H:%M").replace(tzinfo=timezone.utc)
+            # Try parsing with space separator first (YYYY-MM-DD HH:MM)
+            try:
+                # Parse naive datetime and make it timezone-aware
+                dt = datetime.strptime(datetime_str, "%Y-%m-%d %H:%M").replace(tzinfo=timezone.utc)
+            except ValueError:
+                # Try parsing with 'T' separator (ISO 8601 format: YYYY-MM-DDTHH:MM:SS)
+                try:
+                    dt = datetime.fromisoformat(datetime_str)
+                except ValueError as e:
+                    error_msg = f"Invalid datetime format: {datetime_str}"
+                    raise ValueError(error_msg) from e
+
+            # Make timezone-aware if not already
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            else:
+                dt = dt.astimezone(timezone.utc)
 
             # Validate year range
             if dt.year < cls.YEAR_MIN or dt.year > cls.YEAR_MAX:
@@ -219,32 +240,8 @@ class DateUtils:
         except ValueError as e:
             raise DateParseError(
                 datetime_str,
-                f"Could not parse datetime: Invalid format. Expected YYYY-MM-DD HH:MM: {e!s}",
-            ) from e
-
-    @classmethod
-    def _parse_iso_datetime_t(cls, datetime_str: str) -> datetime:
-        """Parse an ISO datetime string with T separator (YYYY-MM-DDTHH:MM:SS)."""
-        try:
-            # Parse the datetime string with T separator and timezone
-            dt = datetime.strptime(datetime_str, "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)
-
-            # Validate year range
-            if dt.year < cls.YEAR_MIN or dt.year > cls.YEAR_MAX:
-                msg = (
-                    f"Year {dt.year} is outside the supported range ({cls.YEAR_MIN}-{cls.YEAR_MAX})"
-                )
-                raise ValidationError(
-                    msg,
-                    field="datetime",
-                    value=datetime_str,
-                )
-            return dt
-
-        except ValueError as e:
-            raise DateParseError(
-                datetime_str,
-                f"Could not parse datetime: Invalid format. Expected YYYY-MM-DDTHH:MM:SS: {e!s}",
+                f"Could not parse datetime: {e!s}. "
+                "Expected formats: YYYY-MM-DD HH:MM or YYYY-MM-DDTHH:MM:SS",
             ) from e
 
     @classmethod
