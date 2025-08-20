@@ -131,7 +131,7 @@ cd "$(dirname "$0")/.."
 source .venv/bin/activate 2>/dev/null || true
 
 echo "Generating weekly product insights..."
-python scripts/product_insights_cli.py weekly --since "1 week ago" > reports/weekly_report.txt
+python scripts/product_insights_cli.py weekly --since 1w > reports/weekly_report.txt
 
 # Send notifications if configured
 python scripts/notification_system.py process insights.json
@@ -171,8 +171,8 @@ jobs:
 
     - name: Generate Product Insights
       run: |
-        python scripts/product_insights_cli.py weekly --since "1 week ago" > weekly_report.txt
-        python scripts/product_insights_cli.py executive --since "1 week ago" > executive_summary.json
+        python scripts/product_insights_cli.py weekly --since 1w > weekly_report.txt
+        python scripts/product_insights_cli.py executive --since 1w > executive_summary.json
 
     - name: Upload Report
       uses: actions/upload-artifact@v3

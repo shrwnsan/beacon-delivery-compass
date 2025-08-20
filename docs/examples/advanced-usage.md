@@ -13,9 +13,16 @@ from datetime import datetime, timezone
 # Initialize analyzer with a repository
 analyzer = GitAnalyzer('/path/to/repo')
 
-# Define UTC date range
+# Define UTC date range using datetime objects
 start = datetime(2025, 7, 1, tzinfo=timezone.utc)  # July 1, 2025 00:00 UTC
 end = datetime(2025, 7, 31, 23, 59, 59, tzinfo=timezone.utc)  # July 31, 2025 23:59:59 UTC
+
+# Or use concise string format
+# stats = analyzer.get_range_analytics("2025-07-01", "2025-07-31")
+
+# Or use relative dates
+# stats = analyzer.get_range_analytics("7d")  # Last 7 days
+# stats = analyzer.get_range_analytics("1m")  # Last month (4 weeks)
 
 # Get analytics for the specified range
 stats = analyzer.get_range_analytics(start, end)
