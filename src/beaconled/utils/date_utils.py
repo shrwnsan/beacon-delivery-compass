@@ -46,6 +46,10 @@ class DateUtils:
             dt = cls._parse_iso_date(original_date_str)
             return dt.replace(tzinfo=timezone.utc)
 
+        # Handle YYYYMMDD format
+        if re.match(r"^\d{8}$", original_date_str):
+            return cls._parse_yyyymmdd_date(original_date_str)
+
         # Handle ISO datetime (YYYY-MM-DD HH:MM or YYYY-MM-DDTHH:MM:SS)
         if re.match(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$", original_date_str) or re.match(
             r"^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?$", original_date_str
@@ -66,10 +70,33 @@ class DateUtils:
 
         error_msg = (
             "Unsupported date format. Expected formats: 'now', '1d'/'2w'/'3m'/'1y' (relative), "
-            "'YYYY-MM-DD' (date), or 'YYYY-MM-DD HH:MM' (datetime; seconds are accepted "
-            "but truncated to minutes)"
+            "'YYYY-MM-DD' (date), 'YYYYMMDD' (compact date), or 'YYYY-MM-DD HH:MM' (datetime; "
+            "seconds are accepted but truncated to minutes)"
         )
         raise DateParseError(date_str, error_msg)
+
+    @classmethod
+    def _parse_yyyymmdd_date(cls, date_str: str) -> datetime:
+        """Parse a YYYYMMDD date string and ensure it's timezone-aware."""
+        try:
+            dt = datetime.strptime(date_str, "%Y%m%d").replace(tzinfo=timezone.utc)
+            if not (cls.YEAR_MIN <= dt.year <= cls.YEAR_MAX):
+                msg = (
+                    f"Year {dt.year} is outside the supported range ({cls.YEAR_MIN}-{cls.YEAR_MAX})"
+                )
+                raise ValidationError(
+                    msg,
+                    field="date",
+                    value=date_str,
+                )
+            # Set time to start of day
+            dt = dt.replace(hour=0, minute=0, second=0, microsecond=0)
+            return dt
+        except ValueError as e:
+            raise DateParseError(
+                date_str,
+                f"Could not parse date: {e!s}. Expected format: YYYYMMDD",
+            ) from e
 
     @classmethod
     def _parse_git_date(cls, date_str: str) -> datetime:
