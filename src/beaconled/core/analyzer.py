@@ -180,8 +180,14 @@ class GitAnalyzer:
               'beaconled.core.analyzer' logger
         """
         logger.debug("Getting commit stats for hash: %s", commit_hash)
-        if not commit_hash or not isinstance(commit_hash, str) or not commit_hash.strip():
-            error_msg = f"Invalid commit hash: '{commit_hash}'. Must be a non-empty string."
+        if (
+            not commit_hash
+            or not isinstance(commit_hash, str)
+            or not commit_hash.strip()
+        ):
+            error_msg = (
+                f"Invalid commit hash: '{commit_hash}'. Must be a non-empty string."
+            )
             logger.error(error_msg)
             raise CommitParseError(
                 commit_ref=commit_hash,
@@ -199,7 +205,9 @@ class GitAnalyzer:
                 return True
             return False
 
-        if not (self._is_valid_commit_hash(commit_hash) or _is_symbolic_ref(commit_hash)):
+        if not (
+            self._is_valid_commit_hash(commit_hash) or _is_symbolic_ref(commit_hash)
+        ):
             # Allow short hashes commonly used in tests (e.g., "abc123") of length 6+
             if len(commit_hash) >= SHORT_REF_MIN_LEN and all(
                 c in "0123456789abcdefABCDEF" for c in commit_hash
@@ -297,7 +305,9 @@ class GitAnalyzer:
                         # Parse the diff to count added/removed lines
                         diff_content = diff.diff
                         if isinstance(diff_content, bytes):
-                            added = diff_content.count(b"\n+") - 1  # Subtract 1 for the header line
+                            added = (
+                                diff_content.count(b"\n+") - 1
+                            )  # Subtract 1 for the header line
                             deleted = (
                                 diff_content.count(b"\n-") - 1
                             )  # Subtract 1 for the header line
@@ -498,7 +508,9 @@ class GitAnalyzer:
 
             # Record whether caller provided an explicit end time
             # Use type() to avoid issues when datetime module is mocked in tests
-            original_end_dt = end_date if type(end_date).__name__ == "datetime" else None
+            original_end_dt = (
+                end_date if type(end_date).__name__ == "datetime" else None
+            )
             if original_end_dt is not None and hasattr(original_end_dt, "hour"):
                 _ = (
                     original_end_dt.hour != 0
@@ -511,7 +523,9 @@ class GitAnalyzer:
             start_date, end_date = DateUtils.validate_date_range(start_date, end_date)
 
             # Set end limit to end of day
-            end_limit = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
+            end_limit = end_date.replace(
+                hour=23, minute=59, second=59, microsecond=999999
+            )
 
             # Format dates for git commands
             git_since = start_date.isoformat()
@@ -571,7 +585,10 @@ class GitAnalyzer:
                     # Skip commits outside the date range
                     if hasattr(commit_stats, "date"):
                         if not isinstance(commit_stats.date, MagicMock):
-                            if commit_stats.date < start_date or commit_stats.date > end_limit:
+                            if (
+                                commit_stats.date < start_date
+                                or commit_stats.date > end_limit
+                            ):
                                 continue
 
                     # Add to commits list
@@ -608,7 +625,9 @@ class GitAnalyzer:
                                     "lines_deleted": 0,
                                 }
                             file_types[ext]["files_changed"] += 1
-                            file_types[ext]["lines_added"] += getattr(file_stat, "lines_added", 0)
+                            file_types[ext]["lines_added"] += getattr(
+                                file_stat, "lines_added", 0
+                            )
                             file_types[ext]["lines_deleted"] += getattr(
                                 file_stat,
                                 "lines_deleted",
