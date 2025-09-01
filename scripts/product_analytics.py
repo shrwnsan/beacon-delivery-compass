@@ -172,7 +172,9 @@ class ProductAnalytics:
 
     def _get_test_coverage_score(self, commits: List[Dict]) -> float:
         """Calculate test coverage score."""
-        test_commits = [c for c in commits if c.get("components", {}).get("tests", 0) > 0]
+        test_commits = [
+            c for c in commits if c.get("components", {}).get("tests", 0) > 0
+        ]
         return min(100, (len(test_commits) / max(len(commits), 1)) * 100)
 
     def _get_stability_score(self, commits: List[Dict]) -> float:
@@ -182,7 +184,9 @@ class ProductAnalytics:
 
     def _get_documentation_score(self, commits: List[Dict]) -> float:
         """Calculate documentation completeness score."""
-        doc_commits = [c for c in commits if c.get("components", {}).get("documentation", 0) > 0]
+        doc_commits = [
+            c for c in commits if c.get("components", {}).get("documentation", 0) > 0
+        ]
         return min(100, (len(doc_commits) / max(len(commits), 1)) * 100)
 
     def _generate_recommendations(self, metrics: ProductMetrics) -> List[str]:
