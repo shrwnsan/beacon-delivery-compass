@@ -112,7 +112,7 @@ jobs:
         beaconled --format json > commit-stats.json
 
     - name: Upload Analytics
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: beaconled-analytics
         path: commit-stats.json
@@ -155,7 +155,7 @@ jobs:
         beaconled --since 2w --until 1d --format json > sprint-report.json
 
     - name: Upload report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: weekly-analytics-${{ matrix.python-version }}
         path: sprint-report.json
