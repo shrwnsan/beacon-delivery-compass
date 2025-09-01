@@ -20,6 +20,7 @@ class TestDateParser(unittest.TestCase):
                 datetime(2023, 10, 5, 14, 30, 0, tzinfo=timezone.utc),
             ),
             ("2024-01-01", datetime(2024, 1, 1, 0, 0, tzinfo=timezone.utc)),
+            ("20250820", datetime(2025, 8, 20, 0, 0, tzinfo=timezone.utc)),
         ]
 
         for date_str, expected_dt in test_cases:
