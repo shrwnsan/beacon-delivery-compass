@@ -65,7 +65,9 @@ class GitAnalytics:
         file_changes = self._parse_file_changes(name_status)
 
         # File type breakdown
-        changed_files = self.run_git_command(["show", "--name-only", commit_hash]).split("\n")
+        changed_files = self.run_git_command(
+            ["show", "--name-only", commit_hash]
+        ).split("\n")
         file_types = self._analyze_file_types(changed_files)
 
         # Component breakdown
@@ -148,7 +150,11 @@ class GitAnalytics:
                 ext = "." + filename.split(".")[-1]
             elif filename.startswith(".") and "." in filename[1:]:
                 # Handle files like .gitignore, .env.example
-                ext = "." + filename.split(".")[-1] if filename.count(".") > 1 else "dotfile"
+                ext = (
+                    "." + filename.split(".")[-1]
+                    if filename.count(".") > 1
+                    else "dotfile"
+                )
             else:
                 ext = "no-extension"
 
@@ -225,7 +231,9 @@ class GitAnalytics:
                 continue
 
             is_high = any(re.search(pattern, file) for pattern in high_impact_patterns)
-            is_medium = any(re.search(pattern, file) for pattern in medium_impact_patterns)
+            is_medium = any(
+                re.search(pattern, file) for pattern in medium_impact_patterns
+            )
 
             if is_high:
                 impact["high"].append(file)
@@ -311,7 +319,9 @@ Date: {commit["date"]}"""
         # Calculate net changes
         net_changes = statistics["insertions"] - statistics["deletions"]
         change_indicator = (
-            "📈 Growth" if net_changes > 0 else "📉 Reduction" if net_changes < 0 else "⚖️ Balance"
+            "📈 Growth"
+            if net_changes > 0
+            else "📉 Reduction" if net_changes < 0 else "⚖️ Balance"
         )
 
         # Product-focused insights
@@ -367,7 +377,9 @@ Message: {commit["message"]}"""
 
 def main():
     parser = argparse.ArgumentParser(description="Generate development analytics")
-    parser.add_argument("commit", nargs="?", default="HEAD", help="Commit hash to analyze")
+    parser.add_argument(
+        "commit", nargs="?", default="HEAD", help="Commit hash to analyze"
+    )
     parser.add_argument(
         "-f",
         "--format",
@@ -396,7 +408,8 @@ def main():
             else:
                 # Calculate weekly insights
                 total_changes = (
-                    stats["summary"]["total_insertions"] + stats["summary"]["total_deletions"]
+                    stats["summary"]["total_insertions"]
+                    + stats["summary"]["total_deletions"]
                 )
                 avg_files_per_commit = stats["summary"]["total_files_changed"] / max(
                     stats["total_commits"], 1
@@ -432,9 +445,13 @@ def main():
                 else:
                     print("   🐌 Consider increasing development pace")
 
-                if component_summary.get("frontend", 0) > component_summary.get("backend", 0):
+                if component_summary.get("frontend", 0) > component_summary.get(
+                    "backend", 0
+                ):
                     print("   🎨 Focus on user-facing improvements")
-                elif component_summary.get("backend", 0) > component_summary.get("frontend", 0):
+                elif component_summary.get("backend", 0) > component_summary.get(
+                    "frontend", 0
+                ):
                     print("   ⚙️ Emphasis on core functionality")
 
                 print("\n💡 Recommendations:")
