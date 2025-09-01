@@ -486,6 +486,7 @@ echo "$DATE,$commits,$files,$insertions,$deletions" >> $LOG_FILE
 - `1y` - 1 year ago (approximate, 52 weeks/year)
 
 #### Absolute Formats
+- `YYYYMMDD` - Compact date format (e.g., `20250820`)
 - `YYYY-MM-DD` - Date only (midnight UTC)
 - `YYYY-MM-DD HH:MM` - Date and time (24-hour format, UTC, no seconds)
 
@@ -497,7 +498,6 @@ echo "$DATE,$commits,$files,$insertions,$deletions" >> $LOG_FILE
 The following formats are **not** supported:
 - Combined relative dates (e.g., `1w2d`, `1w 2d`)
 - ISO datetime with seconds (e.g., `2025-01-15 14:30:45`)
-- ISO datetime with `T` separator (e.g., `2025-01-15T14:30:45`)
 - Timezone offsets (all times are in UTC)
 - Date formats with slashes (e.g., `01/15/2025`)
 - Time-only formats (e.g., `14:30`)
