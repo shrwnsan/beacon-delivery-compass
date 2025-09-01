@@ -175,7 +175,7 @@ jobs:
         python scripts/product_insights_cli.py executive --since 1w > executive_summary.json
 
     - name: Upload Report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: weekly-product-report
         path: |
