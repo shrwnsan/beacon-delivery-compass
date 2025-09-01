@@ -96,7 +96,7 @@ jobs:
           pip install -e .[dev]
 
       - name: Check for known vulnerabilities
-        run: safety check --full-report
+        run: pip-audit --desc
 
       - name: Run security linter
         run: bandit -r src/beaconled -c pyproject.toml
