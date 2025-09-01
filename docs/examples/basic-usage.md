@@ -353,7 +353,7 @@ jobs:
           beaconled --since 1d --format json > daily-report.json
 
       - name: Upload Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: daily-beaconled-report
           path: daily-report.json
