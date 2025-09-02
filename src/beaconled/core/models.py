@@ -7,6 +7,7 @@ for representing git repository statistics and analysis results.
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Any
 
 
 @dataclass
@@ -103,6 +104,8 @@ class RangeStats:
     author_activity_by_day: dict[str, dict[str, int]] = field(default_factory=dict)
     component_stats: dict[str, dict[str, int]] = field(default_factory=dict)
     commits_by_day: dict[str, int] = field(default_factory=dict)
+    file_types: dict[str, dict[str, int]] = field(default_factory=dict)
+    risk_indicators: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         """Validate and compute derived fields after initialization."""
@@ -122,11 +125,7 @@ class RangeStats:
             author_counts[commit.author] += 1
         self.authors = dict(author_counts)
 
-        if not (
-            self.total_files_changed
-            or self.total_lines_added
-            or self.total_lines_deleted
-        ):
+        if not (self.total_files_changed or self.total_lines_added or self.total_lines_deleted):
             self.total_files_changed = sum(c.files_changed for c in self.commits)
             self.total_lines_added = sum(c.lines_added for c in self.commits)
             self.total_lines_deleted = sum(c.lines_deleted for c in self.commits)
@@ -142,9 +141,7 @@ class RangeStats:
             str: Impact level ("high", "medium", or "low")
         """
         files_changed = getattr(commit, "files_changed", 0)
-        lines_changed = getattr(commit, "lines_added", 0) + getattr(
-            commit, "lines_deleted", 0
-        )
+        lines_changed = getattr(commit, "lines_added", 0) + getattr(commit, "lines_deleted", 0)
 
         # High Impact: >15 files changed OR >100 lines added/deleted
         if files_changed > 15 or lines_changed > 100:
@@ -183,12 +180,8 @@ class RangeStats:
         author_impact_stats: dict[str, dict[str, int]] = defaultdict(
             lambda: {"high": 0, "medium": 0, "low": 0}
         )
-        author_activity_by_day: dict[str, dict[str, int]] = defaultdict(
-            lambda: defaultdict(int)
-        )
-        component_stats: dict[str, dict[str, int]] = defaultdict(
-            lambda: {"commits": 0, "lines": 0}
-        )
+        author_activity_by_day: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+        component_stats: dict[str, dict[str, int]] = defaultdict(lambda: {"commits": 0, "lines": 0})
         commits_by_day: dict[str, int] = defaultdict(int)
 
         # Process each commit
@@ -200,9 +193,7 @@ class RangeStats:
 
             # Day of week activity tracking
             if hasattr(commit, "date") and commit.date:
-                day_name = commit.date.strftime(
-                    "%A"
-                )  # Full day name (Monday, Tuesday, etc.)
+                day_name = commit.date.strftime("%A")  # Full day name (Monday, Tuesday, etc.)
                 author_activity_by_day[author][day_name] += 1
 
                 # Overall daily activity
@@ -226,8 +217,6 @@ class RangeStats:
 
         # Convert defaultdicts to regular dicts and store
         self.author_impact_stats = {k: dict(v) for k, v in author_impact_stats.items()}
-        self.author_activity_by_day = {
-            k: dict(v) for k, v in author_activity_by_day.items()
-        }
+        self.author_activity_by_day = {k: dict(v) for k, v in author_activity_by_day.items()}
         self.component_stats = {k: dict(v) for k, v in component_stats.items()}
         self.commits_by_day = dict(commits_by_day)
