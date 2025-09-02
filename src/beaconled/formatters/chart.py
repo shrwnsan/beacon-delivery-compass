@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 from .base_formatter import BaseFormatter
 
 if TYPE_CHECKING:
-    from beaconled.core.models import RangeStats, CommitStats
+    from beaconled.core.models import CommitStats, RangeStats
 
 
 class ChartFormatter(BaseFormatter):
