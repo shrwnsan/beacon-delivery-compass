@@ -6,8 +6,10 @@ import sys
 
 from . import __version__
 from .core.analyzer import GitAnalyzer
+
 # Domain-specific date errors for clearer CLI messages
 from .core.date_errors import DateParseError, DateRangeError
+from .formatters.ascii_chart import ASCIIChartFormatter
 from .formatters.extended import ExtendedFormatter
 from .formatters.json_format import JSONFormatter
 from .formatters.standard import StandardFormatter
@@ -35,7 +37,9 @@ def main() -> None:
             "  # Analyze changes with explicit UTC times\n"
             '  beaconled --since "2025-01-01 00:00:00" --until "2025-01-31 23:59:59"\n\n'
             "  # Output in JSON format\n"
-            "  beaconled --format json"
+            "  beaconled --format json\n\n"
+            "  # Output in ASCII chart format\n"
+            "  beaconled --format ascii"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -54,7 +58,7 @@ def main() -> None:
     parser.add_argument(
         "-f",
         "--format",
-        choices=["standard", "extended", "json"],
+        choices=["standard", "extended", "json", "ascii"],
         default="standard",
         help="Output format (default: standard)",
     )
@@ -125,6 +129,9 @@ def main() -> None:
             elif args.format == "extended":
                 extended_formatter = ExtendedFormatter()
                 output = extended_formatter.format_range_stats(range_stats)
+            elif args.format == "ascii":
+                ascii_formatter = ASCIIChartFormatter()
+                output = ascii_formatter.format_range_stats(range_stats)
             else:  # standard
                 standard_formatter = StandardFormatter(no_emoji=args.no_emoji)
                 output = standard_formatter.format_range_stats(range_stats)
@@ -138,6 +145,9 @@ def main() -> None:
             elif args.format == "extended":
                 extended_formatter = ExtendedFormatter()
                 output = extended_formatter.format_commit_stats(commit_stats)
+            elif args.format == "ascii":
+                ascii_formatter = ASCIIChartFormatter()
+                output = ascii_formatter.format_commit_stats(commit_stats)
             else:  # standard
                 standard_formatter = StandardFormatter(no_emoji=args.no_emoji)
                 output = standard_formatter.format_commit_stats(commit_stats)
@@ -155,7 +165,9 @@ def main() -> None:
         # Preserve domain-specific parse error messaging expected by tests
         error_msg = str(e)
         if "timezone" in error_msg.lower():
-            error_msg += "\nNote: All dates must be in UTC. Please convert local times to UTC before use."
+            error_msg += (
+                "\nNote: All dates must be in UTC. Please convert local times to UTC before use."
+            )
         try:
             print(f"Error: {error_msg}", file=sys.stderr)
         except UnicodeEncodeError:
