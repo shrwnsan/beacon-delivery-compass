@@ -69,12 +69,8 @@ class TestEnhancedStandardFormatter(unittest.TestCase):
         medium_impact_commit = self.test_commits[1]
         low_impact_commit = self.test_commits[2]
 
-        self.assertEqual(
-            RangeStats.categorize_commit_impact(high_impact_commit), "high"
-        )
-        self.assertEqual(
-            RangeStats.categorize_commit_impact(medium_impact_commit), "medium"
-        )
+        self.assertEqual(RangeStats.categorize_commit_impact(high_impact_commit), "high")
+        self.assertEqual(RangeStats.categorize_commit_impact(medium_impact_commit), "medium")
         self.assertEqual(RangeStats.categorize_commit_impact(low_impact_commit), "low")
 
     def test_component_name_extraction(self):
@@ -82,9 +78,7 @@ class TestEnhancedStandardFormatter(unittest.TestCase):
         self.assertEqual(RangeStats.get_component_name("src/main.py"), "src/")
         self.assertEqual(RangeStats.get_component_name("docs/readme.md"), "docs/")
         self.assertEqual(RangeStats.get_component_name("config.json"), "root")
-        self.assertEqual(
-            RangeStats.get_component_name("tests/unit/test_main.py"), "tests/"
-        )
+        self.assertEqual(RangeStats.get_component_name("tests/unit/test_main.py"), "tests/")
 
     def test_extended_stats_calculation(self):
         """Test extended statistics calculation."""
@@ -108,9 +102,7 @@ class TestEnhancedStandardFormatter(unittest.TestCase):
 
         # Test author activity by day
         self.assertIn("John Doe <john@example.com>", range_stats.author_activity_by_day)
-        john_activity = range_stats.author_activity_by_day[
-            "John Doe <john@example.com>"
-        ]
+        john_activity = range_stats.author_activity_by_day["John Doe <john@example.com>"]
         # 2025-01-15 was a Wednesday, 2025-01-17 was a Friday
         self.assertEqual(john_activity["Wednesday"], 1)
         self.assertEqual(john_activity["Friday"], 1)
@@ -151,9 +143,7 @@ class TestEnhancedStandardFormatter(unittest.TestCase):
         clean_output = self.strip_ansi_codes(output)
 
         # Test header format
-        self.assertIn(
-            "Analysis Period: 2025-01-15 to 2025-01-17 (2 days)", clean_output
-        )
+        self.assertIn("Analysis Period: 2025-01-15 to 2025-01-17 (2 days)", clean_output)
 
         # Test total statistics section
         self.assertIn("Total commits: 3", clean_output)
@@ -188,18 +178,14 @@ class TestEnhancedStandardFormatter(unittest.TestCase):
         start_date = datetime(2025, 1, 15, tzinfo=timezone.utc)
         end_date = datetime(2025, 1, 17, tzinfo=timezone.utc)
 
-        range_stats = RangeStats(
-            start_date=start_date, end_date=end_date, commits=[], authors={}
-        )
+        range_stats = RangeStats(start_date=start_date, end_date=end_date, commits=[], authors={})
 
         range_stats.calculate_extended_stats()
         output = self.formatter.format_range_stats(range_stats)
         clean_output = self.strip_ansi_codes(output)
 
         # Should still show header
-        self.assertIn(
-            "Analysis Period: 2025-01-15 to 2025-01-17 (2 days)", clean_output
-        )
+        self.assertIn("Analysis Period: 2025-01-15 to 2025-01-17 (2 days)", clean_output)
 
         # Should not show team overview or breakdown sections
         self.assertNotIn("=== TEAM OVERVIEW ===", output)
@@ -222,9 +208,7 @@ class TestEnhancedStandardFormatter(unittest.TestCase):
         output = self.formatter.format_range_stats(range_stats)
         clean_output = self.strip_ansi_codes(output)
 
-        self.assertIn(
-            "Analysis Period: 2025-01-15 to 2025-01-15 (1 days)", clean_output
-        )
+        self.assertIn("Analysis Period: 2025-01-15 to 2025-01-15 (1 days)", clean_output)
         self.assertIn("Average Commits/Day: 1.0", clean_output)
 
     def test_component_sorting(self):

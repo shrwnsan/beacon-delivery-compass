@@ -91,12 +91,8 @@ index 0000000..e69de29
         mock_commit.hexsha = "multi123"
         mock_commit.author.name = "Test User"
         mock_commit.author.email = "test@example.com"
-        mock_commit.authored_datetime = datetime(
-            2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc
-        )
-        mock_commit.message = (
-            "Update multiple files\n\n- Added new features\n- Fixed bugs"
-        )
+        mock_commit.authored_datetime = datetime(2025, 7, 20, 10, 0, 0, tzinfo=timezone.utc)
+        mock_commit.message = "Update multiple files\n\n- Added new features\n- Fixed bugs"
 
         # Create multiple mock diffs
         # 1. Modified text file
@@ -639,9 +635,7 @@ index 1234567..0000000
             tzinfo=timezone.utc,
         )  # 10:00 UTC
         mock_commit1.message = "Commit 1"
-        mock_commit1.stats.files = {
-            "file1.py": {"insertions": 5, "deletions": 2, "lines": 7}
-        }
+        mock_commit1.stats.files = {"file1.py": {"insertions": 5, "deletions": 2, "lines": 7}}
 
         mock_commit2 = MagicMock()
         mock_commit2.hexsha = "commit2"
@@ -657,9 +651,7 @@ index 1234567..0000000
             tzinfo=timezone.utc,
         )  # 15:00 UTC (11:00 EDT)
         mock_commit2.message = "Commit 2"
-        mock_commit2.stats.files = {
-            "file2.py": {"insertions": 3, "deletions": 1, "lines": 4}
-        }
+        mock_commit2.stats.files = {"file2.py": {"insertions": 3, "deletions": 1, "lines": 4}}
 
         # Set up repo mock to return our test commits
         mock_repo_instance.iter_commits.return_value = [mock_commit1, mock_commit2]
@@ -674,9 +666,7 @@ index 1234567..0000000
         ):
             # Mock _parse_date to return timezone-aware datetimes
             mock_parse.side_effect = [
-                datetime(
-                    2025, 7, 20, 6, 0, 0, tzinfo=timezone.utc
-                ),  # 06:00 UTC (start)
+                datetime(2025, 7, 20, 6, 0, 0, tzinfo=timezone.utc),  # 06:00 UTC (start)
                 datetime(2025, 7, 20, 16, 0, 0, tzinfo=timezone.utc),  # 16:00 UTC (end)
             ]
 
