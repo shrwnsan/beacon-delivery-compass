@@ -64,6 +64,7 @@ class JSONFormatter:
             "total_lines_deleted": stats.total_lines_deleted,
             "net_change": stats.total_lines_added - stats.total_lines_deleted,
             "authors": stats.authors,
+            "risk_indicators": getattr(stats, "risk_indicators", {}),
             "commits": [
                 {
                     "hash": c.hash,

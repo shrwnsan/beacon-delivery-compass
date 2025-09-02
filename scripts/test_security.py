@@ -53,7 +53,8 @@ def main():
 
     # Test 2: bandit for security linting
     all_passed &= run_command(
-        ["bandit", "-r", "src/beaconled", "-c", "pyproject.toml"], "Security linting with bandit"
+        ["bandit", "-r", "src/beaconled", "-c", "pyproject.toml"],
+        "Security linting with bandit",
     )
 
     # Test 3: Alternative - pip-audit with JSON output for detailed info
