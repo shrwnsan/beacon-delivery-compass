@@ -180,6 +180,8 @@ class TestExtendedFormatter:
         assert "md: 1 files, +5/-2" in clean_result
 
     def test_format_range_stats_with_author_breakdown(self, sample_range_stats):
+        # Calculate extended stats for enhanced formatting
+        sample_range_stats.calculate_extended_stats()
         result = self.formatter.format_range_stats(sample_range_stats)
         import re
 
@@ -189,6 +191,16 @@ class TestExtendedFormatter:
 
     @freeze_time("2023-01-31")
     def test_format_range_stats_with_temporal_analysis(self, sample_range_stats):
-        pass
-        # This section is currently not produced by the formatter, so we don't assert for it.
-        # assert "Temporal Analysis - Daily Activity Timeline:" in clean_result
+        # Calculate extended stats to populate commits_by_day
+        sample_range_stats.calculate_extended_stats()
+        result = self.formatter.format_range_stats(sample_range_stats)
+        import re
+
+        clean_result = re.sub(r"\x1b\[[0-9;]*m", "", result)
+        assert "Temporal Analysis - Daily Activity Timeline:" in clean_result
+        # Check for specific dates from the sample data
+        assert "2023-01-10: 1 commit" in clean_result
+        assert "2023-01-12: 1 commit" in clean_result
+        assert "2023-01-15: 1 commit" in clean_result
+        assert "2023-01-20: 1 commit" in clean_result
+        assert "2023-01-25: 1 commit" in clean_result

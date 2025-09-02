@@ -84,15 +84,9 @@ class ExtendedFormatter(BaseFormatter):
             f"{self._format_date(stats.end_date).split()[0]}",
             "",
             f"{Fore.YELLOW}Total commits:{Style.RESET_ALL} {stats.total_commits:,}",
-            (
-                f"{Fore.YELLOW}Total files changed:{Style.RESET_ALL} {stats.total_files_changed:,}"
-            ),
-            (
-                f"{Fore.GREEN}Total lines added:{Style.RESET_ALL} {stats.total_lines_added:,}"
-            ),
-            (
-                f"{Fore.RED}Total lines deleted:{Style.RESET_ALL} {stats.total_lines_deleted:,}"
-            ),
+            (f"{Fore.YELLOW}Total files changed:{Style.RESET_ALL} {stats.total_files_changed:,}"),
+            (f"{Fore.GREEN}Total lines added:{Style.RESET_ALL} {stats.total_lines_added:,}"),
+            (f"{Fore.RED}Total lines deleted:{Style.RESET_ALL} {stats.total_lines_deleted:,}"),
             f"{Fore.YELLOW}Net change:{Style.RESET_ALL} {range_net_change}",
         ]
 
@@ -129,18 +123,25 @@ class ExtendedFormatter(BaseFormatter):
                 ],
             )
 
-        # Add file type breakdown if available
-        if hasattr(stats, "file_types"):
-            output.extend(
-                [
-                    "",
-                    f"{Fore.MAGENTA}File type breakdown:{Style.RESET_ALL}",
-                    *[
-                        self._format_file_type_line(ext, counts)
-                        for ext, counts in sorted(stats.file_types.items())
+        # Add file type breakdown if commits have files
+        if stats.commits:
+            all_files = []
+            for commit in stats.commits:
+                if hasattr(commit, "files") and commit.files:
+                    all_files.extend(commit.files)
+
+            if all_files:
+                file_types = self._get_file_type_breakdown(all_files)
+                output.extend(
+                    [
+                        "",
+                        f"{Fore.MAGENTA}File type breakdown:{Style.RESET_ALL}",
+                        *[
+                            self._format_file_type_line(ext, counts)
+                            for ext, counts in sorted(file_types.items())
+                        ],
                     ],
-                ],
-            )
+                )
 
         return "\n".join(output)
 
