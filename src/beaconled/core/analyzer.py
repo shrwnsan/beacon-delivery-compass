@@ -4,6 +4,7 @@ import logging
 import re
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock
 
 import git
@@ -180,14 +181,8 @@ class GitAnalyzer:
               'beaconled.core.analyzer' logger
         """
         logger.debug("Getting commit stats for hash: %s", commit_hash)
-        if (
-            not commit_hash
-            or not isinstance(commit_hash, str)
-            or not commit_hash.strip()
-        ):
-            error_msg = (
-                f"Invalid commit hash: '{commit_hash}'. Must be a non-empty string."
-            )
+        if not commit_hash or not isinstance(commit_hash, str) or not commit_hash.strip():
+            error_msg = f"Invalid commit hash: '{commit_hash}'. Must be a non-empty string."
             logger.error(error_msg)
             raise CommitParseError(
                 commit_ref=commit_hash,
@@ -205,9 +200,7 @@ class GitAnalyzer:
                 return True
             return False
 
-        if not (
-            self._is_valid_commit_hash(commit_hash) or _is_symbolic_ref(commit_hash)
-        ):
+        if not (self._is_valid_commit_hash(commit_hash) or _is_symbolic_ref(commit_hash)):
             # Allow short hashes commonly used in tests (e.g., "abc123") of length 6+
             if len(commit_hash) >= SHORT_REF_MIN_LEN and all(
                 c in "0123456789abcdefABCDEF" for c in commit_hash
@@ -305,9 +298,7 @@ class GitAnalyzer:
                         # Parse the diff to count added/removed lines
                         diff_content = diff.diff
                         if isinstance(diff_content, bytes):
-                            added = (
-                                diff_content.count(b"\n+") - 1
-                            )  # Subtract 1 for the header line
+                            added = diff_content.count(b"\n+") - 1  # Subtract 1 for the header line
                             deleted = (
                                 diff_content.count(b"\n-") - 1
                             )  # Subtract 1 for the header line
@@ -508,9 +499,7 @@ class GitAnalyzer:
 
             # Record whether caller provided an explicit end time
             # Use type() to avoid issues when datetime module is mocked in tests
-            original_end_dt = (
-                end_date if type(end_date).__name__ == "datetime" else None
-            )
+            original_end_dt = end_date if type(end_date).__name__ == "datetime" else None
             if original_end_dt is not None and hasattr(original_end_dt, "hour"):
                 _ = (
                     original_end_dt.hour != 0
@@ -523,9 +512,7 @@ class GitAnalyzer:
             start_date, end_date = DateUtils.validate_date_range(start_date, end_date)
 
             # Set end limit to end of day
-            end_limit = end_date.replace(
-                hour=23, minute=59, second=59, microsecond=999999
-            )
+            end_limit = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
 
             # Format dates for git commands
             git_since = start_date.isoformat()
@@ -585,10 +572,7 @@ class GitAnalyzer:
                     # Skip commits outside the date range
                     if hasattr(commit_stats, "date"):
                         if not isinstance(commit_stats.date, MagicMock):
-                            if (
-                                commit_stats.date < start_date
-                                or commit_stats.date > end_limit
-                            ):
+                            if commit_stats.date < start_date or commit_stats.date > end_limit:
                                 continue
 
                     # Add to commits list
@@ -625,9 +609,7 @@ class GitAnalyzer:
                                     "lines_deleted": 0,
                                 }
                             file_types[ext]["files_changed"] += 1
-                            file_types[ext]["lines_added"] += getattr(
-                                file_stat, "lines_added", 0
-                            )
+                            file_types[ext]["lines_added"] += getattr(file_stat, "lines_added", 0)
                             file_types[ext]["lines_deleted"] += getattr(
                                 file_stat,
                                 "lines_deleted",
@@ -658,9 +640,12 @@ class GitAnalyzer:
             # Calculate extended statistics for enhanced formatting
             range_stats.calculate_extended_stats()
 
-            # Add additional stats as attributes if needed (for backward compatibility)
-            if hasattr(range_stats, "file_types"):
-                range_stats.file_types = file_types
+            # Add file types to range stats
+            range_stats.file_types = file_types
+
+            # Calculate risk indicators
+            risk_indicators = self._calculate_risk_indicators(range_stats, start_date, end_date)
+            range_stats.risk_indicators = risk_indicators
 
             return range_stats
 
@@ -734,3 +719,95 @@ class GitAnalyzer:
         if date_str == "HEAD":
             return True
         return False
+
+    def _calculate_risk_indicators(
+        self,
+        range_stats: RangeStats,
+        start_date: datetime,
+        end_date: datetime,
+    ) -> dict[str, Any]:
+        """Calculate risk indicators for the given date range.
+
+        Args:
+            range_stats: RangeStats object containing commit data
+            start_date: Start date of the analysis period
+            end_date: End date of the analysis period
+
+        Returns:
+            dict: Risk indicators including large commits, bug fixes, velocity, etc.
+        """
+        if not range_stats.commits:
+            return {
+                "large_commits_count": 0,
+                "recent_bug_fixes": 0,
+                "last_minute_changes": 0,
+                "commit_velocity": 0.0,
+                "readiness_score": 100,
+                "recommendation": "✅ Ready for release",
+            }
+
+        # Calculate date range in days for velocity calculation
+        date_range_days = (end_date - start_date).days
+        if date_range_days <= 0:
+            date_range_days = 1  # Avoid division by zero
+
+        # Count large commits (>15 files changed)
+        large_commits_count = sum(
+            1 for commit in range_stats.commits if getattr(commit, "files_changed", 0) > 15
+        )
+
+        # Count recent bug fixes
+        recent_bug_fixes = sum(
+            1
+            for commit in range_stats.commits
+            if hasattr(commit, "message")
+            and re.search(r"fix|bug|hotfix", getattr(commit, "message", ""), re.IGNORECASE)
+        )
+
+        # Count last minute changes (within last 24 hours of the end date)
+        last_minute_changes = sum(
+            1
+            for commit in range_stats.commits
+            if hasattr(commit, "date")
+            and commit.date
+            and (end_date - commit.date).total_seconds() <= 86400  # 24 hours in seconds
+        )
+
+        # Calculate commit velocity (commits per day)
+        commit_velocity = round(range_stats.total_commits / date_range_days, 2)
+
+        # Calculate readiness score (0-100, higher is safer to release)
+        readiness_score = 100
+
+        # Deduct points for large commits
+        readiness_score -= min(large_commits_count * 15, 40)
+
+        # Deduct points for bug fixes
+        readiness_score -= min(recent_bug_fixes * 10, 30)
+
+        # Deduct points for high commit volume
+        if range_stats.total_commits > 50:
+            readiness_score -= 25
+
+        # Deduct points for last minute changes
+        readiness_score -= min(last_minute_changes * 20, 30)
+
+        # Ensure score stays within bounds
+        readiness_score = max(0, min(100, readiness_score))
+
+        # Generate recommendation based on score
+        if readiness_score >= 80:
+            recommendation = "✅ Ready for release"
+        elif readiness_score >= 60:
+            recommendation = "⚠️  Proceed with caution - extra testing recommended"
+        else:
+            recommendation = "🚫 High risk - consider delaying release"
+
+        return {
+            "large_commits_count": large_commits_count,
+            "recent_bug_fixes": recent_bug_fixes,
+            "last_minute_changes": last_minute_changes,
+            "commit_velocity": commit_velocity,
+            "readiness_score": readiness_score,
+            "recommendation": recommendation,
+        }
