@@ -201,4 +201,21 @@ class StandardFormatter(BaseFormatter):
                 lines = component_stats["lines"]
                 output.append(f"  {component} {commits} commits, {lines:,} lines")
 
+        # Risk Indicators Section
+        risk_indicators = getattr(stats, "risk_indicators", {})
+        if risk_indicators:
+            output.extend(
+                [
+                    "",
+                    f"🚨 {Fore.YELLOW}=== RISK INDICATORS ==={Style.RESET_ALL}",
+                    f"Large Commits (>15 files): {risk_indicators.get('large_commits_count', 0)}",
+                    f"Recent Bug Fixes: {risk_indicators.get('recent_bug_fixes', 0)}",
+                    f"Last Minute Changes: {risk_indicators.get('last_minute_changes', 0)}",
+                    f"Commit Velocity: {risk_indicators.get('commit_velocity', 0.0)} commits/day",
+                    "",
+                    f"Readiness Score: {risk_indicators.get('readiness_score', 0)}/100",
+                    f"Recommendation: {risk_indicators.get('recommendation', 'N/A')}",
+                ]
+            )
+
         return "\n".join(output)
