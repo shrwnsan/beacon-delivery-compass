@@ -6,10 +6,12 @@ import sys
 
 from . import __version__
 from .core.analyzer import GitAnalyzer
+
 # Domain-specific date errors for clearer CLI messages
 from .core.date_errors import DateParseError, DateRangeError
 from .formatters.extended import ExtendedFormatter
 from .formatters.json_format import JSONFormatter
+from .formatters.rich_formatter import RichFormatter
 from .formatters.standard import StandardFormatter
 
 
@@ -54,7 +56,7 @@ def main() -> None:
     parser.add_argument(
         "-f",
         "--format",
-        choices=["standard", "extended", "json"],
+        choices=["standard", "extended", "json", "rich"],
         default="standard",
         help="Output format (default: standard)",
     )
@@ -125,6 +127,9 @@ def main() -> None:
             elif args.format == "extended":
                 extended_formatter = ExtendedFormatter()
                 output = extended_formatter.format_range_stats(range_stats)
+            elif args.format == "rich":
+                rich_formatter = RichFormatter()
+                output = rich_formatter.format_range_stats(range_stats)
             else:  # standard
                 standard_formatter = StandardFormatter(no_emoji=args.no_emoji)
                 output = standard_formatter.format_range_stats(range_stats)
@@ -138,6 +143,9 @@ def main() -> None:
             elif args.format == "extended":
                 extended_formatter = ExtendedFormatter()
                 output = extended_formatter.format_commit_stats(commit_stats)
+            elif args.format == "rich":
+                rich_formatter = RichFormatter()
+                output = rich_formatter.format_commit_stats(commit_stats)
             else:  # standard
                 standard_formatter = StandardFormatter(no_emoji=args.no_emoji)
                 output = standard_formatter.format_commit_stats(commit_stats)
@@ -155,7 +163,9 @@ def main() -> None:
         # Preserve domain-specific parse error messaging expected by tests
         error_msg = str(e)
         if "timezone" in error_msg.lower():
-            error_msg += "\nNote: All dates must be in UTC. Please convert local times to UTC before use."
+            error_msg += (
+                "\nNote: All dates must be in UTC. Please convert local times to UTC before use."
+            )
         try:
             print(f"Error: {error_msg}", file=sys.stderr)
         except UnicodeEncodeError:
