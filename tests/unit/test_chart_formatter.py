@@ -1,7 +1,7 @@
 """Tests for ChartFormatter."""
 
 import pytest
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
 from src.beaconled.core.models import RangeStats, CommitStats, FileStats
@@ -86,14 +86,14 @@ class TestChartFormatter:
 
     def _create_mock_range_stats(self):
         """Create a mock RangeStats object for testing."""
-        start_date = datetime(2025, 1, 1)
-        end_date = datetime(2025, 1, 7)
+        start_date = datetime(2025, 1, 1, tzinfo=timezone.utc)
+        end_date = datetime(2025, 1, 7, tzinfo=timezone.utc)
 
         # Create mock commits
         commit1 = CommitStats(
             hash="abc123",
             author="Test Author",
-            date=datetime(2025, 1, 2),
+            date=datetime(2025, 1, 2, tzinfo=timezone.utc),
             message="Test commit",
             files_changed=2,
             lines_added=10,
@@ -107,7 +107,7 @@ class TestChartFormatter:
         commit2 = CommitStats(
             hash="def456",
             author="Test Author",
-            date=datetime(2025, 1, 3),
+            date=datetime(2025, 1, 3, tzinfo=timezone.utc),
             message="Another commit",
             files_changed=1,
             lines_added=5,

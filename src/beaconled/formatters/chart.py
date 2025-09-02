@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from .base_formatter import BaseFormatter
 
 if TYPE_CHECKING:
-    from beaconled.core.models import RangeStats
+    from beaconled.core.models import RangeStats, CommitStats
 
 
 class ChartFormatter(BaseFormatter):
@@ -19,7 +18,7 @@ class ChartFormatter(BaseFormatter):
     including commit activity, code health metrics, and contributor patterns.
     """
 
-    def __init__(self, output_path: str = "beacon-charts.png", no_emoji: bool = False):
+    def __init__(self, output_path: str = "beacon-charts.png", *, no_emoji: bool = False):
         """Initialize the chart formatter.
 
         Args:
@@ -37,20 +36,21 @@ class ChartFormatter(BaseFormatter):
         """Check if required dependencies for chart generation are available."""
         try:
             import matplotlib.pyplot as plt  # type: ignore
-            import pandas as pd  # type: ignore
             import numpy as np  # type: ignore
+            import pandas as pd  # type: ignore
 
             self.plt = plt
             self.pd = pd
             self.np = np
         except ImportError as e:
-            raise ImportError(
-                f"Chart generation requires matplotlib, pandas, and numpy. "
-                f"Please install with: pip install matplotlib pandas numpy\n"
+            error_msg = (
+                "Chart generation requires matplotlib, pandas, and numpy. "
+                "Please install with: pip install matplotlib pandas numpy\n"
                 f"Error: {e}"
-            ) from e
+            )
+            raise ImportError(error_msg) from e
 
-    def format_commit_stats(self, stats) -> str:
+    def format_commit_stats(self, stats: CommitStats) -> str:
         """Format commit statistics as chart (not supported for single commits)."""
         return (
             "Chart generation is only supported for range analysis (--since flag).\n"
@@ -68,7 +68,8 @@ class ChartFormatter(BaseFormatter):
     def _generate_trend_charts(self, stats: RangeStats) -> None:
         """Generate comprehensive trend charts for the analysis period."""
         if not self.plt:
-            raise RuntimeError("Matplotlib not available")
+            error_msg = "Matplotlib not available"
+            raise RuntimeError(error_msg)
 
         # Create figure with subplots
         fig, ((ax1, ax2), (ax3, ax4)) = self.plt.subplots(2, 2, figsize=(15, 10))
@@ -96,7 +97,7 @@ class ChartFormatter(BaseFormatter):
         self.plt.savefig(self.output_path, dpi=300, bbox_inches="tight")
         self.plt.close()
 
-    def _plot_commit_timeline(self, ax, stats: RangeStats) -> None:
+    def _plot_commit_timeline(self, ax: Any, stats: RangeStats) -> None:
         """Plot commit activity over time."""
         if not hasattr(stats, "commits_by_day") or not stats.commits_by_day:
             ax.text(
@@ -124,15 +125,15 @@ class ChartFormatter(BaseFormatter):
         # Add trend line if we have enough data
         if len(dates) > 3:
             try:
-                x_numeric = [i for i in range(len(dates))]
+                x_numeric = list(range(len(dates)))
                 coeffs = self._linear_regression(x_numeric, commits)
                 trend_line = [coeffs[0] * x + coeffs[1] for x in x_numeric]
                 ax.plot(dates, trend_line, "--", color="#A23B72", alpha=0.7, label="Trend")
                 ax.legend()
-            except:
+            except Exception:
                 pass  # Skip trend line if calculation fails
 
-    def _plot_author_breakdown(self, ax, stats: RangeStats) -> None:
+    def _plot_author_breakdown(self, ax: Any, stats: RangeStats) -> None:
         """Plot author contribution breakdown."""
         if not stats.authors:
             ax.text(
@@ -150,8 +151,8 @@ class ChartFormatter(BaseFormatter):
         commits = list(stats.authors.values())
 
         # Sort by commit count
-        sorted_data = sorted(zip(authors, commits), key=lambda x: x[1], reverse=True)
-        authors_sorted, commits_sorted = zip(*sorted_data)
+        sorted_data = sorted(zip(authors, commits, strict=False), key=lambda x: x[1], reverse=True)
+        authors_sorted, commits_sorted = zip(*sorted_data, strict=False)
 
         bars = ax.bar(range(len(authors_sorted)), commits_sorted, color="#F18F01", alpha=0.8)
         ax.set_title("Author Contributions", fontweight="bold")
@@ -165,7 +166,7 @@ class ChartFormatter(BaseFormatter):
         )
 
         # Add value labels on bars
-        for bar, count in zip(bars, commits_sorted):
+        for bar, count in zip(bars, commits_sorted, strict=False):
             ax.text(
                 bar.get_x() + bar.get_width() / 2,
                 bar.get_height() + 0.1,
@@ -175,7 +176,7 @@ class ChartFormatter(BaseFormatter):
                 fontweight="bold",
             )
 
-    def _plot_health_metrics(self, ax, stats: RangeStats) -> None:
+    def _plot_health_metrics(self, ax: Any, stats: RangeStats) -> None:
         """Plot code health metrics."""
         metrics = []
 
@@ -207,14 +208,14 @@ class ChartFormatter(BaseFormatter):
             ax.set_title("Code Health Metrics")
             return
 
-        labels, values, colors = zip(*metrics)
+        labels, values, colors = zip(*metrics, strict=False)
         bars = ax.bar(labels, values, color=colors, alpha=0.8)
         ax.set_title("Code Health Metrics", fontweight="bold")
         ax.set_ylabel("Value")
         ax.tick_params(axis="x", rotation=45, labelright=True)
 
         # Add value labels
-        for bar, value in zip(bars, values):
+        for bar, value in zip(bars, values, strict=False):
             ax.text(
                 bar.get_x() + bar.get_width() / 2,
                 bar.get_height() + max(values) * 0.02,
@@ -224,7 +225,7 @@ class ChartFormatter(BaseFormatter):
                 fontweight="bold",
             )
 
-    def _plot_file_patterns(self, ax, stats: RangeStats) -> None:
+    def _plot_file_patterns(self, ax: Any, stats: RangeStats) -> None:
         """Plot file change patterns."""
         if not self.plt:
             return
@@ -250,7 +251,7 @@ class ChartFormatter(BaseFormatter):
 
         # Get top 8 file types
         sorted_types = sorted(file_type_counts.items(), key=lambda x: x[1], reverse=True)[:8]
-        file_types, changes = zip(*sorted_types)
+        file_types, changes = zip(*sorted_types, strict=False)
 
         wedges, texts, autotexts = ax.pie(
             changes,
@@ -267,7 +268,7 @@ class ChartFormatter(BaseFormatter):
         for autotext in autotexts:
             autotext.set_fontsize(8)
 
-    def _linear_regression(self, x, y):
+    def _linear_regression(self, x: list[int], y: list[int]) -> tuple[float, float]:
         """Simple linear regression to calculate trend line."""
         if not self.np:
             return 0, 0
