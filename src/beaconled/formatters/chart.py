@@ -67,7 +67,7 @@ class ChartFormatter(BaseFormatter):
 
     def _generate_trend_charts(self, stats: RangeStats) -> None:
         """Generate comprehensive trend charts for the analysis period."""
-        if not self.plt:
+        if not self.plt:  # type: ignore
             error_msg = "Matplotlib not available"
             raise RuntimeError(error_msg)
 
@@ -120,7 +120,7 @@ class ChartFormatter(BaseFormatter):
         ax.set_xlabel("Date")
         ax.set_ylabel("Commits")
         ax.tick_params(axis="x", rotation=45)
-        ax.grid(True, alpha=0.3)
+        ax.grid(visible=True, alpha=0.3)
 
         # Add trend line if we have enough data
         if len(dates) > 3:
@@ -227,7 +227,7 @@ class ChartFormatter(BaseFormatter):
 
     def _plot_file_patterns(self, ax: Any, stats: RangeStats) -> None:
         """Plot file change patterns."""
-        if not self.plt:
+        if not self.plt:  # type: ignore
             return
 
         # Calculate file type statistics from commits
@@ -270,7 +270,7 @@ class ChartFormatter(BaseFormatter):
 
     def _linear_regression(self, x: list[int], y: list[int]) -> tuple[float, float]:
         """Simple linear regression to calculate trend line."""
-        if not self.np:
+        if not self.np:  # type: ignore
             return 0, 0
 
         x_array = self.np.array(x)
