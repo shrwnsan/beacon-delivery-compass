@@ -1,97 +1,65 @@
-# Collaboration Analytics Module
+# Analytics Module
 
-This module provides comprehensive team collaboration analysis for the BeaconLED tool's enhanced extended format.
+This module provides advanced analytics capabilities for the BeaconLED tool's enhanced extended format.
 
 ## Components
 
-### CollaborationAnalyzer
-The main analyzer that generates comprehensive team collaboration insights from commit data.
+### TimeAnalyzer
+The main analytics processor that generates comprehensive time-based insights from commit data.
 
 **Features:**
-- **Co-authorship Analysis**: Identifies frequent collaborator pairs and collaboration strength
-- **Knowledge Distribution**: Maps code ownership patterns and identifies knowledge silos
-- **Review Metrics**: Analyzes review participation and coverage patterns
-- **Collaboration Patterns**: Calculates team connectivity and collaboration balance
+- **Velocity Trends**: Analyzes commit frequency over time with trend detection
+- **Activity Heatmaps**: Maps activity patterns by day of week and hour
+- **Peak Period Detection**: Identifies periods of high activity using statistical thresholds
+- **Bus Factor Analysis**: Calculates team risk based on contributor concentration
 
 ### Data Models
-- `CoAuthorshipMetrics`: Pair-wise collaboration analysis between developers
-- `KnowledgeDistribution`: Code ownership and knowledge silo identification
-- `ReviewMetrics`: Review participation and effectiveness analysis
-- `CollaborationPatterns`: Overall team collaboration health metrics
-- `CollaborationMetrics`: Container for all collaboration analysis results
+- `VelocityTrends`: Commit velocity analysis with trend direction and peak identification
+- `ActivityHeatmap`: Activity patterns by day and hour with peak detection
+- `BusFactor`: Contributor concentration and risk levels
+- `TimeAnalytics`: Container for all time-based analysis results
 
 ## Usage
 
 ```python
-from beaconled.analytics import CollaborationAnalyzer, CollaborationConfig
+from beaconled.analytics import TimeAnalyzer, TimeAnalyzerConfig
 from beaconled.core.models import RangeStats
 
 # Configure analyzer
-config = CollaborationConfig(
-    min_collaboration_threshold=3,
-    knowledge_silo_threshold=0.8,
-    review_coverage_target=0.7
+config = TimeAnalyzerConfig(
+    velocity_window_days=7,
+    peak_threshold=1.5,
+    bus_factor_threshold=0.5
 )
 
 # Create analyzer
-analyzer = CollaborationAnalyzer(config)
+analyzer = TimeAnalyzer(config)
 
 # Analyze commit data
 range_stats = RangeStats(...)  # Your commit data
 results = analyzer.analyze(range_stats)
 
 # Access results
-print(f"Team connectivity: {results.collaboration_patterns.team_connectivity:.2f}")
-print(f"Top collaborators: {results.co_authorship.top_collaborators[:3]}")
-print(f"Knowledge risk: {results.collaboration_patterns.knowledge_risk}")
+print(f"Weekly average: {results.velocity_trends.weekly_average}")
+print(f"Peak day: {results.activity_heatmap.peak_day}")
+print(f"Bus factor: {results.bus_factor.factor}")
 ```
 
 ## Configuration
 
-- `min_collaboration_threshold`: Minimum commits for collaboration consideration (default: 3)
-- `knowledge_silo_threshold`: Concentration threshold for knowledge silos (default: 0.8)
-- `review_coverage_target`: Target review coverage ratio (default: 0.7)
-
-## Analysis Types
-
-### Co-authorship Analysis
-- Identifies developers who frequently work on the same files
-- Calculates collaboration strength scores
-- Ranks top collaborating pairs
-
-### Knowledge Distribution
-- Maps which developers have expertise in which file types
-- Identifies knowledge silos (single-person dependencies)
-- Tracks code ownership patterns
-
-### Review Metrics
-- Measures review participation across the team
-- Calculates review coverage ratios
-- Provides quality indicators
-
-### Collaboration Patterns
-- Team connectivity score (how well-connected the team is)
-- Collaboration balance (ratio of collaborative vs individual work)
-- Overall knowledge risk assessment
+- `velocity_window_days`: Days to use for rolling velocity calculations (default: 7)
+- `peak_threshold`: Standard deviations above mean for peak detection (default: 1.5)
+- `bus_factor_threshold`: Percentage threshold for bus factor calculation (default: 0.5)
 
 ## Testing
 
 Run tests with:
 ```bash
-pytest tests/unit/analytics/test_collaboration_analyzer.py
+pytest tests/unit/analytics/test_time_analyzer.py
 ```
 
 ## Performance
 
-- Designed to handle large development teams efficiently
-- Processes collaboration patterns in O(n) time
-- Memory efficient with streaming analysis
+- Designed to handle large repositories efficiently
+- Uses streaming processing for memory efficiency
 - Typical performance: < 1 second for 1000 commits
-
-## Integration
-
-This module integrates with:
-- **RangeStats**: Consumes commit and author data
-- **Future ChartRenderer**: Provides data for collaboration network graphs
-- **ExtendedFormatter**: Supplies collaboration insights for display
-- **RiskAssessment**: Contributes to knowledge risk evaluation
