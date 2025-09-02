@@ -129,8 +129,8 @@ class RichFormatter(BaseFormatter):
         overview_table.add_row("📊 Duration", f"{duration_days} days")
         overview_table.add_row("🔢 Total Commits", f"{stats.total_commits:,}")
         overview_table.add_row("📂 Files Changed", f"{stats.total_files_changed:,}")
-        overview_table.add_row("➕ Lines Added", f"[green]{stats.total_lines_added:,}[/green]")  # noqa: RUF001
-        overview_table.add_row("➖ Lines Deleted", f"[red]{stats.total_lines_deleted:,}[/red]")  # noqa: RUF001
+        overview_table.add_row("+ Lines Added", f"[green]{stats.total_lines_added:,}[/green]")
+        overview_table.add_row("- Lines Deleted", f"[red]{stats.total_lines_deleted:,}[/red]")
         overview_table.add_row(
             "🔄 Net Change",
             self._format_net_change(stats.total_lines_added, stats.total_lines_deleted),
