@@ -46,6 +46,9 @@ beaconled --since "2025-01-01" --until "2025-01-31"
 
 # Team performance report for the last 2 weeks
 beaconled --since "2w" --format extended
+
+# Disable emoji icons for plain text output
+beaconled --since "1w" --no-emoji
 ```
 
 #### Date Formats
@@ -109,21 +112,21 @@ beaconled --since "1w" --format standard
 ```
 
 ```
-Analysis Period: 2025-01-16 to 2025-01-23 (7 days)
+🗓️ Analysis Period: 2025-01-16 to 2025-01-23 (7 days)
 
-Total commits: 23
-Total files changed: 156
-Total lines added: 2,847
-Total lines deleted: 1,234
-Net change: 1,613
+commits Total commits: 23
+files changed Total files changed: 156
+lines added Total lines added: 2,847
+lines deleted Total lines deleted: 1,234
+net change Net change: 1,613
 
-=== TEAM OVERVIEW ===
-Total Contributors: 4
+🚀 === TEAM OVERVIEW ===
+👥 Total Contributors: 4
 Total Commits: 23
 Average Commits/Day: 2.9
 Active Days: 6/7
 
-=== CONTRIBUTOR BREAKDOWN ===
+🔍 === CONTRIBUTOR BREAKDOWN ===
 John Doe <john@company.com>: 9 commits (39%)
   - High Impact: 3 commits
   - Medium Impact: 4 commits
@@ -142,7 +145,7 @@ Bob Wilson <bob@company.com>: 7 commits (30%)
   - Low Impact: 2 commits
   - Most Active: Wednesday, Thursday
 
-=== COMPONENT ACTIVITY ===
+🔥 === COMPONENT ACTIVITY ===
 Most Changed Components:
   frontend/: 8 commits, 1,234 lines
   backend/api/: 6 commits, 892 lines
@@ -157,6 +160,7 @@ Most Changed Components:
 - **Product Delivery Analytics**: Comprehensive insights into development patterns, release readiness, and technical health
 - **Multi-Stakeholder Value**: One platform serving executives, engineering managers, and technical leads
 - **Flexible Output Formats**: Choose from standard, extended, and JSON formats to fit your workflow needs
+- **Emoji-Enhanced Visual Scanning**: Optional emoji icons for better visual parsing of output (configurable via --no-emoji)
 - **Reliable Git Integration**: Built on GitPython for robust and secure repository operations
 - **Rich Terminal Output**: Colorized and well-formatted output powered by `rich`
 
