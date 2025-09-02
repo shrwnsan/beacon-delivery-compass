@@ -46,6 +46,10 @@ Issues = "https://github.com/shrwnsan/beacon-delivery-compass/issues"
 beaconled = "beaconled.cli:main"
 
 [project.optional-dependencies]
+viz = [
+    "matplotlib>=3.5.0",
+    "numpy>=1.21.0",
+]
 dev = [
     # Testing
     "pytest>=7.0.0",
