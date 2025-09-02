@@ -87,7 +87,7 @@ class CollaborationAnalyzer:
         file_authors: dict[str, list[str]] = defaultdict(list)
         for commit in range_stats.commits:
             for _file_stat in commit.files:
-                file_authors[file_stat.path].append(commit.author)
+                file_authors[_file_stat.path].append(commit.author)
 
         # Calculate collaboration pairs
         author_pairs: dict[tuple[str, str], int] = defaultdict(int)
@@ -134,12 +134,12 @@ class CollaborationAnalyzer:
             )
 
         # Calculate author expertise by file type
-        author_expertise: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
-        file_type_totals: dict[str, int] = defaultdict(int)
+        author_expertise: dict[str, dict[str, float]] = defaultdict(lambda: defaultdict(int))
+        file_type_totals: dict[str, float] = defaultdict(int)
 
         for commit in range_stats.commits:
             for _file_stat in commit.files:
-                file_type = self._get_file_type(file_stat.path)
+                file_type = self._get_file_type(_file_stat.path)
                 author_expertise[commit.author][file_type] += 1
                 file_type_totals[file_type] += 1
 
@@ -154,11 +154,11 @@ class CollaborationAnalyzer:
                 )
 
         # Identify knowledge silos
-        knowledge_silos = []
+        knowledge_silos: list[tuple[str, float]] = []
         for file_type, total_commits in file_type_totals.items():
             if total_commits >= self.min_collaboration_threshold:
                 # Find the author with highest concentration
-                max_concentration = 0
+                max_concentration = 0.0
                 for author_scores in author_expertise_scores.values():
                     concentration = author_scores.get(file_type, 0)
                     max_concentration = max(max_concentration, concentration)
@@ -199,7 +199,7 @@ class CollaborationAnalyzer:
 
         # For now, use commit patterns as proxy for review activity
         # In a real implementation, this would analyze PR/review data
-        
+
         total_commits = sum(range_stats.authors.values())
 
         review_participation = {}
@@ -249,7 +249,7 @@ class CollaborationAnalyzer:
         # Team connectivity: how evenly distributed the work is
         author_count = len(range_stats.authors)
         ideal_commits_per_author = total_commits / author_count
-        connectivity_sum = 0
+        connectivity_sum = 0.0
 
         for commits in range_stats.authors.values():
             deviation = abs(commits - ideal_commits_per_author) / ideal_commits_per_author
