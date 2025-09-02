@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 import tempfile
-from datetime import datetime
+from datetime import datetime, date
 from typing import TYPE_CHECKING
 
 from .base_formatter import BaseFormatter
@@ -17,6 +17,7 @@ try:
     import matplotlib.pyplot as plt
     import numpy as np
     from matplotlib.colors import LinearSegmentedColormap
+
     MATPLOTLIB_AVAILABLE = True
 except ImportError:
     plt = None
@@ -32,7 +33,7 @@ class HeatmapFormatter(BaseFormatter):
     and author activity by day of week.
     """
 
-    def __init__(self, output_file: str | None = None, show_plot: bool = True):
+    def __init__(self, output_file: str | None = None, *, show_plot: bool = True):
         """Initialize the heatmap formatter.
 
         Args:
@@ -40,10 +41,11 @@ class HeatmapFormatter(BaseFormatter):
             show_plot: Whether to display the plot interactively.
         """
         if not MATPLOTLIB_AVAILABLE:
-            raise ImportError(
+            msg = (
                 "matplotlib and numpy are required for heatmap visualization. "
                 "Install with: pip install matplotlib numpy"
             )
+            raise ImportError(msg)
 
         self.output_file = output_file
         self.show_plot = show_plot
@@ -58,7 +60,7 @@ class HeatmapFormatter(BaseFormatter):
             return "No commits found in the specified date range"
 
         # Ensure extended stats are calculated
-        if not hasattr(stats, 'commits_by_day') or not stats.commits_by_day:
+        if not hasattr(stats, "commits_by_day") or not stats.commits_by_day:
             stats.calculate_extended_stats()
 
         # Create the heatmaps
@@ -70,7 +72,7 @@ class HeatmapFormatter(BaseFormatter):
             output_path = self.output_file
         else:
             temp_dir = tempfile.gettempdir()
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now().replace(tzinfo=None).strftime("%Y%m%d_%H%M%S")
             output_path = os.path.join(temp_dir, f"beacon_heatmap_{timestamp}.png")
 
         # Save plots to files
@@ -88,7 +90,7 @@ class HeatmapFormatter(BaseFormatter):
         if not MATPLOTLIB_AVAILABLE or not plt or not np:
             return
 
-        if not hasattr(stats, 'commits_by_day') or not stats.commits_by_day:
+        if not hasattr(stats, "commits_by_day") or not stats.commits_by_day:
             return
 
         # Parse dates and commit counts
@@ -100,9 +102,9 @@ class HeatmapFormatter(BaseFormatter):
                 # Handle different date formats that might be in commits_by_day
                 if isinstance(date_str, str):
                     # Try different date formats
-                    for fmt in ['%Y-%m-%d', '%Y/%m/%d', '%m/%d/%Y']:
+                    for fmt in ["%Y-%m-%d", "%Y/%m/%d", "%m/%d/%Y"]:
                         try:
-                            date_obj = datetime.strptime(date_str, fmt).date()
+                            date_obj = datetime.strptime(date_str, fmt).replace(tzinfo=None).date()
                             dates.append(date_obj)
                             commits.append(count)
                             break
@@ -121,39 +123,41 @@ class HeatmapFormatter(BaseFormatter):
             return
 
         # Sort by date
-        date_commit_pairs = sorted(zip(dates, commits))
-        dates, commits = zip(*date_commit_pairs)
+        date_commit_pairs = sorted(zip(dates, commits, strict=False))
+        dates, commits = zip(*date_commit_pairs, strict=False)
+        dates = list(dates)
+        commits = list(commits)
 
         # Create figure with subplots
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
-        fig.suptitle('Git Repository Activity Heatmap', fontsize=16, fontweight='bold')
+        fig.suptitle("Git Repository Activity Heatmap", fontsize=16, fontweight="bold")
 
         # Daily activity line plot
-        ax1.plot(dates, commits, marker='o', linewidth=2, markersize=4, color='#2E86AB')
-        ax1.set_title('Daily Commit Activity', fontsize=14)
-        ax1.set_xlabel('Date')
-        ax1.set_ylabel('Commits')
-        ax1.grid(True, alpha=0.3)
+        ax1.plot(dates, commits, marker="o", linewidth=2, markersize=4, color="#2E86AB")
+        ax1.set_title("Daily Commit Activity", fontsize=14)
+        ax1.set_xlabel("Date")
+        ax1.set_ylabel("Commits")
+        ax1.grid(True, alpha=0.3)  # type: ignore
 
         # Rotate x-axis labels for better readability
-        ax1.tick_params(axis='x', rotation=45)
+        ax1.tick_params(axis="x", rotation=45)
 
         # Calendar heatmap (simplified version)
         self._create_calendar_heatmap(ax2, dates, commits)
 
         plt.tight_layout()
 
-    def _create_calendar_heatmap(self, ax, dates, commits) -> None:
+    def _create_calendar_heatmap(self, ax, dates: list[date], commits: list[int]) -> None:
         """Create a simplified calendar heatmap."""
         if not MATPLOTLIB_AVAILABLE or not plt or not np or not LinearSegmentedColormap:
             return
 
         # Group by month and day
-        month_data = {}
+        month_data: dict[str, dict[int, int]] = {}
         max_commits = max(commits) if commits else 1
 
-        for date, commit_count in zip(dates, commits):
-            month_key = date.strftime('%Y-%m')
+        for date, commit_count in zip(dates, commits, strict=False):
+            month_key = date.strftime("%Y-%m")
             if month_key not in month_data:
                 month_data[month_key] = {}
 
@@ -171,7 +175,7 @@ class HeatmapFormatter(BaseFormatter):
 
         # Create a 7x5 grid (weeks x days)
         heatmap_data = np.zeros((5, 7))
-        day_names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+        day_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
         # Fill the grid (simplified - doesn't handle month boundaries perfectly)
         for day, commit_count in days_in_month.items():
@@ -182,38 +186,43 @@ class HeatmapFormatter(BaseFormatter):
                 heatmap_data[week_row, day_col] = commit_count
 
         # Create custom colormap
-        colors = ['#f7fbff', '#08306b']  # Light blue to dark blue
-        cmap = LinearSegmentedColormap.from_list('custom_blue', colors)
+        colors = ["#f7fbff", "#08306b"]  # Light blue to dark blue
+        cmap = LinearSegmentedColormap.from_list("custom_blue", colors)
 
         # Plot heatmap
-        im = ax.imshow(heatmap_data, cmap=cmap, aspect='auto')
+        im = ax.imshow(heatmap_data, cmap=cmap, aspect="auto")
 
         # Add colorbar
         cbar = plt.colorbar(im, ax=ax, shrink=0.8)
-        cbar.set_label('Commits')
+        cbar.set_label("Commits")
 
         # Set labels
-        ax.set_title(f'Commit Activity - {current_month}', fontsize=14)
+        ax.set_title(f"Commit Activity - {current_month}", fontsize=14)
         ax.set_xticks(range(7))
         ax.set_yticks(range(5))
         ax.set_xticklabels(day_names)
-        ax.set_yticklabels([f'Week {i+1}' for i in range(5)])
+        ax.set_yticklabels([f"Week {i + 1}" for i in range(5)])
 
         # Add commit counts as text
         for i in range(5):
             for j in range(7):
                 if heatmap_data[i, j] > 0:
-                    ax.text(j, i, int(heatmap_data[i, j]),
-                           ha='center', va='center',
-                           color='white' if heatmap_data[i, j] > max_commits * 0.6 else 'black',
-                           fontweight='bold')
+                    ax.text(
+                        j,
+                        i,
+                        int(heatmap_data[i, j]),
+                        ha="center",
+                        va="center",
+                        color="white" if heatmap_data[i, j] > max_commits * 0.6 else "black",
+                        fontweight="bold",
+                    )
 
     def _create_author_heatmap(self, stats: RangeStats) -> None:
         """Create a heatmap showing author activity by day of week."""
         if not MATPLOTLIB_AVAILABLE or not plt or not np or not LinearSegmentedColormap:
             return
 
-        if not hasattr(stats, 'author_activity_by_day') or not stats.author_activity_by_day:
+        if not hasattr(stats, "author_activity_by_day") or not stats.author_activity_by_day:
             return
 
         # Extract data
@@ -221,7 +230,7 @@ class HeatmapFormatter(BaseFormatter):
         if not authors:
             return
 
-        day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        day_names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
         author_data = []
 
         for author in authors:
@@ -240,18 +249,18 @@ class HeatmapFormatter(BaseFormatter):
         fig, ax = plt.subplots(figsize=(10, max(4, len(authors) * 0.5)))
 
         # Create custom colormap (green to red for activity levels)
-        colors = ['#f7fcf5', '#00441b']  # Light green to dark green
-        cmap = LinearSegmentedColormap.from_list('custom_green', colors)
+        colors = ["#f7fcf5", "#00441b"]  # Light green to dark green
+        cmap = LinearSegmentedColormap.from_list("custom_green", colors)
 
         # Plot heatmap
-        im = ax.imshow(heatmap_data, cmap=cmap, aspect='auto')
+        im = ax.imshow(heatmap_data, cmap=cmap, aspect="auto")
 
         # Add colorbar
         cbar = plt.colorbar(im, ax=ax, shrink=0.8)
-        cbar.set_label('Commits')
+        cbar.set_label("Commits")
 
         # Set labels
-        ax.set_title('Author Activity by Day of Week', fontsize=14, fontweight='bold')
+        ax.set_title("Author Activity by Day of Week", fontsize=14, fontweight="bold")
         ax.set_xticks(range(len(day_names)))
         ax.set_yticks(range(len(authors)))
         ax.set_xticklabels([day[:3] for day in day_names])  # Abbreviated day names
@@ -262,10 +271,15 @@ class HeatmapFormatter(BaseFormatter):
             for j in range(len(day_names)):
                 count = heatmap_data[i, j]
                 if count > 0:
-                    ax.text(j, i, count,
-                           ha='center', va='center',
-                           color='white' if count > max_activity * 0.6 else 'black',
-                           fontweight='bold')
+                    ax.text(
+                        j,
+                        i,
+                        count,
+                        ha="center",
+                        va="center",
+                        color="white" if count > max_activity * 0.6 else "black",
+                        fontweight="bold",
+                    )
 
         plt.tight_layout()
 
@@ -283,9 +297,9 @@ class HeatmapFormatter(BaseFormatter):
             else:
                 # Second figure (author heatmap)
                 filename = f"{output_path.rsplit('.', 1)[0]}_authors.png"
-            plt.savefig(filename, dpi=150, bbox_inches='tight')
+            plt.savefig(filename, dpi=150, bbox_inches="tight")
 
         if self.show_plot:
             plt.show()
         else:
-            plt.close('all')  # Close all figures to free memory</content>
+            plt.close("all")  # Close all figures to free memory</content>
