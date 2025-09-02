@@ -6,6 +6,7 @@ import sys
 
 from . import __version__
 from .core.analyzer import GitAnalyzer
+
 # Domain-specific date errors for clearer CLI messages
 from .core.date_errors import DateParseError, DateRangeError
 from .formatters.extended import ExtendedFormatter
@@ -155,7 +156,9 @@ def main() -> None:
         # Preserve domain-specific parse error messaging expected by tests
         error_msg = str(e)
         if "timezone" in error_msg.lower():
-            error_msg += "\nNote: All dates must be in UTC. Please convert local times to UTC before use."
+            error_msg += (
+                "\nNote: All dates must be in UTC. Please convert local times to UTC before use."
+            )
         try:
             print(f"Error: {error_msg}", file=sys.stderr)
         except UnicodeEncodeError:
