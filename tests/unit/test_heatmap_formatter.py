@@ -4,7 +4,7 @@ import pytest
 from datetime import datetime
 from unittest.mock import patch, MagicMock
 
-from beaconled.core.models import CommitStats, RangeStats, FileStats
+from beaconled.core.models import CommitStats, RangeStats
 from beaconled.formatters.heatmap import HeatmapFormatter
 
 
@@ -17,7 +17,7 @@ class TestHeatmapFormatter:
         commit_stats = CommitStats(
             hash="abc123",
             author="Test Author",
-            date=datetime.now(),
+            date=datetime.now().replace(tzinfo=None),
             message="Test commit",
             files_changed=1,
             lines_added=10,
@@ -38,7 +38,9 @@ class TestHeatmapFormatter:
         """Test formatting range stats with no commits."""
         formatter = HeatmapFormatter()
         range_stats = RangeStats(
-            start_date=datetime(2025, 1, 1), end_date=datetime(2025, 1, 31), total_commits=0
+            start_date=datetime(2025, 1, 1).replace(tzinfo=None).replace(tzinfo=None),
+            end_date=datetime(2025, 1, 31).replace(tzinfo=None).replace(tzinfo=None),
+            total_commits=0,
         )
 
         result = formatter.format_range_stats(range_stats)
@@ -63,7 +65,7 @@ class TestHeatmapFormatter:
         commit = CommitStats(
             hash="abc123",
             author="Test Author",
-            date=datetime(2025, 1, 15, 10, 0),
+            date=datetime(2025, 1, 15, 10, 0).replace(tzinfo=None),
             message="Test commit",
             files_changed=2,
             lines_added=20,
@@ -71,8 +73,8 @@ class TestHeatmapFormatter:
         )
 
         range_stats = RangeStats(
-            start_date=datetime(2025, 1, 1),
-            end_date=datetime(2025, 1, 31),
+            start_date=datetime(2025, 1, 1).replace(tzinfo=None).replace(tzinfo=None),
+            end_date=datetime(2025, 1, 31).replace(tzinfo=None).replace(tzinfo=None),
             total_commits=1,
             commits=[commit],
         )
@@ -98,7 +100,7 @@ class TestHeatmapFormatter:
         mock_ax2 = MagicMock()
         mock_plt.subplots.return_value = (mock_fig, (mock_ax1, mock_ax2))
 
-        range_stats = RangeStats(start_date=datetime(2025, 1, 1), end_date=datetime(2025, 1, 31))
+        range_stats = RangeStats(start_date=datetime(2025, 1, 1).replace(tzinfo=None).replace(tzinfo=None), end_date=datetime(2025, 1, 31).replace(tzinfo=None).replace(tzinfo=None))
         range_stats.commits_by_day = {"2025-01-15": 5, "2025-01-16": 3}
 
         formatter = HeatmapFormatter()
@@ -122,7 +124,7 @@ class TestHeatmapFormatter:
         mock_np.array.return_value = mock_array
         mock_np.max.return_value = 3
 
-        range_stats = RangeStats(start_date=datetime(2025, 1, 1), end_date=datetime(2025, 1, 31))
+        range_stats = RangeStats(start_date=datetime(2025, 1, 1).replace(tzinfo=None).replace(tzinfo=None), end_date=datetime(2025, 1, 31).replace(tzinfo=None).replace(tzinfo=None))
         range_stats.author_activity_by_day = {
             "Author 1": {"Monday": 1, "Tuesday": 2, "Wednesday": 3}
         }
