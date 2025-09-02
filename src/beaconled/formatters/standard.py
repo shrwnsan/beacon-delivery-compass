@@ -109,9 +109,7 @@ class StandardFormatter(BaseFormatter):
             f"{self._get_emoji('lines_added')} Total lines added: {stats.total_lines_added:,}",
             f"{self._get_emoji('lines_deleted')} Total lines deleted: {stats.total_lines_deleted:,}",
             f"{self._get_emoji('net_change')} Net change: "
-            + self._format_net_change(
-                stats.total_lines_added, stats.total_lines_deleted
-            ),
+            + self._format_net_change(stats.total_lines_added, stats.total_lines_deleted),
         ]
 
         # Team Overview Section
@@ -140,9 +138,7 @@ class StandardFormatter(BaseFormatter):
             )
 
             # Sort authors by commit count and take top 3
-            top_contributors = sorted(
-                stats.authors.items(), key=lambda x: x[1], reverse=True
-            )[:3]
+            top_contributors = sorted(stats.authors.items(), key=lambda x: x[1], reverse=True)[:3]
 
             for author, commit_count in top_contributors:
                 percentage = round((commit_count / stats.total_commits) * 100)
@@ -167,9 +163,9 @@ class StandardFormatter(BaseFormatter):
                     day_activity = stats.author_activity_by_day[author]
                     if day_activity:
                         # Get top 2 most active days
-                        top_days = sorted(
-                            day_activity.items(), key=lambda x: x[1], reverse=True
-                        )[:2]
+                        top_days = sorted(day_activity.items(), key=lambda x: x[1], reverse=True)[
+                            :2
+                        ]
                         most_active = ", ".join([day for day, _ in top_days])
                         output.append(f"  - Most Active: {most_active}")
 
@@ -189,13 +185,28 @@ class StandardFormatter(BaseFormatter):
                 stats.component_stats.items(),
                 key=lambda x: (x[1]["commits"], x[1]["lines"]),
                 reverse=True,
-            )[
-                :5
-            ]  # Top 5 components
+            )[:5]  # Top 5 components
 
             for component, component_stats in sorted_components:
                 commits = component_stats["commits"]
                 lines = component_stats["lines"]
                 output.append(f"  {component} {commits} commits, {lines:,} lines")
+
+        # Risk Indicators Section
+        risk_indicators = getattr(stats, "risk_indicators", {})
+        if risk_indicators:
+            output.extend(
+                [
+                    "",
+                    f"🚨 {Fore.YELLOW}=== RISK INDICATORS ==={Style.RESET_ALL}",
+                    f"Large Commits (>15 files): {risk_indicators.get('large_commits_count', 0)}",
+                    f"Recent Bug Fixes: {risk_indicators.get('recent_bug_fixes', 0)}",
+                    f"Last Minute Changes: {risk_indicators.get('last_minute_changes', 0)}",
+                    f"Commit Velocity: {risk_indicators.get('commit_velocity', 0.0)} commits/day",
+                    "",
+                    f"Readiness Score: {risk_indicators.get('readiness_score', 0)}/100",
+                    f"Recommendation: {risk_indicators.get('recommendation', 'N/A')}",
+                ]
+            )
 
         return "\n".join(output)
