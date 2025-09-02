@@ -65,9 +65,7 @@ def create_test_repo(path, num_commits, num_files, num_branches, num_tags):
         for file_num in range(1, num_files + 1):
             file_path = os.path.join(path, f"file_{file_num}.txt")
             with open(file_path, "a") as f:
-                f.write(
-                    f"Commit {commit_num} - {datetime.now(timezone.utc).isoformat()}\n"
-                )
+                f.write(f"Commit {commit_num} - {datetime.now(timezone.utc).isoformat()}\n")
                 f.write(generate_test_file())
 
             repo.index.add([file_path])
