@@ -27,7 +27,6 @@ test:
 lint:
 	ruff check .
 	black --check .
-	isort --check-only .
 
 # Run static type checking
 typecheck:
@@ -36,7 +35,6 @@ typecheck:
 # Format code
 format:
 	black .
-	isort .
 
 # Check for outdated dependencies
 check-deps:

@@ -7,14 +7,21 @@ insights for the enhanced extended format.
 
 from .collaboration_analyzer import CollaborationAnalyzer, CollaborationConfig
 from .models import (
+    ActivityHeatmap,
+    BusFactor,
     CoAuthorshipMetrics,
     CollaborationMetrics,
     CollaborationPatterns,
     KnowledgeDistribution,
     ReviewMetrics,
+    TimeAnalytics,
+    VelocityTrends,
 )
+from .time_analyzer import TimeAnalyzer, TimeAnalyzerConfig
 
 __all__ = [
+    "ActivityHeatmap",
+    "BusFactor",
     "CoAuthorshipMetrics",
     "CollaborationAnalyzer",
     "CollaborationConfig",
@@ -22,4 +29,8 @@ __all__ = [
     "CollaborationPatterns",
     "KnowledgeDistribution",
     "ReviewMetrics",
+    "TimeAnalytics",
+    "TimeAnalyzer",
+    "TimeAnalyzerConfig",
+    "VelocityTrends",
 ]
