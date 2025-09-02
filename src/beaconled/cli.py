@@ -12,6 +12,8 @@ from .core.date_errors import DateParseError, DateRangeError
 from .formatters.ascii_chart import ASCIIChartFormatter
 from .formatters.extended import ExtendedFormatter
 from .formatters.json_format import JSONFormatter
+from .formatters.rich_formatter import RichFormatter
+from .formatters.chart import ChartFormatter
 from .formatters.standard import StandardFormatter
 
 
@@ -58,7 +60,7 @@ def main() -> None:
     parser.add_argument(
         "-f",
         "--format",
-        choices=["standard", "extended", "json", "ascii"],
+        choices=["standard", "extended", "json", "ascii", "rich", "chart"],
         default="standard",
         help="Output format (default: standard)",
     )
@@ -106,6 +108,11 @@ def main() -> None:
         action="store_true",
         help="Disable emoji icons in output",
     )
+    parser.add_argument(
+        "--chart-output",
+        default="beacon-charts.png",
+        help="Output path for chart files (default: beacon-charts.png)",
+    )
 
     args = parser.parse_args()
 
@@ -131,6 +138,15 @@ def main() -> None:
                 output = extended_formatter.format_range_stats(range_stats)
             elif args.format == "ascii":
                 ascii_formatter = ASCIIChartFormatter()
+            elif args.format == "rich":
+                rich_formatter = RichFormatter()
+            elif args.format == "chart":
+                chart_formatter = ChartFormatter(
+                    output_path=getattr(args, "chart_output", "beacon-charts.png"),
+                    no_emoji=args.no_emoji,
+                )
+                output = chart_formatter.format_range_stats(range_stats)
+                output = rich_formatter.format_range_stats(range_stats)
                 output = ascii_formatter.format_range_stats(range_stats)
             else:  # standard
                 standard_formatter = StandardFormatter(no_emoji=args.no_emoji)
@@ -141,9 +157,18 @@ def main() -> None:
 
             if args.format == "json":
                 json_formatter = JSONFormatter()
+            elif args.format == "chart":
+                chart_formatter = ChartFormatter(
+                    output_path=getattr(args, "chart_output", "beacon-charts.png"),
+                    no_emoji=args.no_emoji,
+                )
+                output = chart_formatter.format_commit_stats(commit_stats)
                 output = json_formatter.format_commit_stats(commit_stats)
             elif args.format == "extended":
                 extended_formatter = ExtendedFormatter()
+            elif args.format == "rich":
+                rich_formatter = RichFormatter()
+                output = rich_formatter.format_commit_stats(commit_stats)
                 output = extended_formatter.format_commit_stats(commit_stats)
             elif args.format == "ascii":
                 ascii_formatter = ASCIIChartFormatter()
