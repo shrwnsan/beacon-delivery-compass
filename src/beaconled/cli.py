@@ -12,6 +12,7 @@ from .core.date_errors import DateParseError, DateRangeError
 from .formatters.ascii_chart import ASCIIChartFormatter
 from .formatters.chart import ChartFormatter
 from .formatters.extended import ExtendedFormatter
+from .formatters.heatmap import HeatmapFormatter
 from .formatters.json_format import JSONFormatter
 from .formatters.rich_formatter import RichFormatter
 from .formatters.standard import StandardFormatter
@@ -43,7 +44,9 @@ def main() -> None:
             "  # Output in ASCII chart format\n"
             "  beaconled --format ascii\n\n"
             "  # Output in chart format\n"
-            "  beaconled --since 1w --format chart"
+            "  beaconled --since 1w --format chart\n\n"
+            "  # Generate visual heatmaps of commit activity (requires matplotlib)\n"
+            "  beaconled --since 1w --format heatmap"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -62,9 +65,9 @@ def main() -> None:
     parser.add_argument(
         "-f",
         "--format",
-        choices=["standard", "extended", "json", "ascii", "rich", "chart"],
+        choices=["standard", "extended", "json", "ascii", "rich", "chart", "heatmap"],
         default="standard",
-        help="Output format (default: standard)",
+        help="Output format (default: standard). Use 'heatmap' for visual analytics (requires matplotlib)",
     )
     parser.add_argument(
         "--since",
@@ -150,6 +153,9 @@ def main() -> None:
                     no_emoji=args.no_emoji,
                 )
                 output = chart_formatter.format_range_stats(range_stats)
+            elif args.format == "heatmap":
+                heatmap_formatter = HeatmapFormatter()
+                output = heatmap_formatter.format_range_stats(range_stats)
             else:  # standard
                 standard_formatter = StandardFormatter(no_emoji=args.no_emoji)
                 output = standard_formatter.format_range_stats(range_stats)
@@ -175,6 +181,9 @@ def main() -> None:
                     no_emoji=args.no_emoji,
                 )
                 output = chart_formatter.format_commit_stats(commit_stats)
+            elif args.format == "heatmap":
+                heatmap_formatter = HeatmapFormatter()
+                output = heatmap_formatter.format_commit_stats(commit_stats)
             else:  # standard
                 standard_formatter = StandardFormatter(no_emoji=args.no_emoji)
                 output = standard_formatter.format_commit_stats(commit_stats)
