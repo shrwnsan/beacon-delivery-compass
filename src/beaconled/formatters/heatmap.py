@@ -150,7 +150,10 @@ class HeatmapFormatter(BaseFormatter):
         plt.tight_layout()
 
     def _create_calendar_heatmap(
-        self, ax, dates: list[date_type], commits: list[int]  # type: ignore
+        self,
+        ax,
+        dates: list[date_type],
+        commits: list[int],  # type: ignore
     ) -> None:
         """Create a simplified calendar heatmap."""
         if not MATPLOTLIB_AVAILABLE or not plt or not np or not LinearSegmentedColormap:
