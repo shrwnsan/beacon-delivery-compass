@@ -46,6 +46,9 @@ beaconled --since "2025-01-01" --until "2025-01-31"
 
 # Team performance report for the last 2 weeks
 beaconled --since "2w" --format extended
+
+# Generate visual heatmaps of commit activity (requires matplotlib)
+beaconled --since "1w" --format heatmap
 ```
 
 #### Date Formats
@@ -156,7 +159,8 @@ Most Changed Components:
 - **Team Health Monitoring**: Data-driven team management with contribution analysis and workload distribution
 - **Product Delivery Analytics**: Comprehensive insights into development patterns, release readiness, and technical health
 - **Multi-Stakeholder Value**: One platform serving executives, engineering managers, and technical leads
-- **Flexible Output Formats**: Choose from standard, extended, and JSON formats to fit your workflow needs
+- **Flexible Output Formats**: Choose from standard, extended, JSON, and heatmap formats to fit your workflow needs
+- **Visual Analytics**: Generate interactive heatmaps showing commit patterns and author activity over time
 - **Reliable Git Integration**: Built on GitPython for robust and secure repository operations
 - **Rich Terminal Output**: Colorized and well-formatted output powered by `rich`
 
