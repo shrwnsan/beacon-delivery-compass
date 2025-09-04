@@ -112,9 +112,7 @@ class TestJSONFormatter:
         data = json.loads(result)
 
         # Check the output
-        assert (
-            data["start_date"] == "2023-01-01T00:00:00+00:00"
-        )  # Now includes timezone
+        assert data["start_date"] == "2023-01-01T00:00:00+00:00"  # Now includes timezone
         assert data["end_date"] == "2023-02-01T00:00:00+00:00"  # Now includes timezone
         assert data["total_commits"] == 2
         assert data["total_files_changed"] == 3
