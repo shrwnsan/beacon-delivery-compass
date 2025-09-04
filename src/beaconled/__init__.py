@@ -3,9 +3,14 @@
 from .core.analyzer import GitAnalyzer
 from .core.date_errors import DateParseError, DateRangeError
 from .core.models import CommitStats, RangeStats
-from .exceptions import (BeaconError, CommitError, ConfigurationError,
-                         InvalidRepositoryError, RepositoryError,
-                         ValidationError)
+from .exceptions import (
+    BeaconError,
+    CommitError,
+    ConfigurationError,
+    InvalidRepositoryError,
+    RepositoryError,
+    ValidationError,
+)
 
 __version__ = "0.3.0"
 __author__ = "Your Name"
