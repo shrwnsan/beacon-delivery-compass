@@ -83,9 +83,7 @@ class TestGitAnalyzerDates(unittest.TestCase):
         mock_datetime.now.return_value = mock_now
 
         # Mock DateUtils to raise an exception
-        with patch(
-            "beaconled.utils.date_utils.DateUtils._parse_git_date"
-        ) as mock_parse:
+        with patch("beaconled.utils.date_utils.DateUtils._parse_git_date") as mock_parse:
             mock_parse.side_effect = DateParseError("invalid-date", "Invalid date")
 
             # Should return current time on error
@@ -124,12 +122,8 @@ class TestGitAnalyzerDates(unittest.TestCase):
         self.assertTrue(
             self.analyzer._is_valid_date_string("2025-01-15 23:59")
         )  # Without seconds (supported)
-        self.assertFalse(
-            self.analyzer._is_valid_date_string("2025-01-15 24:00")
-        )  # Invalid hour
-        self.assertFalse(
-            self.analyzer._is_valid_date_string("2025-01-15 23:60")
-        )  # Invalid minute
+        self.assertFalse(self.analyzer._is_valid_date_string("2025-01-15 24:00"))  # Invalid hour
+        self.assertFalse(self.analyzer._is_valid_date_string("2025-01-15 23:60"))  # Invalid minute
 
         # Special cases
         self.assertTrue(self.analyzer._is_valid_date_string("HEAD"))
@@ -181,25 +175,17 @@ class TestGitAnalyzerDates(unittest.TestCase):
             ),  # With seconds (not supported)
         )
         self.assertFalse(
-            self.analyzer._is_valid_date_string(
-                "2025-01-15T14:30"
-            ),  # T separator (not supported)
+            self.analyzer._is_valid_date_string("2025-01-15T14:30"),  # T separator (not supported)
         )
         # Invalid concise formats
         self.assertFalse(self.analyzer._is_valid_date_string("1x"))  # Invalid unit
-        self.assertFalse(
-            self.analyzer._is_valid_date_string("1.5d")
-        )  # Non-integer value
+        self.assertFalse(self.analyzer._is_valid_date_string("1.5d"))  # Non-integer value
         self.assertFalse(self.analyzer._is_valid_date_string("d"))  # Missing number
         self.assertFalse(self.analyzer._is_valid_date_string("1"))  # Missing unit
-        self.assertFalse(
-            self.analyzer._is_valid_date_string("1d2")
-        )  # No unit for second part
+        self.assertFalse(self.analyzer._is_valid_date_string("1d2"))  # No unit for second part
 
         # Other invalid formats
-        self.assertFalse(
-            self.analyzer._is_valid_date_string("HEAD2")
-        )  # Invalid HEAD reference
+        self.assertFalse(self.analyzer._is_valid_date_string("HEAD2"))  # Invalid HEAD reference
         self.assertFalse(self.analyzer._is_valid_date_string(""))  # Empty string
         self.assertFalse(self.analyzer._is_valid_date_string(" "))  # Whitespace
 

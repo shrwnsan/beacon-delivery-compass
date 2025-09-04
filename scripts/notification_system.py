@@ -146,9 +146,7 @@ class NotificationSystem:
         )
 
         if self.config["email"]["enabled"]:
-            self._send_email_report(
-                report, recipients, "Weekly Product Development Report"
-            )
+            self._send_email_report(report, recipients, "Weekly Product Development Report")
 
         if self.config["slack"]["enabled"]:
             self._send_slack_report(report)
@@ -196,9 +194,7 @@ Review the attached insights and schedule follow-up discussions as needed.
             "text": message,
             "channel": channel,
             "username": "Product Insights Bot",
-            "icon_emoji": (
-                ":warning:" if severity == "critical" else ":information_source:"
-            ),
+            "icon_emoji": (":warning:" if severity == "critical" else ":information_source:"),
         }
 
         try:
@@ -217,9 +213,7 @@ Review the attached insights and schedule follow-up discussions as needed.
         subject = f"Product Development Alert - {severity.upper()}"
         self._send_email(recipients, subject, message)
 
-    def _send_email_report(
-        self, report: str, recipients: List[str], subject: str
-    ) -> None:
+    def _send_email_report(self, report: str, recipients: List[str], subject: str) -> None:
         """Send email report."""
         self._send_email(recipients, subject, report)
 
@@ -230,9 +224,7 @@ Review the attached insights and schedule follow-up discussions as needed.
 
         try:
             # Validate recipients
-            if not recipients or not all(
-                isinstance(r, str) and "@" in r for r in recipients
-            ):
+            if not recipients or not all(isinstance(r, str) and "@" in r for r in recipients):
                 msg = "Invalid email recipients"
                 raise ValueError(msg)
 
@@ -249,9 +241,7 @@ Review the attached insights and schedule follow-up discussions as needed.
                 timeout=30,  # Add timeout to prevent hanging
             )
             server.starttls()
-            server.login(
-                self.config["email"]["username"], self.config["email"]["password"]
-            )
+            server.login(self.config["email"]["username"], self.config["email"]["password"])
 
             server.send_message(msg)
             server.quit()
@@ -335,10 +325,7 @@ class ActionTrigger:
 
         # Check customer focus
         customer_index = float(metrics.get("customer_driven_index", "0").split("%")[0])
-        if (
-            customer_index
-            < self.config["thresholds"]["customer_driven_index"]["critical"]
-        ):
+        if customer_index < self.config["thresholds"]["customer_driven_index"]["critical"]:
             triggers.append(
                 {
                     "trigger": "low_customer_focus",

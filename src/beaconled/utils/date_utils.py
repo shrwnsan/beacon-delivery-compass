@@ -81,8 +81,9 @@ class DateUtils:
         try:
             dt = datetime.strptime(date_str, "%Y%m%d").replace(tzinfo=timezone.utc)
             if not (cls.YEAR_MIN <= dt.year <= cls.YEAR_MAX):
-                msg = f"Year {dt.year} is outside the supported range "
-                f"({cls.YEAR_MIN}-{cls.YEAR_MAX})"
+                msg = (
+                    f"Year {dt.year} is outside the supported range ({cls.YEAR_MIN}-{cls.YEAR_MAX})"
+                )
                 raise ValidationError(
                     msg,
                     field="date",
@@ -208,8 +209,9 @@ class DateUtils:
         try:
             dt = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
             if not (cls.YEAR_MIN <= dt.year <= cls.YEAR_MAX):
-                year_range = f"({cls.YEAR_MIN}-{cls.YEAR_MAX})"
-                msg = f"Year {dt.year} is outside the supported range {year_range}"
+                msg = (
+                    f"Year {dt.year} is outside the supported range ({cls.YEAR_MIN}-{cls.YEAR_MAX})"
+                )
                 raise ValidationError(
                     msg,
                     field="date",
@@ -252,8 +254,9 @@ class DateUtils:
 
             # Validate year range
             if dt.year < cls.YEAR_MIN or dt.year > cls.YEAR_MAX:
-                year_range = f"({cls.YEAR_MIN}-{cls.YEAR_MAX})"
-                msg = f"Year {dt.year} is outside the supported range {year_range}"
+                msg = (
+                    f"Year {dt.year} is outside the supported range ({cls.YEAR_MIN}-{cls.YEAR_MAX})"
+                )
                 raise ValidationError(
                     msg,
                     field="datetime",
