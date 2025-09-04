@@ -10,6 +10,7 @@ from .core.analyzer import GitAnalyzer
 # Domain-specific date errors for clearer CLI messages
 from .core.date_errors import DateParseError, DateRangeError
 from .formatters.extended import ExtendedFormatter
+from .formatters.heatmap import HeatmapFormatter
 from .formatters.json_format import JSONFormatter
 from .formatters.standard import StandardFormatter
 
@@ -55,9 +56,9 @@ def main() -> None:
     parser.add_argument(
         "-f",
         "--format",
-        choices=["standard", "extended", "json"],
+        choices=["standard", "extended", "json", "heatmap"],
         default="standard",
-        help="Output format (default: standard)",
+        help="Output format (default: standard). Use 'heatmap' for visual analytics (requires matplotlib)",
     )
     parser.add_argument(
         "--since",
@@ -126,6 +127,9 @@ def main() -> None:
             elif args.format == "extended":
                 extended_formatter = ExtendedFormatter()
                 output = extended_formatter.format_range_stats(range_stats)
+            elif args.format == "heatmap":
+                heatmap_formatter = HeatmapFormatter()
+                output = heatmap_formatter.format_range_stats(range_stats)
             else:  # standard
                 standard_formatter = StandardFormatter(no_emoji=args.no_emoji)
                 output = standard_formatter.format_range_stats(range_stats)
@@ -139,6 +143,9 @@ def main() -> None:
             elif args.format == "extended":
                 extended_formatter = ExtendedFormatter()
                 output = extended_formatter.format_commit_stats(commit_stats)
+            elif args.format == "heatmap":
+                heatmap_formatter = HeatmapFormatter()
+                output = heatmap_formatter.format_commit_stats(commit_stats)
             else:  # standard
                 standard_formatter = StandardFormatter(no_emoji=args.no_emoji)
                 output = standard_formatter.format_commit_stats(commit_stats)
