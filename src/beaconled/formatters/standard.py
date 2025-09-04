@@ -69,16 +69,24 @@ class StandardFormatter(BaseFormatter):
         output = [
             f"{self._get_emoji('commit')} {Fore.CYAN}Commit:{Style.RESET_ALL} {stats.hash[:8]}",
             f"{self._get_emoji('author')} {Fore.CYAN}Author:{Style.RESET_ALL} {stats.author}",
-            f"{self._get_emoji('date')} {Fore.CYAN}Date:{Style.RESET_ALL} "
-            f"{self._format_date(stats.date)}",
+            (
+                f"{self._get_emoji('date')} {Fore.CYAN}Date:{Style.RESET_ALL} "
+                f"{self._format_date(stats.date)}"
+            ),
             f"{self._get_emoji('message')} {Fore.CYAN}Message:{Style.RESET_ALL} {stats.message}",
             "",
-            f"{self._get_emoji('files')} {Fore.YELLOW}Files changed:{Style.RESET_ALL} "
-            f"{stats.files_changed:,}",
-            f"{self._get_emoji('added')} {Fore.GREEN}Lines added:{Style.RESET_ALL} "
-            f"{stats.lines_added:,}",
-            f"{self._get_emoji('deleted')} {Fore.RED}Lines deleted:{Style.RESET_ALL} "
-            f"{stats.lines_deleted:,}",
+            (
+                f"{self._get_emoji('files')} {Fore.YELLOW}Files changed:{Style.RESET_ALL} "
+                f"{stats.files_changed:,}"
+            ),
+            (
+                f"{self._get_emoji('added')} {Fore.GREEN}Lines added:{Style.RESET_ALL} "
+                f"{stats.lines_added:,}"
+            ),
+            (
+                f"{self._get_emoji('deleted')} {Fore.RED}Lines deleted:{Style.RESET_ALL} "
+                f"{stats.lines_deleted:,}"
+            ),
             f"{self._get_emoji('net')} {Fore.YELLOW}Net change:{Style.RESET_ALL} {net_change_str}",
         ]
 
@@ -109,11 +117,15 @@ class StandardFormatter(BaseFormatter):
             "",
             # Total statistics with comma formatting
             f"{self._get_emoji('commits')} Total commits: {stats.total_commits:,}",
-            f"{self._get_emoji('files_changed')} Total files changed: "
-            f"{stats.total_files_changed:,}",
-            f"{self._get_emoji('lines_added')} Total lines added: {stats.total_lines_added:,}",
-            f"{self._get_emoji('lines_deleted')} Total lines deleted: "
-            f"{stats.total_lines_deleted:,}",
+            (
+                f"{self._get_emoji('files_changed')} Total files changed: "
+                f"{stats.total_files_changed:,}"
+            ),
+            (f"{self._get_emoji('lines_added')} Total lines added: {stats.total_lines_added:,}"),
+            (
+                f"{self._get_emoji('lines_deleted')} Total lines deleted: "
+                f"{stats.total_lines_deleted:,}"
+            ),
             f"{self._get_emoji('net_change')} Net change: "
             + self._format_net_change(stats.total_lines_added, stats.total_lines_deleted),
         ]
@@ -126,8 +138,10 @@ class StandardFormatter(BaseFormatter):
             output.extend(
                 [
                     "",
-                    f"{self._get_emoji('overview')} {Fore.YELLOW}=== TEAM OVERVIEW ==="
-                    f"{Style.RESET_ALL}",
+                    (
+                        f"{self._get_emoji('overview')} {Fore.YELLOW}"
+                        f"=== TEAM OVERVIEW ==={Style.RESET_ALL}"
+                    ),
                     f"{self._get_emoji('contributors')} Total Contributors: {len(stats.authors)}",
                     f"Total Commits: {stats.total_commits}",
                     f"Average Commits/Day: {avg_commits_per_day}",
@@ -140,8 +154,10 @@ class StandardFormatter(BaseFormatter):
             output.extend(
                 [
                     "",
-                    f"{self._get_emoji('breakdown')} {Fore.YELLOW}=== CONTRIBUTOR BREAKDOWN ==="
-                    f"{Style.RESET_ALL}",
+                    (
+                        f"{self._get_emoji('breakdown')} {Fore.YELLOW}"
+                        f"=== CONTRIBUTOR BREAKDOWN ==={Style.RESET_ALL}"
+                    ),
                 ]
             )
 
@@ -183,8 +199,10 @@ class StandardFormatter(BaseFormatter):
         if hasattr(stats, "component_stats") and stats.component_stats:
             output.extend(
                 [
-                    f"{self._get_emoji('activity')} {Fore.YELLOW}=== COMPONENT ACTIVITY ==="
-                    f"{Style.RESET_ALL}",
+                    (
+                        f"{self._get_emoji('activity')} {Fore.YELLOW}"
+                        f"=== COMPONENT ACTIVITY ==={Style.RESET_ALL}"
+                    ),
                     "Most Changed Components:",
                 ]
             )
@@ -200,22 +218,5 @@ class StandardFormatter(BaseFormatter):
                 commits = component_stats["commits"]
                 lines = component_stats["lines"]
                 output.append(f"  {component} {commits} commits, {lines:,} lines")
-
-        # Risk Indicators Section
-        risk_indicators = getattr(stats, "risk_indicators", {})
-        if risk_indicators:
-            output.extend(
-                [
-                    "",
-                    f"🚨 {Fore.YELLOW}=== RISK INDICATORS ==={Style.RESET_ALL}",
-                    f"Large Commits (>15 files): {risk_indicators.get('large_commits_count', 0)}",
-                    f"Recent Bug Fixes: {risk_indicators.get('recent_bug_fixes', 0)}",
-                    f"Last Minute Changes: {risk_indicators.get('last_minute_changes', 0)}",
-                    f"Commit Velocity: {risk_indicators.get('commit_velocity', 0.0)} commits/day",
-                    "",
-                    f"Readiness Score: {risk_indicators.get('readiness_score', 0)}/100",
-                    f"Recommendation: {risk_indicators.get('recommendation', 'N/A')}",
-                ]
-            )
 
         return "\n".join(output)

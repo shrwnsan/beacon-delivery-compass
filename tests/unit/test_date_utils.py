@@ -62,11 +62,9 @@ class TestDateParser(unittest.TestCase):
                         **kw,
                         tzinfo=timezone.utc,
                     )
-                    mock_datetime.fromtimestamp.side_effect = (
-                        lambda ts, tz: datetime.fromtimestamp(
-                            ts,
-                            tz,
-                        )
+                    mock_datetime.fromtimestamp.side_effect = lambda ts, tz: datetime.fromtimestamp(
+                        ts,
+                        tz,
                     )
 
                     # Call the method under test
@@ -130,9 +128,7 @@ class TestDateParser(unittest.TestCase):
     def test_validate_date_range_invalid(self) -> None:
         """Test validation of invalid date ranges."""
         with self.assertRaises(ValueError):
-            DateParser.validate_date_range(
-                "2025-12-31", "2025-01-01"
-            )  # End before start
+            DateParser.validate_date_range("2025-12-31", "2025-01-01")  # End before start
 
     def test_is_valid_commit_hash(self) -> None:
         """Test validation of commit hashes."""

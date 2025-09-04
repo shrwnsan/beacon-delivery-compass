@@ -139,7 +139,7 @@ def main() -> None:
                 json_formatter = JSONFormatter()
                 output = json_formatter.format_range_stats(range_stats)
             elif args.format == "extended":
-                extended_formatter = ExtendedFormatter()
+                extended_formatter = ExtendedFormatter(no_emoji=args.no_emoji)
                 output = extended_formatter.format_range_stats(range_stats)
             elif args.format == "ascii":
                 ascii_formatter = ASCIIChartFormatter()
@@ -167,7 +167,7 @@ def main() -> None:
                 json_formatter = JSONFormatter()
                 output = json_formatter.format_commit_stats(commit_stats)
             elif args.format == "extended":
-                extended_formatter = ExtendedFormatter()
+                extended_formatter = ExtendedFormatter(no_emoji=args.no_emoji)
                 output = extended_formatter.format_commit_stats(commit_stats)
             elif args.format == "ascii":
                 ascii_formatter = ASCIIChartFormatter()

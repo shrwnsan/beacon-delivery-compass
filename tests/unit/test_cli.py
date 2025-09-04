@@ -76,18 +76,14 @@ class TestCLI(unittest.TestCase):
         mock_analyzer.return_value.get_range_analytics.return_value = mock_stats
 
         # Mock the formatter to return a simple string
-        mock_formatter.return_value.format_range_stats.return_value = (
-            "Mocked range stats output"
-        )
+        mock_formatter.return_value.format_range_stats.return_value = "Mocked range stats output"
 
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
             main()
             output = mock_stdout.getvalue()
             self.assertEqual(output, "Mocked range stats output\n")
             # Verify that get_range_analytics was called with "1w" and "now"
-            mock_analyzer.return_value.get_range_analytics.assert_called_once_with(
-                "1w", "now"
-            )
+            mock_analyzer.return_value.get_range_analytics.assert_called_once_with("1w", "now")
 
     @patch("beaconled.cli.ExtendedFormatter")
     @patch("beaconled.cli.GitAnalyzer")
@@ -108,9 +104,7 @@ class TestCLI(unittest.TestCase):
         mock_analyzer.return_value.get_commit_stats.return_value = mock_commit
 
         # Mock the formatter to return a simple string
-        mock_formatter.return_value.format_commit_stats.return_value = (
-            "Mocked extended output"
-        )
+        mock_formatter.return_value.format_commit_stats.return_value = "Mocked extended output"
 
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
             main()
@@ -184,9 +178,7 @@ class TestCLI(unittest.TestCase):
 
         # Mock the analyzer to return our test data
         mock_analyzer.return_value.get_commit_stats.return_value = mock_commit
-        mock_formatter.return_value.format_commit_stats.return_value = (
-            "Formatted output"
-        )
+        mock_formatter.return_value.format_commit_stats.return_value = "Formatted output"
 
         with patch("sys.stdout", new_callable=StringIO):
             main()
@@ -246,9 +238,7 @@ class TestCLI(unittest.TestCase):
 
         # Set up mocks
         mock_analyzer.return_value.get_range_analytics.return_value = mock_stats
-        mock_formatter.return_value.format_range_stats.return_value = (
-            "Range stats output"
-        )
+        mock_formatter.return_value.format_range_stats.return_value = "Range stats output"
 
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
             main()
@@ -330,9 +320,7 @@ class TestCLI(unittest.TestCase):
 
         # Set up mocks
         mock_analyzer.return_value.get_commit_stats.return_value = mock_commit
-        mock_formatter.return_value.format_commit_stats.return_value = (
-            "Formatted output"
-        )
+        mock_formatter.return_value.format_commit_stats.return_value = "Formatted output"
 
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
             main()
@@ -367,9 +355,7 @@ class TestCLI(unittest.TestCase):
 
         # Mock the StandardFormatter
         with patch("beaconled.cli.StandardFormatter") as mock_formatter:
-            mock_formatter.return_value.format_commit_stats.return_value = (
-                "Formatted output"
-            )
+            mock_formatter.return_value.format_commit_stats.return_value = "Formatted output"
             with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
                 main()
                 self.assertEqual(mock_stdout.getvalue().strip(), "Formatted output")
@@ -440,9 +426,7 @@ class TestCLI(unittest.TestCase):
             main()
         self.assertEqual(cm.exception.code, 2)
         self.assertIn("usage:", sys.stderr.getvalue())
-        self.assertIn(
-            "error: --until cannot be used without --since", sys.stderr.getvalue()
-        )
+        self.assertIn("error: --until cannot be used without --since", sys.stderr.getvalue())
 
 
 if __name__ == "__main__":
