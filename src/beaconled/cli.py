@@ -66,16 +66,7 @@ def main() -> None:
     parser.add_argument(
         "-f",
         "--format",
-        choices=[
-            "standard",
-            "extended",
-            "json",
-            "ascii",
-            "rich",
-            "chart",
-            "heatmap",
-            "enhanced-extended",
-        ],
+        choices=["standard", "extended", "json", "ascii", "rich", "chart", "heatmap", "enhanced-extended"],
         default="standard",
         help="Output format (default: standard). Use 'heatmap' for visual analytics (requires matplotlib)",
     )
@@ -165,7 +156,7 @@ def main() -> None:
                 output = chart_formatter.format_range_stats(range_stats)
             elif args.format == "enhanced-extended":
                 enhanced_system = EnhancedExtendedSystem()
-                if args.no_emoji:\n                    enhanced_system.extended_formatter = ExtendedFormatter(no_emoji=True)  # type: ignore\n                else:\n                    enhanced_system.extended_formatter = RichFormatter()  # type: ignore
+                if args.no_emoji:
                     enhanced_system.extended_formatter = ExtendedFormatter(no_emoji=True)
                 else:
                     enhanced_system.extended_formatter = RichFormatter()
@@ -200,11 +191,11 @@ def main() -> None:
                 output = chart_formatter.format_commit_stats(commit_stats)
             elif args.format == "enhanced-extended":
                 enhanced_system = EnhancedExtendedSystem()
-                if args.no_emoji:\n                    enhanced_system.extended_formatter = ExtendedFormatter(no_emoji=True)  # type: ignore\n                else:\n                    enhanced_system.extended_formatter = RichFormatter()  # type: ignore
+                if args.no_emoji:
                     enhanced_system.extended_formatter = ExtendedFormatter(no_emoji=True)
                 else:
                     enhanced_system.extended_formatter = RichFormatter()
-                output = enhanced_system.extended_formatter.format_commit_stats(commit_stats)  # type: ignore
+                output = enhanced_system.extended_formatter.format_commit_stats(commit_stats)
             elif args.format == "heatmap":
                 heatmap_formatter = HeatmapFormatter()
                 output = heatmap_formatter.format_commit_stats(commit_stats)
