@@ -131,24 +131,24 @@ def truncate_label(label: str, max_length: int) -> str:
 ## Acceptance Criteria
 
 ### Functional Requirements
-- [ ] Render horizontal bar charts with proper scaling
-- [ ] Generate simple line charts for trend data
-- [ ] Create distribution charts for data analysis
-- [ ] Handle empty datasets gracefully
-- [ ] Support custom chart dimensions
+- [x] Render horizontal bar charts with proper scaling
+- [x] Generate simple line charts for trend data
+- [x] Create distribution charts for data analysis
+- [x] Handle empty datasets gracefully
+- [x] Support custom chart dimensions
 
 ### Technical Requirements
-- [ ] 90%+ test coverage
-- [ ] Type hints for all public interfaces
-- [ ] Docstrings with usage examples
-- [ ] Performance: < 100ms for typical datasets
-- [ ] Memory efficient rendering
+- [x] 90%+ test coverage
+- [x] Type hints for all public interfaces
+- [x] Docstrings with usage examples
+- [x] Performance: < 100ms for typical datasets
+- [x] Memory efficient rendering
 
 ### Visual Requirements
-- [ ] Charts render correctly in 80-character terminals
-- [ ] Proper alignment and spacing
-- [ ] Clear labels and legends
-- [ ] Consistent visual style across chart types
+- [x] Charts render correctly in 80-character terminals
+- [x] Proper alignment and spacing
+- [x] Clear labels and legends
+- [x] Consistent visual style across chart types
 
 ## Estimated Timeline
 
