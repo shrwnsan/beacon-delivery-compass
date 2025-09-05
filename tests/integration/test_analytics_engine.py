@@ -4,8 +4,7 @@ These tests verify that all components integrate correctly and produce
 expected output for the enhanced extended format.
 """
 
-import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from beaconled.analytics import AnalyticsEngine, EnhancedExtendedSystem
 from beaconled.core.models import CommitStats, RangeStats
@@ -23,9 +22,9 @@ class TestAnalyticsEngine:
     def test_analyze_with_simple_data(self):
         """Test analytics engine with simple test data."""
         # Create simple test data
-        start_date = datetime.now() - timedelta(days=7)
-        end_date = datetime.now()
-        
+        start_date = datetime.now(timezone.utc) - timedelta(days=7)
+        end_date = datetime.now(timezone.utc)
+
         commit1 = CommitStats(
             hash="a" * 40,
             author="Alice <alice@example.com>",
@@ -35,7 +34,7 @@ class TestAnalyticsEngine:
             lines_added=10,
             lines_deleted=0,
         )
-        
+
         commit2 = CommitStats(
             hash="b" * 40,
             author="Bob <bob@example.com>",
@@ -45,7 +44,7 @@ class TestAnalyticsEngine:
             lines_added=20,
             lines_deleted=5,
         )
-        
+
         range_stats = RangeStats(
             start_date=start_date,
             end_date=end_date,
@@ -54,13 +53,13 @@ class TestAnalyticsEngine:
             total_lines_added=30,
             total_lines_deleted=5,
             commits=[commit1, commit2],
-            authors={"Alice": 1, "Bob": 1}
+            authors={"Alice": 1, "Bob": 1},
         )
-        
+
         # Test the analytics engine
         engine = AnalyticsEngine()
         result = engine.analyze(range_stats)
-        
+
         # Verify we get expected structure
         assert "time" in result
         assert "collaboration" in result
@@ -82,9 +81,9 @@ class TestEnhancedExtendedSystem:
     def test_analyze_and_format_with_simple_data(self):
         """Test the complete analysis and formatting pipeline."""
         # Create simple test data
-        start_date = datetime.now() - timedelta(days=7)
-        end_date = datetime.now()
-        
+        start_date = datetime.now(timezone.utc) - timedelta(days=7)
+        end_date = datetime.now(timezone.utc)
+
         commit1 = CommitStats(
             hash="a" * 40,
             author="Alice <alice@example.com>",
@@ -94,7 +93,7 @@ class TestEnhancedExtendedSystem:
             lines_added=10,
             lines_deleted=0,
         )
-        
+
         range_stats = RangeStats(
             start_date=start_date,
             end_date=end_date,
@@ -103,13 +102,13 @@ class TestEnhancedExtendedSystem:
             total_lines_added=10,
             total_lines_deleted=0,
             commits=[commit1],
-            authors={"Alice": 1}
+            authors={"Alice": 1},
         )
-        
+
         # Test the system
         system = EnhancedExtendedSystem()
         result = system.analyze_and_format(range_stats)
-        
+
         # Verify we get a string result
         assert isinstance(result, str)
         assert len(result) > 0
