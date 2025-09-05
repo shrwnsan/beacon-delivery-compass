@@ -99,13 +99,13 @@ The system is designed to use less than 200MB of memory for repositories with up
 class AnalyticsEngine:
     def __init__(self) -> None:
         """Initialize the analytics engine with all component analyzers."""
-    
+
     def analyze(self, range_stats: RangeStats) -> dict:
         """Perform comprehensive analysis on range statistics.
-        
+
         Args:
             range_stats: The range statistics to analyze
-            
+
         Returns:
             Dictionary containing all analytics results
         """
@@ -117,13 +117,13 @@ class AnalyticsEngine:
 class EnhancedExtendedSystem:
     def __init__(self) -> None:
         """Initialize the enhanced extended system."""
-    
+
     def analyze_and_format(self, range_stats: RangeStats) -> str:
         """Complete analysis and formatting pipeline.
-        
+
         Args:
             range_stats: The range statistics to analyze and format
-            
+
         Returns:
             Formatted string with enhanced analytics
         """

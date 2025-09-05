@@ -6,7 +6,6 @@ for the enhanced extended format.
 """
 
 from typing import TYPE_CHECKING
-from datetime import datetime
 
 from beaconled.core.models import RangeStats
 
@@ -14,8 +13,8 @@ from .collaboration_analyzer import CollaborationAnalyzer, CollaborationConfig
 from .time_analyzer import TimeAnalyzer, TimeAnalyzerConfig
 
 if TYPE_CHECKING:
-    from beaconled.formatters.chart import ChartRenderer
-    from beaconled.formatters.heatmap import HeatmapRenderer
+    from beaconled.formatters.chart import ChartFormatter as ChartRenderer
+    from beaconled.formatters.heatmap import HeatmapFormatter as HeatmapRenderer
     from beaconled.formatters.rich_formatter import RichFormatter
 
 
@@ -30,22 +29,22 @@ class AnalyticsEngine:
         """Initialize the analytics engine with all component analyzers."""
         # Time-based analytics
         self.time_analyzer = TimeAnalyzer(TimeAnalyzerConfig())
-        
+
         # Team collaboration analytics
         self.collaboration_analyzer = CollaborationAnalyzer(CollaborationConfig())
-        
+
         # Caching for performance optimization
         self._cache: dict = {}
-        
+
         # Quality and risk analyzers would be initialized here
         # when they're implemented
-        
+
     def analyze(self, range_stats: RangeStats) -> dict:
         """Perform comprehensive analysis on range statistics.
-        
+
         Args:
             range_stats: The range statistics to analyze
-            
+
         Returns:
             Dictionary containing all analytics results
         """
@@ -54,35 +53,33 @@ class AnalyticsEngine:
         cache_key = (
             range_stats.total_commits,
             range_stats.start_date.isoformat(),
-            range_stats.end_date.isoformat()
+            range_stats.end_date.isoformat(),
         )
-        
+
         # Check if we have cached results
         if cache_key in self._cache:
             return self._cache[cache_key]
-        
+
         # Perform time-based analysis
         time_analytics = self.time_analyzer.analyze(range_stats)
-        
+
         # Perform team collaboration analysis
         collaboration_analytics = self.collaboration_analyzer.analyze(range_stats)
-        
+
         # Store in cache
         result = {
             "time": time_analytics,
             "collaboration": collaboration_analytics,
-            # "quality": quality_analytics,
-            # "risk": risk_analytics,
         }
-        
+
         self._cache[cache_key] = result
-        
+
         # Limit cache size to prevent memory issues
         if len(self._cache) > 100:
             # Remove the oldest entry
             oldest_key = next(iter(self._cache))
             del self._cache[oldest_key]
-        
+
         return result
 
 
@@ -99,21 +96,18 @@ class EnhancedExtendedSystem:
         self.analytics_engine = AnalyticsEngine()
 
         # Visualization pipeline (these would be initialized when available)
-        self.chart_renderer: "ChartRenderer | None" = None
-        self.heatmap_renderer: "HeatmapRenderer | None" = None
-        # self.trend_renderer = TrendRenderer()
+        self.chart_renderer: ChartRenderer | None = None
+        self.heatmap_renderer: HeatmapRenderer | None = None
 
         # Formatting pipeline
-        self.extended_formatter: "RichFormatter | None" = None
-        # self.section_renderers = SectionRendererFactory()
-        # self.visual_enhancer = EmojiRenderer()
+        self.extended_formatter: RichFormatter | None = None
 
     def analyze_and_format(self, range_stats: RangeStats) -> str:
         """Complete analysis and formatting pipeline.
-        
+
         Args:
             range_stats: The range statistics to analyze and format
-            
+
         Returns:
             Formatted string with enhanced analytics
         """
@@ -121,8 +115,6 @@ class EnhancedExtendedSystem:
         analytics = self.analytics_engine.analyze(range_stats)
 
         # 2. Render visualizations (when components are available)
-        # chart_output = self.chart_renderer.render_all_charts(analytics)
-        # heatmap_output = self.heatmap_renderer.render_heatmap(analytics)
 
         # 3. Format with all enhancements
         if self.extended_formatter:
@@ -130,4 +122,4 @@ class EnhancedExtendedSystem:
             return self.extended_formatter.format_range_stats(range_stats)
         else:
             # Fallback to basic formatting
-            return f"Enhanced analysis complete. Time analytics: {analytics['time']}, Collaboration analytics: {analytics['collaboration']}"
+            return f"Enhanced analysis complete. Time analytics: {analytics["time"]},\n            Collaboration analytics: {analytics["collaboration"]}"
