@@ -140,24 +140,24 @@ def _generate_legend(self, min_val: float, max_val: float) -> List[str]:
 ## Acceptance Criteria
 
 ### Functional Requirements
-- [ ] Render day-of-week vs hour-of-day activity heatmaps
-- [ ] Support generic 2D heatmap visualization
-- [ ] Generate appropriate legends and scales
-- [ ] Handle various data ranges and densities
-- [ ] Integrate with ActivityHeatmap data model
+- [x] Render day-of-week vs hour-of-day activity heatmaps
+- [x] Support generic 2D heatmap visualization
+- [x] Generate appropriate legends and scales
+- [x] Handle various data ranges and densities
+- [x] Integrate with ActivityHeatmap data model
 
 ### Technical Requirements
-- [ ] 90%+ test coverage
-- [ ] Type hints for all public interfaces
-- [ ] Performance: < 100ms for typical heatmaps
-- [ ] Memory efficient grid generation
-- [ ] Extends existing ChartRenderer cleanly
+- [x] 90%+ test coverage
+- [x] Type hints for all public interfaces
+- [x] Performance: < 100ms for typical heatmaps
+- [x] Memory efficient grid generation
+- [x] Extends existing ChartRenderer cleanly
 
 ### Visual Requirements
-- [ ] Clear visual distinction between intensity levels
-- [ ] Proper alignment and spacing in grid
-- [ ] Readable labels and legends
-- [ ] Consistent with other chart styles
+- [x] Clear visual distinction between intensity levels
+- [x] Proper alignment and spacing in grid
+- [x] Readable labels and legends
+- [x] Consistent with other chart styles
 
 ## Estimated Timeline
 
