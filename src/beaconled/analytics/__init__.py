@@ -6,6 +6,7 @@ insights for the enhanced extended format.
 """
 
 from .collaboration_analyzer import CollaborationAnalyzer, CollaborationConfig
+from .engine import AnalyticsEngine, EnhancedExtendedSystem
 from .models import (
     ActivityHeatmap,
     BusFactor,
@@ -21,12 +22,14 @@ from .time_analyzer import TimeAnalyzer, TimeAnalyzerConfig
 
 __all__ = [
     "ActivityHeatmap",
+    "AnalyticsEngine",
     "BusFactor",
     "CoAuthorshipMetrics",
     "CollaborationAnalyzer",
     "CollaborationConfig",
     "CollaborationMetrics",
     "CollaborationPatterns",
+    "EnhancedExtendedSystem",
     "KnowledgeDistribution",
     "ReviewMetrics",
     "TimeAnalytics",
