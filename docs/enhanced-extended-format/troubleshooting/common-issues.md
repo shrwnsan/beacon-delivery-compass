@@ -4,7 +4,7 @@
 
 ### 1. "enhanced-extended" format not recognized
 
-**Problem:** 
+**Problem:**
 ```bash
 beaconled --format enhanced-extended --since 1w
 Error: Invalid format "enhanced-extended"
