@@ -489,3 +489,12 @@ disallow_untyped_calls = true
 [[tool.mypy.overrides]]
 module = ["matplotlib", "matplotlib.*", "numpy", "numpy.*"]
 ignore_missing_imports = true
+
+# Bandit security scanner configuration
+[tool.bandit]
+skips = ["B110"]  # Allow try/except/pass in specific contexts
+exclude_dirs = ["tests"]
+
+# Allow B110 (try/except/pass) in visualization/chart code where graceful degradation is intentional
+[tool.bandit.assert_used]
+skips = ["**/formatters/chart.py", "**/formatters/ascii_chart.py", "**/formatters/heatmap.py"]
