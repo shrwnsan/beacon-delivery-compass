@@ -7,6 +7,7 @@ for representing git repository statistics and analysis results.
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Any
 
 
 @dataclass
@@ -103,6 +104,8 @@ class RangeStats:
     author_activity_by_day: dict[str, dict[str, int]] = field(default_factory=dict)
     component_stats: dict[str, dict[str, int]] = field(default_factory=dict)
     commits_by_day: dict[str, int] = field(default_factory=dict)
+    file_types: dict[str, dict[str, int]] = field(default_factory=dict)
+    risk_indicators: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         """Validate and compute derived fields after initialization."""

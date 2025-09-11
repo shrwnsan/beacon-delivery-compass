@@ -8,6 +8,10 @@ from typing import TYPE_CHECKING, Any
 from .base_formatter import BaseFormatter
 
 if TYPE_CHECKING:
+    import matplotlib.pyplot as plt  # type: ignore
+    import numpy as np  # type: ignore
+    import pandas as pd  # type: ignore
+
     from beaconled.core.models import CommitStats, RangeStats
 
 
@@ -27,9 +31,9 @@ class ChartFormatter(BaseFormatter):
         """
         self.output_path = Path(output_path)
         self.no_emoji = no_emoji
-        self.plt = None
-        self.pd = None
-        self.np = None
+        self.plt: plt | None = None
+        self.pd: pd | None = None
+        self.np: np | None = None
         self._check_dependencies()
 
     def _check_dependencies(self) -> None:
@@ -67,7 +71,7 @@ class ChartFormatter(BaseFormatter):
 
     def _generate_trend_charts(self, stats: RangeStats) -> None:
         """Generate comprehensive trend charts for the analysis period."""
-        if not self.plt:  # type: ignore  # type: ignore
+        if self.plt is None:
             error_msg = "Matplotlib not available"
             raise RuntimeError(error_msg)
 
@@ -227,11 +231,11 @@ class ChartFormatter(BaseFormatter):
 
     def _plot_file_patterns(self, ax: Any, stats: RangeStats) -> None:
         """Plot file change patterns."""
-        if not self.plt:  # type: ignore  # type: ignore
+        if self.plt is None:
             return
 
         # Calculate file type statistics from commits
-        file_type_counts = {}
+        file_type_counts: dict[str, int] = {}
         for commit in stats.commits:
             for file_stat in commit.files:
                 ext = file_stat.path.split(".")[-1] if "." in file_stat.path else "no-ext"
@@ -270,7 +274,7 @@ class ChartFormatter(BaseFormatter):
 
     def _linear_regression(self, x: list[int], y: list[int]) -> tuple[float, float]:
         """Simple linear regression to calculate trend line."""
-        if not self.np:  # type: ignore  # type: ignore
+        if self.np is None:
             return 0, 0
 
         x_array = self.np.array(x)

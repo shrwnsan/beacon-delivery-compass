@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import os
 import tempfile
-from datetime import datetime, date
-from typing import TYPE_CHECKING
+from datetime import date as date_type
+from datetime import datetime, timezone
+from typing import TYPE_CHECKING, Any
 
 from .base_formatter import BaseFormatter
 
@@ -72,7 +73,7 @@ class HeatmapFormatter(BaseFormatter):
             output_path = self.output_file
         else:
             temp_dir = tempfile.gettempdir()
-            timestamp = datetime.now().replace(tzinfo=None).strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             output_path = os.path.join(temp_dir, f"beacon_heatmap_{timestamp}.png")
 
         # Save plots to files
@@ -104,7 +105,8 @@ class HeatmapFormatter(BaseFormatter):
                     # Try different date formats
                     for fmt in ["%Y-%m-%d", "%Y/%m/%d", "%m/%d/%Y"]:
                         try:
-                            date_obj = datetime.strptime(date_str, fmt).replace(tzinfo=None).date()
+                            parsed_dt = datetime.strptime(date_str, fmt)  # noqa: DTZ007
+                            date_obj = parsed_dt.replace(tzinfo=timezone.utc).date()
                             dates.append(date_obj)
                             commits.append(count)
                             break
@@ -113,9 +115,6 @@ class HeatmapFormatter(BaseFormatter):
                     else:
                         # If no format works, skip this date
                         continue
-                else:
-                    dates.append(date_str)
-                    commits.append(count)
             except (ValueError, AttributeError):
                 continue
 
@@ -124,9 +123,9 @@ class HeatmapFormatter(BaseFormatter):
 
         # Sort by date
         date_commit_pairs = sorted(zip(dates, commits, strict=False))
-        dates, commits = zip(*date_commit_pairs, strict=False)
-        dates = list(dates)
-        commits = list(commits)
+        sorted_dates, sorted_commits = zip(*date_commit_pairs, strict=False)  # type: ignore
+        dates = list(sorted_dates)
+        commits = list(sorted_commits)
 
         # Create figure with subplots
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
@@ -137,7 +136,7 @@ class HeatmapFormatter(BaseFormatter):
         ax1.set_title("Daily Commit Activity", fontsize=14)
         ax1.set_xlabel("Date")
         ax1.set_ylabel("Commits")
-        ax1.grid(True, alpha=0.3)  # type: ignore
+        ax1.grid(visible=True, alpha=0.3)  # type: ignore
 
         # Rotate x-axis labels for better readability
         ax1.tick_params(axis="x", rotation=45)
@@ -147,7 +146,12 @@ class HeatmapFormatter(BaseFormatter):
 
         plt.tight_layout()
 
-    def _create_calendar_heatmap(self, ax, dates: list[date], commits: list[int]) -> None:
+    def _create_calendar_heatmap(
+        self,
+        ax: Any,
+        dates: list[date_type],
+        commits: list[int],
+    ) -> None:
         """Create a simplified calendar heatmap."""
         if not MATPLOTLIB_AVAILABLE or not plt or not np or not LinearSegmentedColormap:
             return
@@ -156,12 +160,12 @@ class HeatmapFormatter(BaseFormatter):
         month_data: dict[str, dict[int, int]] = {}
         max_commits = max(commits) if commits else 1
 
-        for date, commit_count in zip(dates, commits, strict=False):
-            month_key = date.strftime("%Y-%m")
+        for commit_date, commit_count in zip(dates, commits, strict=False):
+            month_key = commit_date.strftime("%Y-%m")
             if month_key not in month_data:
                 month_data[month_key] = {}
 
-            day = date.day
+            day = commit_date.day
             month_data[month_key][day] = commit_count
 
         # Create a simple grid visualization
@@ -190,24 +194,24 @@ class HeatmapFormatter(BaseFormatter):
         cmap = LinearSegmentedColormap.from_list("custom_blue", colors)
 
         # Plot heatmap
-        im = ax.imshow(heatmap_data, cmap=cmap, aspect="auto")
+        im = ax.imshow(heatmap_data, cmap=cmap, aspect="auto")  # type: ignore
 
         # Add colorbar
         cbar = plt.colorbar(im, ax=ax, shrink=0.8)
         cbar.set_label("Commits")
 
         # Set labels
-        ax.set_title(f"Commit Activity - {current_month}", fontsize=14)
-        ax.set_xticks(range(7))
-        ax.set_yticks(range(5))
-        ax.set_xticklabels(day_names)
-        ax.set_yticklabels([f"Week {i + 1}" for i in range(5)])
+        ax.set_title(f"Commit Activity - {current_month}", fontsize=14)  # type: ignore
+        ax.set_xticks(range(7))  # type: ignore
+        ax.set_yticks(range(5))  # type: ignore
+        ax.set_xticklabels(day_names)  # type: ignore
+        ax.set_yticklabels([f"Week {i + 1}" for i in range(5)])  # type: ignore
 
         # Add commit counts as text
         for i in range(5):
             for j in range(7):
                 if heatmap_data[i, j] > 0:
-                    ax.text(
+                    ax.text(  # type: ignore
                         j,
                         i,
                         int(heatmap_data[i, j]),
