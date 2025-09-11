@@ -40,4 +40,4 @@ def run_beaconled(args: list[str], **kwargs) -> subprocess.CompletedProcess:
         CompletedProcess object with the result of the command execution.
     """
     cmd = get_beaconled_cmd() + args
-    return subprocess.run(cmd, **kwargs)
+    return subprocess.run(cmd, check=False, **kwargs)
