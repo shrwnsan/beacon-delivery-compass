@@ -1,7 +1,7 @@
 """Unit tests for TimeAnalyzer."""
 
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from beaconled.analytics.time_analyzer import TimeAnalyzer, TimeAnalyzerConfig
 from beaconled.core.models import CommitStats, RangeStats
@@ -25,7 +25,7 @@ class TestTimeAnalyzer:
     @pytest.fixture
     def sample_commits(self):
         """Sample commit data for testing."""
-        base_date = datetime(2023, 1, 1, 10, 0, 0)
+        base_date = datetime(2023, 1, 1, 10, 0, 0, tzinfo=timezone.utc)
         commits = []
 
         # Create commits over several days with varying activity
@@ -57,7 +57,9 @@ class TestTimeAnalyzer:
     def test_analyze_empty_commits(self, analyzer):
         """Test analysis with empty commit list."""
         empty_stats = RangeStats(
-            start_date=datetime(2023, 1, 1), end_date=datetime(2023, 1, 2), commits=[]
+            start_date=datetime(2023, 1, 1, tzinfo=timezone.utc),
+            end_date=datetime(2023, 1, 2, tzinfo=timezone.utc),
+            commits=[],
         )
 
         result = analyzer.analyze(empty_stats)
