@@ -2,7 +2,6 @@
 
 import pytest
 from datetime import datetime, timezone
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from src.beaconled.core.models import RangeStats, CommitStats, FileStats
@@ -18,7 +17,7 @@ class TestChartFormatter:
             with pytest.raises(ImportError, match="Chart generation requires matplotlib"):
                 ChartFormatter()
 
-    @patch('src.beaconled.formatters.chart.ChartFormatter._check_dependencies')
+    @patch("src.beaconled.formatters.chart.ChartFormatter._check_dependencies")
     def test_format_commit_stats(self, mock_check_deps):
         """Test formatting commit stats (should return message for single commits)."""
         mock_check_deps.return_value = None  # Skip dependency check
@@ -30,14 +29,14 @@ class TestChartFormatter:
         assert "Chart generation is only supported for range analysis" in result
         assert "--since flag" in result
 
-    @patch('src.beaconled.formatters.chart.ChartFormatter._check_dependencies')
-    @patch('src.beaconled.formatters.chart.ChartFormatter._generate_trend_charts')
+    @patch("src.beaconled.formatters.chart.ChartFormatter._check_dependencies")
+    @patch("src.beaconled.formatters.chart.ChartFormatter._generate_trend_charts")
     def test_format_range_stats_success(self, mock_generate, mock_check_deps):
         """Test successful range stats formatting."""
         mock_check_deps.return_value = None  # Skip dependency check
         mock_generate.return_value = None  # Skip chart generation
         formatter = ChartFormatter()
-        
+
         mock_stats = self._create_mock_range_stats()
 
         result = formatter.format_range_stats(mock_stats)
@@ -45,21 +44,21 @@ class TestChartFormatter:
         assert "Charts generated successfully" in result
         assert "beacon-charts.png" in result
 
-    @patch('src.beaconled.formatters.chart.ChartFormatter._check_dependencies')
-    @patch('src.beaconled.formatters.chart.ChartFormatter._generate_trend_charts')
+    @patch("src.beaconled.formatters.chart.ChartFormatter._check_dependencies")
+    @patch("src.beaconled.formatters.chart.ChartFormatter._generate_trend_charts")
     def test_format_range_stats_custom_output(self, mock_generate, mock_check_deps):
         """Test range stats formatting with custom output path."""
         mock_check_deps.return_value = None  # Skip dependency check
         mock_generate.return_value = None  # Skip chart generation
         formatter = ChartFormatter(output_path="custom.png")
-        
+
         mock_stats = self._create_mock_range_stats()
 
         result = formatter.format_range_stats(mock_stats)
 
         assert "custom.png" in result
 
-    @patch('src.beaconled.formatters.chart.ChartFormatter._check_dependencies')
+    @patch("src.beaconled.formatters.chart.ChartFormatter._check_dependencies")
     def test_format_range_stats_error(self, mock_check_deps):
         """Test range stats formatting with error."""
         mock_check_deps.return_value = None  # Skip dependency check
