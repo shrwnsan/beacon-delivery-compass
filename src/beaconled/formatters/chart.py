@@ -134,8 +134,10 @@ class ChartFormatter(BaseFormatter):
                 trend_line = [coeffs[0] * x + coeffs[1] for x in x_numeric]
                 ax.plot(dates, trend_line, "--", color="#A23B72", alpha=0.7, label="Trend")
                 ax.legend()
-            except Exception:
-                pass  # Skip trend line if calculation fails
+            except (ValueError, ZeroDivisionError, TypeError):
+                # Gracefully skip trend line if statistical calculation fails
+                # This is acceptable for optional visualization features
+                pass  # nosec B110
 
     def _plot_author_breakdown(self, ax: Any, stats: RangeStats) -> None:
         """Plot author contribution breakdown."""
