@@ -168,20 +168,24 @@ class ExtendedFormatter(BaseFormatter):
             )
 
         # Add file type breakdown if available
+        file_types = {}
         if stats.commits:
             file_types = self._get_file_type_breakdown_from_commits(stats.commits)
-            if file_types:
-                output.extend(
-                    [
-                        "",
-                        f"{self._get_emoji('breakdown')} "
-                        f"{Fore.MAGENTA}File type breakdown:{Style.RESET_ALL}",
-                        *[
-                            self._format_file_type_line(ext, counts)
-                            for ext, counts in sorted(file_types.items())
-                        ],
+        elif hasattr(stats, "file_types") and stats.file_types:
+            file_types = stats.file_types
+
+        if file_types:
+            output.extend(
+                [
+                    "",
+                    f"{self._get_emoji('breakdown')} "
+                    f"{Fore.MAGENTA}File type breakdown:{Style.RESET_ALL}",
+                    *[
+                        self._format_file_type_line(ext, counts)
+                        for ext, counts in sorted(file_types.items())
                     ],
-                )
+                ],
+            )
         return "\n".join(output)
 
     def _get_author_contribution_stats(

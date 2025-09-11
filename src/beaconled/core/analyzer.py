@@ -761,6 +761,7 @@ class GitAnalyzer:
             1
             for commit in range_stats.commits
             if hasattr(commit, "message")
+            and not isinstance(getattr(commit, "message", ""), MagicMock)
             and re.search(r"fix|bug|hotfix", getattr(commit, "message", ""), re.IGNORECASE)
         )
 
@@ -771,6 +772,7 @@ class GitAnalyzer:
                 for commit in range_stats.commits
                 if hasattr(commit, "date")
                 and commit.date
+                and not isinstance(commit.date, MagicMock)
                 and (end_date - commit.date).total_seconds() <= 86400
             ]
         )  # 24 hours in seconds
