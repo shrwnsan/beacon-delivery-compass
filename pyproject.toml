@@ -479,3 +479,8 @@ warn_unreachable = true
 disallow_untyped_decorators = true
 disallow_incomplete_defs = true
 disallow_untyped_calls = true
+
+# Ignore missing imports for optional dependencies
+[[tool.mypy.overrides]]
+module = ["matplotlib", "matplotlib.*", "numpy", "numpy.*"]
+ignore_missing_imports = true
