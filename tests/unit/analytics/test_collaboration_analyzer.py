@@ -1,7 +1,7 @@
 """Unit tests for CollaborationAnalyzer."""
 
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from beaconled.analytics.collaboration_analyzer import CollaborationAnalyzer, CollaborationConfig
 from beaconled.core.models import CommitStats, FileStats, RangeStats
@@ -25,7 +25,7 @@ class TestCollaborationAnalyzer:
     @pytest.fixture
     def sample_commits(self):
         """Sample commit data for testing."""
-        base_date = datetime(2023, 1, 1, 10, 0, 0)
+        base_date = datetime(2023, 1, 1, 10, 0, 0, tzinfo=timezone.utc)
         commits = []
 
         # Create commits with different authors and file collaborations
@@ -72,7 +72,9 @@ class TestCollaborationAnalyzer:
     def test_analyze_empty_commits(self, analyzer):
         """Test analysis with empty commit list."""
         empty_stats = RangeStats(
-            start_date=datetime(2023, 1, 1), end_date=datetime(2023, 1, 2), commits=[]
+            start_date=datetime(2023, 1, 1, tzinfo=timezone.utc),
+            end_date=datetime(2023, 1, 2, tzinfo=timezone.utc),
+            commits=[],
         )
 
         result = analyzer.analyze(empty_stats)
@@ -85,8 +87,8 @@ class TestCollaborationAnalyzer:
         """Test co-authorship analysis."""
         co_authorship = analyzer._analyze_co_authorship(
             RangeStats(
-                start_date=datetime(2023, 1, 1),
-                end_date=datetime(2023, 1, 7),
+                start_date=datetime(2023, 1, 1, tzinfo=timezone.utc),
+                end_date=datetime(2023, 1, 7, tzinfo=timezone.utc),
                 commits=sample_commits,
             )
         )
@@ -170,7 +172,7 @@ class TestCollaborationAnalyzer:
             CommitStats(
                 hash="commit_001",
                 author="single_author",
-                date=datetime(2023, 1, 1),
+                date=datetime(2023, 1, 1, tzinfo=timezone.utc),
                 message="Single author commit",
                 files_changed=1,
                 lines_added=10,
@@ -180,8 +182,8 @@ class TestCollaborationAnalyzer:
         ]
 
         range_stats = RangeStats(
-            start_date=datetime(2023, 1, 1),
-            end_date=datetime(2023, 1, 1),
+            start_date=datetime(2023, 1, 1, tzinfo=timezone.utc),
+            end_date=datetime(2023, 1, 1, tzinfo=timezone.utc),
             commits=single_author_commits,
         )
 
@@ -222,7 +224,7 @@ class TestCollaborationAnalyzer:
             CommitStats(
                 hash="commit_001",
                 author="python_expert",
-                date=datetime(2023, 1, 1),
+                date=datetime(2023, 1, 1, tzinfo=timezone.utc),
                 message="Python work",
                 files_changed=5,
                 lines_added=50,
@@ -238,7 +240,7 @@ class TestCollaborationAnalyzer:
             CommitStats(
                 hash="commit_002",
                 author="js_developer",
-                date=datetime(2023, 1, 2),
+                date=datetime(2023, 1, 2, tzinfo=timezone.utc),
                 message="JS work",
                 files_changed=1,
                 lines_added=20,
@@ -248,8 +250,8 @@ class TestCollaborationAnalyzer:
         ]
 
         range_stats = RangeStats(
-            start_date=datetime(2023, 1, 1),
-            end_date=datetime(2023, 1, 2),
+            start_date=datetime(2023, 1, 1, tzinfo=timezone.utc),
+            end_date=datetime(2023, 1, 2, tzinfo=timezone.utc),
             commits=specialized_commits,
         )
 
