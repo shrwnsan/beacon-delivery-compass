@@ -87,19 +87,15 @@ class ExtendedFormatter(BaseFormatter):
         # Add file type breakdown (match test expectation wording)
         # Always include this section for consistency in extended format
         file_types = self._get_file_type_breakdown(stats.files) if stats.files else {}
-        output.extend(
-            [
-                "",
-                f"{Fore.MAGENTA}File type breakdown:{Style.RESET_ALL}",
-            ]
-        )
+        output.extend([
+            "",
+            f"{Fore.MAGENTA}File type breakdown:{Style.RESET_ALL}",
+        ])
         if file_types:
-            output.extend(
-                [
-                    self._format_file_type_line(ext, counts)
-                    for ext, counts in sorted(file_types.items())
-                ]
-            )
+            output.extend([
+                self._format_file_type_line(ext, counts)
+                for ext, counts in sorted(file_types.items())
+            ])
         else:
             output.append("  No files changed")
 

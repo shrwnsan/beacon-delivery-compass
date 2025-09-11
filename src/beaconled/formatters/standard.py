@@ -135,31 +135,27 @@ class StandardFormatter(BaseFormatter):
             active_days = len(getattr(stats, "commits_by_day", {}))
             avg_commits_per_day = round(stats.total_commits / max(duration_days, 1), 1)
 
-            output.extend(
-                [
-                    "",
-                    (
-                        f"{self._get_emoji('overview')} {Fore.YELLOW}"
-                        f"=== TEAM OVERVIEW ==={Style.RESET_ALL}"
-                    ),
-                    f"{self._get_emoji('contributors')} Total Contributors: {len(stats.authors)}",
-                    f"Total Commits: {stats.total_commits}",
-                    f"Average Commits/Day: {avg_commits_per_day}",
-                    f"Active Days: {active_days}/{duration_days}",
-                ]
-            )
+            output.extend([
+                "",
+                (
+                    f"{self._get_emoji('overview')} {Fore.YELLOW}"
+                    f"=== TEAM OVERVIEW ==={Style.RESET_ALL}"
+                ),
+                f"{self._get_emoji('contributors')} Total Contributors: {len(stats.authors)}",
+                f"Total Commits: {stats.total_commits}",
+                f"Average Commits/Day: {avg_commits_per_day}",
+                f"Active Days: {active_days}/{duration_days}",
+            ])
 
         # Contributor Breakdown Section
         if stats.authors and hasattr(stats, "author_impact_stats"):
-            output.extend(
-                [
-                    "",
-                    (
-                        f"{self._get_emoji('breakdown')} {Fore.YELLOW}"
-                        f"=== CONTRIBUTOR BREAKDOWN ==={Style.RESET_ALL}"
-                    ),
-                ]
-            )
+            output.extend([
+                "",
+                (
+                    f"{self._get_emoji('breakdown')} {Fore.YELLOW}"
+                    f"=== CONTRIBUTOR BREAKDOWN ==={Style.RESET_ALL}"
+                ),
+            ])
 
             # Sort authors by commit count and take top 3
             top_contributors = sorted(stats.authors.items(), key=lambda x: x[1], reverse=True)[:3]
@@ -171,13 +167,11 @@ class StandardFormatter(BaseFormatter):
                 # Add impact breakdown
                 if author in stats.author_impact_stats:
                     impact_stats = stats.author_impact_stats[author]
-                    output.extend(
-                        [
-                            f"  - High Impact: {impact_stats.get('high', 0)} commits",
-                            f"  - Medium Impact: {impact_stats.get('medium', 0)} commits",
-                            f"  - Low Impact: {impact_stats.get('low', 0)} commits",
-                        ]
-                    )
+                    output.extend([
+                        f"  - High Impact: {impact_stats.get('high', 0)} commits",
+                        f"  - Medium Impact: {impact_stats.get('medium', 0)} commits",
+                        f"  - Low Impact: {impact_stats.get('low', 0)} commits",
+                    ])
 
                 # Add most active days
                 if (
@@ -197,15 +191,13 @@ class StandardFormatter(BaseFormatter):
 
         # Component Activity Section
         if hasattr(stats, "component_stats") and stats.component_stats:
-            output.extend(
-                [
-                    (
-                        f"{self._get_emoji('activity')} {Fore.YELLOW}"
-                        f"=== COMPONENT ACTIVITY ==={Style.RESET_ALL}"
-                    ),
-                    "Most Changed Components:",
-                ]
-            )
+            output.extend([
+                (
+                    f"{self._get_emoji('activity')} {Fore.YELLOW}"
+                    f"=== COMPONENT ACTIVITY ==={Style.RESET_ALL}"
+                ),
+                "Most Changed Components:",
+            ])
 
             # Sort components by commits, then by lines
             sorted_components = sorted(

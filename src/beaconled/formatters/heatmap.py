@@ -250,7 +250,7 @@ class HeatmapFormatter(BaseFormatter):
         max_activity = np.max(heatmap_data) if heatmap_data.size > 0 else 1
 
         # Create new figure for author heatmap
-        fig, ax = plt.subplots(figsize=(10, max(4, len(authors) * 0.5)))
+        _fig, ax = plt.subplots(figsize=(10, max(4, len(authors) * 0.5)))
 
         # Create custom colormap (green to red for activity levels)
         colors = ["#f7fcf5", "#00441b"]  # Light green to dark green
