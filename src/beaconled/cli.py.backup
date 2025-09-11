@@ -9,13 +9,9 @@ from .core.analyzer import GitAnalyzer
 
 # Domain-specific date errors for clearer CLI messages
 from .core.date_errors import DateParseError, DateRangeError
-from .formatters.ascii_chart import ASCIIChartFormatter
-from .formatters.chart import ChartFormatter
 from .formatters.extended import ExtendedFormatter
 from .formatters.heatmap import HeatmapFormatter
-from .analytics.engine import EnhancedExtendedSystem
 from .formatters.json_format import JSONFormatter
-from .formatters.rich_formatter import RichFormatter
 from .formatters.standard import StandardFormatter
 
 
@@ -41,13 +37,7 @@ def main() -> None:
             "  # Analyze changes with explicit UTC times\n"
             '  beaconled --since "2025-01-01 00:00:00" --until "2025-01-31 23:59:59"\n\n'
             "  # Output in JSON format\n"
-            "  beaconled --format json\n\n"
-            "  # Output in ASCII chart format\n"
-            "  beaconled --format ascii\n\n"
-            "  # Output in chart format\n"
-            "  beaconled --since 1w --format chart\n\n"
-            "  # Generate visual heatmaps of commit activity (requires matplotlib)\n"
-            "  beaconled --since 1w --format heatmap"
+            "  beaconled --format json"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -66,16 +56,7 @@ def main() -> None:
     parser.add_argument(
         "-f",
         "--format",
-        choices=[
-            "standard",
-            "extended",
-            "json",
-            "ascii",
-            "rich",
-            "chart",
-            "heatmap",
-            "enhanced-extended",
-        ],
+        choices=["standard", "extended", "json", "heatmap", "chart"],
         default="standard",
         help="Output format (default: standard). Use 'heatmap' for visual analytics (requires matplotlib)",
     )
@@ -123,11 +104,6 @@ def main() -> None:
         action="store_true",
         help="Disable emoji icons in output",
     )
-    parser.add_argument(
-        "--chart-output",
-        default="beacon-charts.png",
-        help="Output path for chart files (default: beacon-charts.png)",
-    )
 
     args = parser.parse_args()
 
@@ -149,27 +125,8 @@ def main() -> None:
                 json_formatter = JSONFormatter()
                 output = json_formatter.format_range_stats(range_stats)
             elif args.format == "extended":
-                extended_formatter = ExtendedFormatter(no_emoji=args.no_emoji)
+                extended_formatter = ExtendedFormatter()
                 output = extended_formatter.format_range_stats(range_stats)
-            elif args.format == "ascii":
-                ascii_formatter = ASCIIChartFormatter()
-                output = ascii_formatter.format_range_stats(range_stats)
-            elif args.format == "rich":
-                rich_formatter = RichFormatter()
-                output = rich_formatter.format_range_stats(range_stats)
-            elif args.format == "chart":
-                chart_formatter = ChartFormatter(
-                    output_path=getattr(args, "chart_output", "beacon-charts.png"),
-                    no_emoji=args.no_emoji,
-                )
-                output = chart_formatter.format_range_stats(range_stats)
-            elif args.format == "enhanced-extended":
-                enhanced_system = EnhancedExtendedSystem()
-                if args.no_emoji:
-                    enhanced_system.extended_formatter = ExtendedFormatter(no_emoji=True)
-                else:
-                    enhanced_system.extended_formatter = RichFormatter()
-                output = enhanced_system.analyze_and_format(range_stats)
             elif args.format == "heatmap":
                 heatmap_formatter = HeatmapFormatter()
                 output = heatmap_formatter.format_range_stats(range_stats)
@@ -184,27 +141,8 @@ def main() -> None:
                 json_formatter = JSONFormatter()
                 output = json_formatter.format_commit_stats(commit_stats)
             elif args.format == "extended":
-                extended_formatter = ExtendedFormatter(no_emoji=args.no_emoji)
+                extended_formatter = ExtendedFormatter()
                 output = extended_formatter.format_commit_stats(commit_stats)
-            elif args.format == "ascii":
-                ascii_formatter = ASCIIChartFormatter()
-                output = ascii_formatter.format_commit_stats(commit_stats)
-            elif args.format == "rich":
-                rich_formatter = RichFormatter()
-                output = rich_formatter.format_commit_stats(commit_stats)
-            elif args.format == "chart":
-                chart_formatter = ChartFormatter(
-                    output_path=getattr(args, "chart_output", "beacon-charts.png"),
-                    no_emoji=args.no_emoji,
-                )
-                output = chart_formatter.format_commit_stats(commit_stats)
-            elif args.format == "enhanced-extended":
-                enhanced_system = EnhancedExtendedSystem()
-                if args.no_emoji:
-                    enhanced_system.extended_formatter = ExtendedFormatter(no_emoji=True)
-                else:
-                    enhanced_system.extended_formatter = RichFormatter()
-                output = enhanced_system.extended_formatter.format_commit_stats(commit_stats)
             elif args.format == "heatmap":
                 heatmap_formatter = HeatmapFormatter()
                 output = heatmap_formatter.format_commit_stats(commit_stats)
