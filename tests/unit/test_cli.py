@@ -204,7 +204,7 @@ class TestCLI(unittest.TestCase):
             main()
             # Verify get_range_analytics was called with the correct arguments
             mock_analyzer.return_value.get_range_analytics.assert_called_once()
-            args, kwargs = mock_analyzer.return_value.get_range_analytics.call_args
+            args, _kwargs = mock_analyzer.return_value.get_range_analytics.call_args
             self.assertEqual(args[0], "1w")  # since
             self.assertEqual(args[1], "now")  # until
             # Verify the formatter was called with the stats
@@ -245,7 +245,7 @@ class TestCLI(unittest.TestCase):
 
             # Verify get_range_analytics was called with the correct arguments
             mock_analyzer.return_value.get_range_analytics.assert_called_once()
-            args, kwargs = mock_analyzer.return_value.get_range_analytics.call_args
+            args, _kwargs = mock_analyzer.return_value.get_range_analytics.call_args
             self.assertEqual(args[0], "2025-01-01")  # since
             self.assertEqual(args[1], "2025-01-31")  # until
 

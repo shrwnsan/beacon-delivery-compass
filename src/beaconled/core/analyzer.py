@@ -766,16 +766,14 @@ class GitAnalyzer:
         )
 
         # Count last minute changes (within last 24 hours of the end date)
-        last_minute_changes = len(
-            [
-                commit
-                for commit in range_stats.commits
-                if hasattr(commit, "date")
-                and commit.date
-                and not isinstance(commit.date, MagicMock)
-                and (end_date - commit.date).total_seconds() <= 86400
-            ]
-        )  # 24 hours in seconds
+        last_minute_changes = len([
+            commit
+            for commit in range_stats.commits
+            if hasattr(commit, "date")
+            and commit.date
+            and not isinstance(commit.date, MagicMock)
+            and (end_date - commit.date).total_seconds() <= 86400
+        ])  # 24 hours in seconds
         # Calculate commit velocity (commits per day)
         commit_velocity = round(range_stats.total_commits / date_range_days, 2)
 

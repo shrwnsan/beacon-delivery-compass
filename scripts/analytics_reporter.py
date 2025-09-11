@@ -180,15 +180,23 @@ class GitAnalytics:
             # Focus on product-related components
             if "backend" in file_lower or file.startswith("src/"):
                 components["backend"] += 1
-            elif "frontend" in file_lower or file.endswith(
-                (".js", ".ts", ".tsx", ".jsx", ".css", ".html")
-            ):
+            elif "frontend" in file_lower or file.endswith((
+                ".js",
+                ".ts",
+                ".tsx",
+                ".jsx",
+                ".css",
+                ".html",
+            )):
                 components["frontend"] += 1
             elif "api" in file_lower or "service" in file_lower:
                 components["api"] += 1
-            elif "test" in file_lower or filename.endswith(
-                (".test.js", ".spec.js", ".test.ts", ".spec.ts")
-            ):
+            elif "test" in file_lower or filename.endswith((
+                ".test.js",
+                ".spec.js",
+                ".test.ts",
+                ".spec.ts",
+            )):
                 components["tests"] += 1
             elif file.startswith("docs/") or file.endswith(".md"):
                 components["documentation"] += 1
@@ -244,9 +252,12 @@ class GitAnalytics:
     def get_range_analytics(self, since: str = "1w", until: str = "HEAD") -> Dict:
         """Get analytics for a range of commits."""
         # Get commit list
-        commit_list = self.run_git_command(
-            ["rev-list", f"--since={since}", f"--until={until}", "HEAD"]
-        ).split("\n")
+        commit_list = self.run_git_command([
+            "rev-list",
+            f"--since={since}",
+            f"--until={until}",
+            "HEAD",
+        ]).split("\n")
 
         commit_list = [c for c in commit_list if c.strip()]
 

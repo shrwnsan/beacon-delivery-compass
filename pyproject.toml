@@ -115,6 +115,7 @@ extend-exclude = '''
 # Ruff configuration
 [tool.ruff]
 line-length = 100
+preview = true  # Enable preview rules like RUF059
 
 [tool.ruff.lint]
 # Ignore these rules globally
@@ -194,6 +195,7 @@ select = [
   "ISC001",  # implicit string concatenation
   "F841",    # allow assigned-but-unused in tests (e.g., captured stdout)
   "PLW1510", # allow subprocess.run without explicit check in test utilities
+  "PLW1514", # allow open() without explicit encoding in tests
   "FBT003",  # boolean positional in asserts in tests
   "ERA001",  # allow commented-out code in tests
   "T201",    # allow print in tests for debug
@@ -222,6 +224,7 @@ select = [
 
   # Security (testing exceptions)
   "S311",    # use of random for non-crypto in tests
+  "S404",    # allow subprocess imports in tests
   "S603"     # subprocess usage in tests
 ]
 "src/beaconled/utils/date_utils.py" = [
@@ -267,6 +270,7 @@ select = [
   "PTH101",  # using os.chmod for simplicity
   "S103",    # permissive chmod in a local script
   "E501",    # long embedded script/text blocks
+  "PLW1514", # open without encoding in script files
 ]
 "scripts/product_insights_cli.py" = [
   "T201",    # CLI intentionally prints
@@ -327,6 +331,7 @@ select = [
 
   # Security
   "S103",    # chmod mask
+  "S404",    # subprocess imports in scripts
   "S603",    # subprocess shell/args in scripts
 
   # Other
@@ -363,6 +368,11 @@ select = [
   "TRY300", # return outside else
   "FBT001", # bool positional in def
   "FBT002", # bool default positional
+  "PLW1514", # open without encoding in helper
+]
+"scripts/notification_system.py" = [
+  "T201",    # prints allowed
+  "PLW1514", # open without encoding
 ]
 
 "run_test.py" = [
@@ -392,6 +402,9 @@ select = [
   "ANN001", # arg annotations optional
   "PTH123",  # built-in open() in scripts
   "TRY300", # try/except in exceptions
+]
+"tests/unit/test_date_utils.py" = [
+  "PLW0108", # allow lambda that could be inlined
 ]
 [tool.pytest.ini_options]
 minversion = "7.0"

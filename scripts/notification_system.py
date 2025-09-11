@@ -118,21 +118,22 @@ class NotificationSystem:
     def _send_daily_digest(self, alert: Dict, insights: Dict) -> None:
         """Send daily digest for high-priority issues."""
         # Queue for daily digest
-        self.notification_queue.append(
-            {"type": "alert", "severity": "high", "alert": alert, "insights": insights}
-        )
+        self.notification_queue.append({
+            "type": "alert",
+            "severity": "high",
+            "alert": alert,
+            "insights": insights,
+        })
 
     def _send_weekly_summary(self, alert: Dict, insights: Dict) -> None:
         """Send weekly summary for medium-priority issues."""
         # Queue for weekly summary
-        self.notification_queue.append(
-            {
-                "type": "alert",
-                "severity": "medium",
-                "alert": alert,
-                "insights": insights,
-            }
-        )
+        self.notification_queue.append({
+            "type": "alert",
+            "severity": "medium",
+            "alert": alert,
+            "insights": insights,
+        })
 
     def send_weekly_report(self, insights: Dict) -> None:
         """Send comprehensive weekly report."""
@@ -302,38 +303,32 @@ class ActionTrigger:
         # Check feature velocity
         velocity = float(metrics.get("feature_velocity", "0").split()[0])
         if velocity < self.config["thresholds"]["feature_velocity"]["critical"]:
-            triggers.append(
-                {
-                    "trigger": "low_velocity",
-                    "action": "resource_allocation_review",
-                    "priority": "high",
-                    "details": f"Feature velocity at {velocity} features/week",
-                }
-            )
+            triggers.append({
+                "trigger": "low_velocity",
+                "action": "resource_allocation_review",
+                "priority": "high",
+                "details": f"Feature velocity at {velocity} features/week",
+            })
 
         # Check technical debt
         debt_ratio = float(metrics.get("technical_debt_ratio", "0").split("%")[0])
         if debt_ratio > self.config["thresholds"]["technical_debt_ratio"]["critical"]:
-            triggers.append(
-                {
-                    "trigger": "high_debt",
-                    "action": "refactoring_sprint",
-                    "priority": "critical",
-                    "details": f"Technical debt at {debt_ratio}%",
-                }
-            )
+            triggers.append({
+                "trigger": "high_debt",
+                "action": "refactoring_sprint",
+                "priority": "critical",
+                "details": f"Technical debt at {debt_ratio}%",
+            })
 
         # Check customer focus
         customer_index = float(metrics.get("customer_driven_index", "0").split("%")[0])
         if customer_index < self.config["thresholds"]["customer_driven_index"]["critical"]:
-            triggers.append(
-                {
-                    "trigger": "low_customer_focus",
-                    "action": "product_research_session",
-                    "priority": "medium",
-                    "details": f"Customer-driven index at {customer_index}%",
-                }
-            )
+            triggers.append({
+                "trigger": "low_customer_focus",
+                "action": "product_research_session",
+                "priority": "medium",
+                "details": f"Customer-driven index at {customer_index}%",
+            })
 
         return triggers
 

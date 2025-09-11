@@ -240,15 +240,13 @@ class ASCIIChartFormatter(BaseFormatter):
             lines.append("")
 
         # Summary statistics
-        lines.extend(
-            [
-                f"{Fore.YELLOW}Summary:{Style.RESET_ALL}",
-                f"Files Changed: {stats.files_changed}",
-                f"Lines Added: {stats.lines_added:,}",
-                f"Lines Deleted: {stats.lines_deleted:,}",
-                f"Net Change: {self._format_net_change(stats.lines_added, stats.lines_deleted)}",
-            ]
-        )
+        lines.extend([
+            f"{Fore.YELLOW}Summary:{Style.RESET_ALL}",
+            f"Files Changed: {stats.files_changed}",
+            f"Lines Added: {stats.lines_added:,}",
+            f"Lines Deleted: {stats.lines_deleted:,}",
+            f"Net Change: {self._format_net_change(stats.lines_added, stats.lines_deleted)}",
+        ])
 
         return "\n".join(lines)
 
@@ -308,17 +306,15 @@ class ASCIIChartFormatter(BaseFormatter):
                 lines.append("")
 
         # Summary statistics
-        lines.extend(
-            [
-                f"{Fore.YELLOW}Summary Statistics:{Style.RESET_ALL}",
-                f"Total Commits: {stats.total_commits:,}",
-                f"Total Files Changed: {stats.total_files_changed:,}",
-                f"Total Lines Added: {stats.total_lines_added:,}",
-                f"Total Lines Deleted: {stats.total_lines_deleted:,}",
-                "Net Change: "
-                + self._format_net_change(stats.total_lines_added, stats.total_lines_deleted),
-                f"Contributors: {len(stats.authors)}",
-            ]
-        )
+        lines.extend([
+            f"{Fore.YELLOW}Summary Statistics:{Style.RESET_ALL}",
+            f"Total Commits: {stats.total_commits:,}",
+            f"Total Files Changed: {stats.total_files_changed:,}",
+            f"Total Lines Added: {stats.total_lines_added:,}",
+            f"Total Lines Deleted: {stats.total_lines_deleted:,}",
+            "Net Change: "
+            + self._format_net_change(stats.total_lines_added, stats.total_lines_deleted),
+            f"Contributors: {len(stats.authors)}",
+        ])
 
         return "\n".join(lines)

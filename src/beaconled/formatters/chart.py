@@ -257,7 +257,7 @@ class ChartFormatter(BaseFormatter):
         sorted_types = sorted(file_type_counts.items(), key=lambda x: x[1], reverse=True)[:8]
         file_types, changes = zip(*sorted_types, strict=False)
 
-        wedges, texts, autotexts = ax.pie(
+        _wedges, texts, autotexts = ax.pie(
             changes,
             labels=file_types,
             autopct="%1.1f%%",

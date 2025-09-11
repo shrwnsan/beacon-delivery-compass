@@ -211,34 +211,28 @@ class ProductAnalytics:
         alerts = []
 
         if metrics.feature_velocity < 2:
-            alerts.append(
-                {
-                    "type": "velocity",
-                    "severity": "high",
-                    "message": "Feature velocity below threshold",
-                    "action": "Review resource allocation",
-                }
-            )
+            alerts.append({
+                "type": "velocity",
+                "severity": "high",
+                "message": "Feature velocity below threshold",
+                "action": "Review resource allocation",
+            })
 
         if metrics.technical_debt_ratio > 40:
-            alerts.append(
-                {
-                    "type": "debt",
-                    "severity": "critical",
-                    "message": "Technical debt ratio critically high",
-                    "action": "Immediate refactoring required",
-                }
-            )
+            alerts.append({
+                "type": "debt",
+                "severity": "critical",
+                "message": "Technical debt ratio critically high",
+                "action": "Immediate refactoring required",
+            })
 
         if metrics.customer_driven_index < 30:
-            alerts.append(
-                {
-                    "type": "customer_focus",
-                    "severity": "medium",
-                    "message": "Low customer-driven development",
-                    "action": "Conduct user research",
-                }
-            )
+            alerts.append({
+                "type": "customer_focus",
+                "severity": "medium",
+                "message": "Low customer-driven development",
+                "action": "Conduct user research",
+            })
 
         return alerts
 
