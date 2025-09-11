@@ -52,7 +52,7 @@ class TestRichFormatter:
             CommitStats(
                 hash="def456ghi789012",
                 author="Jane Smith <jane@example.com>",
-                date=datetime(2023, 6, 16, 10, 15, 30),
+                date=datetime(2023, 6, 16, 10, 15, 30, tzinfo=timezone.utc),
                 message="Fix bug in login validation",
                 files_changed=1,
                 lines_added=5,
@@ -61,8 +61,8 @@ class TestRichFormatter:
         ]
 
         stats = RangeStats(
-            start_date=datetime(2023, 6, 15),
-            end_date=datetime(2023, 6, 16),
+            start_date=datetime(2023, 6, 15, tzinfo=timezone.utc),
+            end_date=datetime(2023, 6, 16, tzinfo=timezone.utc),
             total_commits=2,
             total_files_changed=3,
             total_lines_added=105,
@@ -190,8 +190,8 @@ class TestRichFormatter:
     def test_format_range_stats_empty(self, formatter):
         """Test range stats formatting with minimal data."""
         stats = RangeStats(
-            start_date=datetime(2023, 6, 15),
-            end_date=datetime(2023, 6, 15),
+            start_date=datetime(2023, 6, 15, tzinfo=timezone.utc),
+            end_date=datetime(2023, 6, 15, tzinfo=timezone.utc),
             total_commits=0,
             total_files_changed=0,
             total_lines_added=0,
@@ -212,7 +212,7 @@ class TestRichFormatter:
         stats = CommitStats(
             hash="test",
             author="Test",
-            date=datetime(2023, 6, 15),
+            date=datetime(2023, 6, 15, tzinfo=timezone.utc),
             message="Test",
             lines_added=100,
             lines_deleted=20,
@@ -227,7 +227,7 @@ class TestRichFormatter:
         stats = CommitStats(
             hash="test",
             author="Test",
-            date=datetime(2023, 6, 15),
+            date=datetime(2023, 6, 15, tzinfo=timezone.utc),
             message="Test",
             lines_added=20,
             lines_deleted=100,
@@ -239,7 +239,7 @@ class TestRichFormatter:
 
     def test_format_date_method(self, formatter):
         """Test the _format_date helper method."""
-        dt = datetime(2023, 6, 15, 14, 30, 45)
+        dt = datetime(2023, 6, 15, 14, 30, 45, tzinfo=timezone.utc)
         formatted = formatter._format_date(dt)
         assert formatted == "2023-06-15 14:30:45"
 
@@ -304,7 +304,7 @@ class TestRichFormatter:
             CommitStats(
                 hash="abc123",
                 author="Alice",
-                date=datetime(2023, 6, 15, 10, 0, 0),
+                date=datetime(2023, 6, 15, 10, 0, 0, tzinfo=timezone.utc),
                 message="Feature commit",
                 files_changed=5,
                 lines_added=50,
@@ -317,7 +317,7 @@ class TestRichFormatter:
             CommitStats(
                 hash="def456",
                 author="Bob",
-                date=datetime(2023, 6, 16, 14, 0, 0),
+                date=datetime(2023, 6, 16, 14, 0, 0, tzinfo=timezone.utc),
                 message="Bug fix",
                 files_changed=1,
                 lines_added=2,
@@ -329,8 +329,8 @@ class TestRichFormatter:
         ]
 
         stats = RangeStats(
-            start_date=datetime(2023, 6, 15),
-            end_date=datetime(2023, 6, 16),
+            start_date=datetime(2023, 6, 15, tzinfo=timezone.utc),
+            end_date=datetime(2023, 6, 16, tzinfo=timezone.utc),
             commits=commits,
         )
         stats.calculate_extended_stats()
