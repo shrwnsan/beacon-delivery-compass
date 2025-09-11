@@ -29,54 +29,74 @@ class TestChartFormatter:
 
     def test_format_range_stats_success(self):
         """Test successful range stats formatting."""
-        with (
-            patch("matplotlib.pyplot.subplots") as mock_subplots,
-            patch("matplotlib.pyplot.savefig") as mock_savefig,
-            patch("matplotlib.pyplot.close") as mock_close,
-        ):
-            # Mock matplotlib
-            mock_subplots.return_value = (MagicMock(), MagicMock())
-            mock_savefig.return_value = None
-            mock_close.return_value = None
+        formatter = ChartFormatter()
+        # Mock the dependencies
+        formatter.plt = MagicMock()
+        formatter.np = MagicMock()
+        # Mock numpy functions
+        formatter.np.sum.return_value = 0
+        formatter.np.array.return_value = MagicMock()
+        # Fix the mock to return properly structured values for unpacking
+        mock_fig = MagicMock()
+        mock_axes = ((MagicMock(), MagicMock()), (MagicMock(), MagicMock()))
 
-            formatter = ChartFormatter()
-            # Mock the dependencies
-            formatter.plt = MagicMock()
-            formatter.plt.subplots.return_value = (MagicMock(), MagicMock())
-            formatter.plt.savefig.return_value = None
-            formatter.plt.close.return_value = None
-            formatter.plt.cm.Set3.colors = ["#1f77b4", "#ff7f0e", "#2ca02c"]
+        # Use side_effect to handle method calls with parameters
+        def subplots_side_effect(*args, **kwargs):
+            if args == (2, 2) and kwargs.get("figsize") == (15, 10):
+                return (mock_fig, mock_axes)
+            return (MagicMock(), MagicMock())
 
-            mock_stats = self._create_mock_range_stats()
+        formatter.plt.subplots.side_effect = subplots_side_effect
+        formatter.plt.savefig.return_value = None
+        formatter.plt.close.return_value = None
+        formatter.plt.cm.Set3.colors = ["#1f77b4", "#ff7f0e", "#2ca02c"]
 
-            result = formatter.format_range_stats(mock_stats)
+        mock_stats = self._create_mock_range_stats()
 
-            assert "Charts generated successfully" in result
-            assert "beacon-charts.png" in result
+        result = formatter.format_range_stats(mock_stats)
 
-    @patch("beaconled.formatters.chart.plt")
-    def test_format_range_stats_custom_output(self, mock_plt):
+        assert "Charts generated successfully" in result
+        assert "beacon-charts.png" in result
+
+    def test_format_range_stats_custom_output(self):
         """Test range stats formatting with custom output path."""
-        # Mock matplotlib
-        mock_plt.subplots.return_value = (MagicMock(), MagicMock())
-        mock_plt.savefig.return_value = None
-        mock_plt.close.return_value = None
-
         formatter = ChartFormatter(output_path="custom.png")
+        # Mock the dependencies
+        formatter.plt = MagicMock()
+        formatter.np = MagicMock()
+        # Mock numpy functions
+        formatter.np.sum.return_value = 0
+        formatter.np.array.return_value = MagicMock()
+        # Fix the mock to return properly structured values for unpacking
+        mock_fig = MagicMock()
+        mock_axes = ((MagicMock(), MagicMock()), (MagicMock(), MagicMock()))
+
+        # Use side_effect to handle method calls with parameters
+        def subplots_side_effect(*args, **kwargs):
+            if args == (2, 2) and kwargs.get("figsize") == (15, 10):
+                return (mock_fig, mock_axes)
+            return (MagicMock(), MagicMock())
+
+        formatter.plt.subplots.side_effect = subplots_side_effect
+        formatter.plt.savefig.return_value = None
+        formatter.plt.close.return_value = None
+
         mock_stats = self._create_mock_range_stats()
 
         result = formatter.format_range_stats(mock_stats)
 
         assert "custom.png" in result
-        mock_plt.savefig.assert_called_once_with("custom.png", dpi=300, bbox_inches="tight")
+        formatter.plt.savefig.assert_called_once_with(
+            Path("custom.png"), dpi=300, bbox_inches="tight"
+        )
 
-    @patch("beaconled.formatters.chart.plt")
-    def test_format_range_stats_error(self, mock_plt):
+    def test_format_range_stats_error(self):
         """Test range stats formatting with error."""
-        # Mock matplotlib to raise an error
-        mock_plt.subplots.side_effect = Exception("Test error")
-
         formatter = ChartFormatter()
+        # Mock the dependencies to raise an error
+        formatter.plt = MagicMock()
+        formatter.plt.subplots.side_effect = Exception("Test error")
+
         mock_stats = self._create_mock_range_stats()
 
         result = formatter.format_range_stats(mock_stats)
