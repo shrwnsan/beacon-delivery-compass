@@ -156,7 +156,8 @@ select = [
     "EM",  # flake8-errmsg
     "EXE", # flake8-executable
     "TID", # flake8-tidy-imports
-    "RUF"  # Ruff-specific rules
+    "RUF",  # Ruff-specific rules
+    "PLW",  # Pylint warnings (unused variables, etc.)
 ]
 
 # Relax rules for source files and scripts
@@ -192,6 +193,7 @@ select = [
   "E501",    # ignore line-length in tests
   "ISC001",  # implicit string concatenation
   "F841",    # allow assigned-but-unused in tests (e.g., captured stdout)
+  "PLW1510", # allow subprocess.run without explicit check in test utilities
   "FBT003",  # boolean positional in asserts in tests
   "ERA001",  # allow commented-out code in tests
   "T201",    # allow print in tests for debug

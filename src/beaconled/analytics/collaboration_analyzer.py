@@ -86,12 +86,12 @@ class CollaborationAnalyzer:
         # Group commits by files to find co-authorship
         file_authors: dict[str, list[str]] = defaultdict(list)
         for commit in range_stats.commits:
-            for _file_stat in commit.files:
-                file_authors[_file_stat.path].append(commit.author)
+            for file_stat in commit.files:
+                file_authors[file_stat.path].append(commit.author)
 
         # Calculate collaboration pairs
         author_pairs: dict[tuple[str, str], int] = defaultdict(int)
-        for _file_path, authors in file_authors.items():
+        for _, authors in file_authors.items():
             if len(authors) > 1:
                 # Remove duplicates and sort for consistent pairing
                 unique_authors = sorted(set(authors))
@@ -138,8 +138,8 @@ class CollaborationAnalyzer:
         file_type_totals: dict[str, float] = defaultdict(int)
 
         for commit in range_stats.commits:
-            for _file_stat in commit.files:
-                file_type = self._get_file_type(_file_stat.path)
+            for file_stat in commit.files:
+                file_type = self._get_file_type(file_stat.path)
                 author_expertise[commit.author][file_type] += 1
                 file_type_totals[file_type] += 1
 
@@ -265,7 +265,7 @@ class CollaborationAnalyzer:
         for commit in range_stats.commits:
             if len(commit.files) > 0:
                 authors_in_commit = set()
-                for _file_stat in commit.files:
+                for _ in commit.files:
                     authors_in_commit.add(commit.author)
                 if len(authors_in_commit) == 1:
                     single_author_commits += 1

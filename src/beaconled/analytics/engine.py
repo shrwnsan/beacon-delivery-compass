@@ -5,7 +5,7 @@ analytics components (time, team, quality, risk) into a unified system
 for the enhanced extended format.
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 from beaconled.core.models import RangeStats
 
@@ -34,12 +34,12 @@ class AnalyticsEngine:
         self.collaboration_analyzer = CollaborationAnalyzer(CollaborationConfig())
 
         # Caching for performance optimization
-        self._cache: dict = {}
+        self._cache: dict[Any, Any] = {}
 
         # Quality and risk analyzers would be initialized here
         # when they're implemented
 
-    def analyze(self, range_stats: RangeStats) -> dict:
+    def analyze(self, range_stats: RangeStats) -> dict[Any, Any]:
         """Perform comprehensive analysis on range statistics.
 
         Args:
@@ -58,7 +58,7 @@ class AnalyticsEngine:
 
         # Check if we have cached results
         if cache_key in self._cache:
-            return self._cache[cache_key]
+            return cast("dict[Any, Any]", self._cache[cache_key])
 
         # Perform time-based analysis
         time_analytics = self.time_analyzer.analyze(range_stats)
