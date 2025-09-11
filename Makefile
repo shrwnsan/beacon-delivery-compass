@@ -10,8 +10,7 @@ help:
 	@echo "  format    - Format code (black, isort)"
 	@echo "  check-deps - Check for outdated dependencies"
 	@echo "  clean     - Clean up temporary files"
-	@echo "  dev-setup - Configure pre-commit for development"
-	@echo "  prod-setup - Configure pre-commit for production"
+	@echo "  dev-setup - Install and configure pre-commit hooks"
 
 # Set up development environment
 setup:
@@ -47,21 +46,16 @@ clean:
 	find . -type d -name ".mypy_cache" -exec rm -r {} +
 	rm -rf .coverage coverage.xml htmlcov/ .ruff_cache/ .hypothesis/
 
-# Configure pre-commit for development
+# Configure pre-commit (unified configuration)
 dev-setup:
-	@echo "Configuring pre-commit for development..."
-	cp .pre-commit-dev.yaml .pre-commit-config.yaml
+	@echo "Installing pre-commit hooks..."
 	pre-commit install --install-hooks
-	@echo "\nDevelopment pre-commit configured. The following checks are enabled:"
-	@echo "- Black (lenient: 100 chars/line)"
-	@echo "- Ruff (ignoring E501,F401)"
-	@echo "- mypy (non-strict)"
-	@echo "\nUse 'make prod-setup' to switch to production checks before committing."
+	@echo "\nPre-commit configured with unified checks:"
+	@echo "- Black (100 chars/line)"
+	@echo "- Ruff (with auto-fix)"
+	@echo "- mypy (for src/ files only)"
+	@echo "- Basic file checks (whitespace, YAML, file size)"
 
-# Configure pre-commit for production
-prod-setup:
-	@echo "Configuring pre-commit for production..."
-	cp .pre-commit-prod.yaml .pre-commit-config.yaml
-	pre-commit install --install-hooks
-	@echo "\nProduction pre-commit configured with strict checks."
-	@echo "All hooks including isort, black, ruff, and mypy will run."
+# Alias for backward compatibility
+prod-setup: dev-setup
+	@echo "\nNote: Using unified pre-commit configuration (dev and prod are now the same)"
