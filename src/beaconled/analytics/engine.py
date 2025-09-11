@@ -13,9 +13,9 @@ from .collaboration_analyzer import CollaborationAnalyzer, CollaborationConfig
 from .time_analyzer import TimeAnalyzer, TimeAnalyzerConfig
 
 if TYPE_CHECKING:
+    from beaconled.formatters.base_formatter import BaseFormatter
     from beaconled.formatters.chart import ChartFormatter as ChartRenderer
     from beaconled.formatters.heatmap import HeatmapFormatter as HeatmapRenderer
-    from beaconled.formatters.rich_formatter import RichFormatter
 
 
 class AnalyticsEngine:
@@ -100,7 +100,7 @@ class EnhancedExtendedSystem:
         self.heatmap_renderer: HeatmapRenderer | None = None
 
         # Formatting pipeline
-        self.extended_formatter: RichFormatter | None = None
+        self.extended_formatter: BaseFormatter | None = None
 
     def analyze_and_format(self, range_stats: RangeStats) -> str:
         """Complete analysis and formatting pipeline.
@@ -122,4 +122,8 @@ class EnhancedExtendedSystem:
             return self.extended_formatter.format_range_stats(range_stats)
         else:
             # Fallback to basic formatting
-            return f"Enhanced analysis complete. Time analytics: {analytics["time"]},\n            Collaboration analytics: {analytics["collaboration"]}"
+            time_result = analytics["time"]
+            collab_result = analytics["collaboration"]
+            return (
+                f"Enhanced analysis complete. Time: {time_result}, Collaboration: {collab_result}"
+            )

@@ -6,7 +6,7 @@ import os
 import tempfile
 from datetime import date as date_type
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from .base_formatter import BaseFormatter
 
@@ -115,9 +115,6 @@ class HeatmapFormatter(BaseFormatter):
                     else:
                         # If no format works, skip this date
                         continue
-                else:
-                    dates.append(date_str)
-                    commits.append(count)
             except (ValueError, AttributeError):
                 continue
 
@@ -151,9 +148,9 @@ class HeatmapFormatter(BaseFormatter):
 
     def _create_calendar_heatmap(
         self,
-        ax,
+        ax: Any,
         dates: list[date_type],
-        commits: list[int],  # type: ignore
+        commits: list[int],
     ) -> None:
         """Create a simplified calendar heatmap."""
         if not MATPLOTLIB_AVAILABLE or not plt or not np or not LinearSegmentedColormap:
