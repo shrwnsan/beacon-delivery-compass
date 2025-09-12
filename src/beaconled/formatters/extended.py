@@ -367,6 +367,10 @@ class ExtendedFormatter(BaseFormatter):
             lifecycle_stats = self._get_file_lifecycle_stats(since, until)
             output.extend(self._format_file_lifecycle(lifecycle_stats))
 
+        # Add frequently changed files section
+        frequent_files = self._get_frequently_changed_files("30 days ago")
+        output.extend(self._format_frequent_files(frequent_files))
+
         # Add other sections
         output.extend(self._format_authors_section(stats))
         output.extend(self._format_daily_activity_section(stats))
@@ -579,3 +583,60 @@ class ExtendedFormatter(BaseFormatter):
             f"  {day}: {count} commit{'s' if count != 1 else ''}"
             for day, count in sorted(daily_activity.items())
         ]
+
+    def _get_frequently_changed_files(self, since: str) -> dict[str, int]:
+        """Get files ordered by change frequency.
+
+        Args:
+            since: Time period to analyze (e.g., "30 days ago")
+
+        Returns:
+            Dictionary mapping file paths to change frequency
+        """
+        from collections import defaultdict
+
+        file_changes: dict[str, int] = defaultdict(int)
+
+        try:
+            # Use GitPython to get file change counts
+            repo = git.Repo()
+
+            # Get commits since the specified time
+            commits = list(repo.iter_commits(since=since))
+
+            # Count file changes across all commits
+            for commit in commits:
+                # Get the files changed in this commit
+                for file_obj in commit.stats.files:
+                    file_path = str(file_obj)
+                    file_changes[file_path] += 1
+
+            # Sort by frequency (descending) and return top 5
+            sorted_files = sorted(file_changes.items(), key=lambda x: x[1], reverse=True)
+            return dict(sorted_files[:5])
+
+        except Exception:
+            # Handle any errors gracefully
+            return {}
+
+    def _format_frequent_files(self, frequent_files: dict[str, int]) -> list[str]:
+        """Format frequently changed files section.
+
+        Args:
+            frequent_files: Dictionary mapping file paths to change frequency
+
+        Returns:
+            List of formatted strings for the output
+        """
+        if not frequent_files:
+            return []
+
+        output = [
+            "",
+            f"{self._get_emoji('activity')} {Fore.MAGENTA}Most Frequently Changed "
+            f"(last 30 days):{Style.RESET_ALL}",
+        ]
+        for file_path, count in frequent_files.items():
+            output.append(f"  • {file_path}: {count} changes")
+
+        return output

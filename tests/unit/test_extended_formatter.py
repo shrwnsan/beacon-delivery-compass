@@ -257,3 +257,62 @@ class TestExtendedFormatter:
         import re
 
         return re.sub(r"\x1b\[[0-9;]*m", "", text)
+
+    def test_get_frequently_changed_files(self):
+        """Test the _get_frequently_changed_files method."""
+        # Since this method uses git commands, we'll test it returns a dictionary
+        # and handles errors gracefully
+
+        # Test with a short time period that should return empty results in most cases
+        frequent_files = self.formatter._get_frequently_changed_files("1 second ago")
+
+        # Should return a dictionary
+        assert isinstance(frequent_files, dict)
+
+        # Should have at most 5 entries (top 5)
+        assert len(frequent_files) <= 5
+
+        # Test with a longer time period
+        frequent_files = self.formatter._get_frequently_changed_files("30 days ago")
+
+        # Should return a dictionary
+        assert isinstance(frequent_files, dict)
+
+    def test_format_frequent_files_with_data(self):
+        """Test formatting frequent files with data."""
+        frequent_files = {
+            "src/beaconled/cli.py": 19,
+            "pyproject.toml": 18,
+            "src/beaconled/formatters/extended.py": 16,
+            "README.md": 11,
+            "src/beaconled/core/analyzer.py": 10,
+        }
+
+        result = self.formatter._format_frequent_files(frequent_files)
+        clean_result = self._strip_ansi_codes("\n".join(result)).split("\n")
+
+        # Should return a list
+        assert isinstance(result, list)
+
+        # Should have header and file entries
+        assert len(clean_result) == 7  # Empty line + Emoji + Header + 5 files
+
+        # Check header (with emoji)
+        assert (
+            "🔥 Most Frequently Changed (last 30 days):" in clean_result[1]
+        )  # Index 1 because first item is empty string
+
+        # Check file entries
+        assert "src/beaconled/cli.py: 19 changes" in clean_result[2]
+        assert "pyproject.toml: 18 changes" in clean_result[3]
+        assert "src/beaconled/formatters/extended.py: 16 changes" in clean_result[4]
+        assert "README.md: 11 changes" in clean_result[5]
+        assert "src/beaconled/core/analyzer.py: 10 changes" in clean_result[6]
+
+    def test_format_frequent_files_empty(self):
+        """Test formatting frequent files with empty data."""
+        result = self.formatter._format_frequent_files({})
+
+        # Should return an empty list
+        assert isinstance(result, list)
+        assert len(result) == 0
