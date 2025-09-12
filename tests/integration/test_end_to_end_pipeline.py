@@ -7,7 +7,7 @@ and produces expected output with performance benchmarks.
 import time
 from datetime import datetime, timedelta, timezone
 
-from beaconled.analytics import AnalyticsEngine, EnhancedExtendedSystem
+from beaconled.analytics.engine import AnalyticsEngine, ExtendedFormatSystem
 from beaconled.core.models import CommitStats, RangeStats
 from beaconled.formatters.extended import ExtendedFormatter
 from beaconled.formatters.rich_formatter import RichFormatter
@@ -53,12 +53,12 @@ class TestEndToEndPipeline:
         )
 
         # Test the complete pipeline
-        system = EnhancedExtendedSystem()
-        system.extended_formatter = RichFormatter()  # Or ExtendedFormatter()
+        system = ExtendedFormatSystem()
+        system.set_formatter(RichFormatter())  # Or ExtendedFormatter()
 
         # Benchmark the pipeline
         start_time = time.time()
-        result = system.analyze_and_format(range_stats)
+        result = system.format_analysis(range_stats)
         end_time = time.time()
 
         # Verify we get expected output
@@ -137,11 +137,11 @@ class TestEndToEndPipeline:
         )
 
         # Test the full system performance
-        system = EnhancedExtendedSystem()
-        system.extended_formatter = ExtendedFormatter()
+        system = ExtendedFormatSystem()
+        system.set_formatter(ExtendedFormatter())
 
         start_time = time.time()
-        result = system.analyze_and_format(range_stats)
+        result = system.format_analysis(range_stats)
         total_time = time.time() - start_time
 
         # Verify result
@@ -159,6 +159,8 @@ class TestErrorHandling:
 
     def test_empty_repository(self):
         """Test handling of empty repository."""
+        from beaconled.formatters.standard import StandardFormatter
+
         start_date = datetime.now(timezone.utc) - timedelta(days=1)
         end_date = datetime.now(timezone.utc)
 
@@ -173,8 +175,9 @@ class TestErrorHandling:
             authors={},
         )
 
-        system = EnhancedExtendedSystem()
-        result = system.analyze_and_format(range_stats)
+        system = ExtendedFormatSystem()
+        system.set_formatter(StandardFormatter())
+        result = system.format_analysis(range_stats)
 
         # Should handle gracefully
         assert isinstance(result, str)
@@ -182,6 +185,8 @@ class TestErrorHandling:
 
     def test_single_commit_repository(self):
         """Test handling of single commit repository."""
+        from beaconled.formatters.standard import StandardFormatter
+
         start_date = datetime.now(timezone.utc) - timedelta(days=1)
         end_date = datetime.now(timezone.utc)
 
@@ -206,8 +211,9 @@ class TestErrorHandling:
             authors={"Single Author": 1},
         )
 
-        system = EnhancedExtendedSystem()
-        result = system.analyze_and_format(range_stats)
+        system = ExtendedFormatSystem()
+        system.set_formatter(StandardFormatter())
+        result = system.format_analysis(range_stats)
 
         # Should handle gracefully
         assert isinstance(result, str)

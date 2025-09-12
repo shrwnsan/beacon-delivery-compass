@@ -1,9 +1,11 @@
 """Extended output formatter with additional analytics."""
 
 from collections import defaultdict
+from typing import Any
 
 from colorama import Fore, Style
 
+from beaconled.analytics.engine import AnalyticsEngine
 from beaconled.core.models import CommitStats, RangeStats
 from beaconled.formatters.base_formatter import BaseFormatter
 
@@ -15,12 +17,18 @@ class ExtendedFormatter(BaseFormatter):
     - File type breakdown
     - Author contribution details
     - Daily activity patterns
+    - Time-based analytics
+    - Team collaboration analysis
+    - Code quality insights
+    - Risk assessment
     """
 
     def __init__(self, *, no_emoji: bool = False):
         """Initializes the formatter."""
+        super().__init__()
         # Disable emojis in environments that don't support them
         self.no_emoji = no_emoji or not self._supports_emoji()
+        self.analytics_engine = AnalyticsEngine()
 
         self.EMOJIS = {
             "commit": "📊",
@@ -35,6 +43,10 @@ class ExtendedFormatter(BaseFormatter):
             "contributors": "👥",
             "activity": "🔥",
             "breakdown": "🔍",
+            "time": "⏱️",
+            "team": "👥",
+            "quality": "🛠️",
+            "risk": "⚠️",
         }
 
     def _supports_emoji(self) -> bool:
@@ -107,13 +119,72 @@ class ExtendedFormatter(BaseFormatter):
         count = counts["count"]
         return f"  {ext}: {count} files, +{added:,}/-{deleted:,}"
 
-    def format_range_stats(self, stats: RangeStats) -> str:
-        """Format range statistics with extended details."""
+    def _convert_analytics_object_to_dict(self, analytics: Any) -> dict[str, Any]:
+        """Convert an analytics object to a dictionary."""
+        # Ensure we return a dict, not just any object
+        if isinstance(analytics, dict):
+            return analytics
+        # If it's an object, convert to dict
+        elif hasattr(analytics, "__dict__"):
+            analytics_dict = analytics.__dict__
+            if isinstance(analytics_dict, dict):
+                return analytics_dict
+            else:
+                return {}
+        # Try to convert arbitrary objects to dict by accessing their attributes
+        elif hasattr(analytics, "__class__"):
+            result: dict[str, Any] = {}
+            for attr in ["time", "collaboration", "quality", "risk"]:
+                if hasattr(analytics, attr):
+                    result[attr] = getattr(analytics, attr)
+            return result
+        else:
+            # Fallback to empty dict
+            return {}
+
+    def _extract_stats_analytics(self, stats: RangeStats) -> dict[str, Any]:
+        """Extract analytics data from stats object attributes."""
+        stats_analytics: dict[str, Any] = {}
+        if hasattr(stats, "time"):
+            stats_analytics["time"] = stats.time
+        if hasattr(stats, "collaboration"):
+            stats_analytics["collaboration"] = stats.collaboration
+        if hasattr(stats, "quality"):
+            stats_analytics["quality"] = stats.quality
+        if hasattr(stats, "risk"):
+            stats_analytics["risk"] = stats.risk
+        return stats_analytics
+
+    def _get_analytics_data(self, stats: RangeStats) -> dict[str, Any]:
+        """Get analytics data from stats or by calling analytics engine."""
+        result: dict[str, Any] = {}
+
+        # First check if analytics is already attached to stats
+        analytics = getattr(stats, "analytics", None)
+        if analytics is not None:
+            result = self._convert_analytics_object_to_dict(analytics)
+        else:
+            # Check for individual analytics attributes on stats object
+            stats_analytics = self._extract_stats_analytics(stats)
+
+            # If we have analytics data from attributes, use it
+            if stats_analytics:
+                result = stats_analytics
+            else:
+                # Otherwise, call our own analytics engine
+                analytics_result = self.analytics_engine.analyze(stats)
+                # analytics_result is guaranteed to be a dict from the engine
+                result = analytics_result
+
+        return result
+
+    def _format_basic_stats(self, stats: RangeStats) -> list[str]:
+        """Format basic statistics section."""
         range_net_change = self._format_net_change(
             stats.total_lines_added,
             stats.total_lines_deleted,
         )
-        output = [
+        return [
             f"{self._get_emoji('range')} {Fore.CYAN}Range Analysis:{Style.RESET_ALL} "
             f"{self._format_date(stats.start_date).split()[0]} to "
             f"{self._format_date(stats.end_date).split()[0]}",
@@ -128,60 +199,167 @@ class ExtendedFormatter(BaseFormatter):
             f"{range_net_change}",
         ]
 
-        # Add authors section
-        if stats.authors:
-            output.extend(
-                [
-                    "",
-                    f"{self._get_emoji('contributors')} "
-                    f"{Fore.MAGENTA}Contributors:{Style.RESET_ALL}",
-                    *[
-                        self._format_author_stats(a, c)
-                        for a, c in sorted(
-                            stats.authors.items(),
-                            key=lambda x: x[1],
-                            reverse=True,
-                        )
-                    ],
-                ],
-            )
+    def _format_authors_section(self, stats: RangeStats) -> list[str]:
+        """Format authors section."""
+        if not stats.authors:
+            return []
 
-        # Add daily activity if available
-        if hasattr(stats, "commits_by_day"):
-            output.extend(
-                [
-                    "",
-                    (
-                        f"{self._get_emoji('activity')} "
-                        f"{Fore.MAGENTA}Temporal Analysis - Daily Activity "
-                        f"Timeline:{Style.RESET_ALL}"
-                    ),
-                    *[
-                        f"  {day}: {count} commit{'s' if count != 1 else ''}"
-                        for day, count in sorted(stats.commits_by_day.items())
-                    ],
-                ],
-            )
+        return [
+            "",
+            f"{self._get_emoji('contributors')} {Fore.MAGENTA}Contributors:{Style.RESET_ALL}",
+            *[
+                self._format_author_stats(a, c)
+                for a, c in sorted(
+                    stats.authors.items(),
+                    key=lambda x: x[1],
+                    reverse=True,
+                )
+            ],
+        ]
 
-        # Add file type breakdown if available
+    def _format_daily_activity_section(self, stats: RangeStats) -> list[str]:
+        """Format daily activity section."""
+        if not hasattr(stats, "commits_by_day"):
+            return []
+
+        return [
+            "",
+            (
+                f"{self._get_emoji('activity')} "
+                f"{Fore.MAGENTA}Temporal Analysis - Daily Activity "
+                f"Timeline:{Style.RESET_ALL}"
+            ),
+            *[
+                f"  {day}: {count} commit{'s' if count != 1 else ''}"
+                for day, count in sorted(stats.commits_by_day.items())
+            ],
+        ]
+
+    def _format_file_types_section(self, stats: RangeStats) -> list[str]:
+        """Format file types section."""
         file_types = {}
         if stats.commits:
             file_types = self._get_file_type_breakdown_from_commits(stats.commits)
         elif hasattr(stats, "file_types") and stats.file_types:
             file_types = stats.file_types
 
-        if file_types:
-            output.extend(
-                [
-                    "",
-                    f"{self._get_emoji('breakdown')} "
-                    f"{Fore.MAGENTA}File type breakdown:{Style.RESET_ALL}",
-                    *[
-                        self._format_file_type_line(ext, counts)
-                        for ext, counts in sorted(file_types.items())
-                    ],
-                ],
-            )
+        if not file_types:
+            return []
+
+        return [
+            "",
+            f"{self._get_emoji('breakdown')} {Fore.MAGENTA}File type breakdown:{Style.RESET_ALL}",
+            *[
+                self._format_file_type_line(ext, counts)
+                for ext, counts in sorted(file_types.items())
+            ],
+        ]
+
+    def _format_time_analytics_section(self, analytics: dict[str, Any]) -> list[str]:
+        """Format the time-based analytics section."""
+        has_time_analytics = (
+            isinstance(analytics, dict) and "time" in analytics and analytics["time"] is not None
+        )
+        if not has_time_analytics:
+            return []
+
+        time_analytics = analytics["time"]
+        return [
+            "",
+            f"{self._get_emoji('time')} {Fore.MAGENTA}Time-Based Analytics:{Style.RESET_ALL}",
+            f"  • Velocity: {time_analytics.velocity_trends.weekly_average:.1f} commits/week",
+            f"  • Peak day: {time_analytics.activity_heatmap.peak_day}",
+            f"  • Bus factor: {time_analytics.bus_factor.factor}",
+        ]
+
+    def _format_team_collaboration_section(self, analytics: dict[str, Any]) -> list[str]:
+        """Format the team collaboration analytics section."""
+        has_collab_analytics = (
+            isinstance(analytics, dict)
+            and "collaboration" in analytics
+            and analytics["collaboration"] is not None
+        )
+        if not has_collab_analytics:
+            return []
+
+        collab = analytics["collaboration"]
+        collab_patterns = getattr(collab, "collaboration_patterns", None)
+        knowledge_risk = (
+            collab_patterns.knowledge_risk
+            if collab_patterns and hasattr(collab_patterns, "knowledge_risk")
+            else "N/A"
+        )
+
+        return [
+            "",
+            f"{self._get_emoji('team')} {Fore.MAGENTA}Team Collaboration:{Style.RESET_ALL}",
+            f"  • Team connectivity: {getattr(collab_patterns, 'team_connectivity', 'N/A'):.1%}",
+            f"  • Knowledge risk: {knowledge_risk}",
+        ]
+
+    def _format_code_quality_section(self, analytics: dict[str, Any]) -> list[str]:
+        """Format the code quality analytics section."""
+
+        quality = None
+        if "quality" in analytics:
+            quality = analytics["quality"]
+        elif hasattr(analytics, "quality"):
+            quality = getattr(analytics, "quality", None)
+
+        if quality is not None:
+            return [
+                "",
+                f"{self._get_emoji('quality')} {Fore.MAGENTA}Code Quality:{Style.RESET_ALL}",
+                f"  • Maintainability: {getattr(quality, 'maintainability_index', 'N/A')}",
+                f"  • Test coverage: {getattr(quality, 'test_coverage', 'N/A')}%",
+            ]
+        return []
+
+    def _format_risk_assessment_section(self, analytics: dict[str, Any]) -> list[str]:
+        """Format the risk assessment analytics section."""
+
+        risk = None
+        if "risk" in analytics:
+            risk = analytics["risk"]
+        elif hasattr(analytics, "risk"):
+            risk = getattr(analytics, "risk", None)
+
+        if risk is not None:
+            risk_score = getattr(risk, "risk_score", "N/A")
+            return [
+                "",
+                f"{self._get_emoji('risk')} {Fore.MAGENTA}Risk Assessment:{Style.RESET_ALL}",
+                (
+                    f"  • Overall risk: {risk_score}/10"
+                    if risk_score != "N/A"
+                    else "  • Overall risk: N/A"
+                ),
+                (
+                    f"  • Hotspots: {len(getattr(risk, 'hotspots', []))} files"
+                    if isinstance(getattr(risk, "hotspots", []), list)
+                    else "  • Hotspots: N/A"
+                ),
+            ]
+        return []
+
+    def format_range_stats(self, stats: RangeStats) -> str:
+        """Format range statistics with extended details."""
+        output = self._format_basic_stats(stats)
+
+        # Get analytics data
+        analytics = self._get_analytics_data(stats)
+
+        # Add analytics sections
+        output.extend(self._format_time_analytics_section(analytics))
+        output.extend(self._format_team_collaboration_section(analytics))
+        output.extend(self._format_code_quality_section(analytics))
+        output.extend(self._format_risk_assessment_section(analytics))
+
+        # Add other sections
+        output.extend(self._format_authors_section(stats))
+        output.extend(self._format_daily_activity_section(stats))
+        output.extend(self._format_file_types_section(stats))
+
         return "\n".join(output)
 
     def _get_author_contribution_stats(

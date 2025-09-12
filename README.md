@@ -44,7 +44,7 @@ beaconled --since "3d"
 # Date range analysis with timezone support
 beaconled --since "2025-01-01" --until "2025-01-31"
 
-# Team performance report for the last 2 weeks
+# Extended analysis with team, quality, and risk metrics
 beaconled --since "2w" --format extended
 
 # Generate visual heatmaps of commit activity (requires matplotlib)
@@ -52,6 +52,34 @@ beaconled --since "1w" --format heatmap
 
 # Disable emoji icons for plain text output
 beaconled --since "1w" --no-emoji
+```
+
+#### Extended Format Features
+The extended format (`--format extended`) includes comprehensive analytics:
+
+- **Time-Based Analytics**: Velocity trends, activity heatmaps, peak periods
+- **Team Collaboration**: Co-authorship patterns, ownership distribution
+- **Code Quality**: Churn metrics, complexity trends, large changes
+- **Risk Assessment**: Risk indicators, hotspot detection, stability metrics
+
+Example:
+```
+=== TIME-BASED ANALYTICS ===
+• Velocity: 5.2 commits/day
+• Peak hours: 10:00, 14:00
+• Bus factor: 3
+
+=== TEAM COLLABORATION ===
+• Core contributors: alice, bob
+• Knowledge distribution: Balanced
+
+=== CODE QUALITY ===
+• Churn rate: 12.5%
+• Complexity trend: Decreasing
+
+=== RISK ASSESSMENT ===
+• Risk score: 4/10
+• Hotspots: src/auth/, src/api/
 ```
 
 #### Date Formats
@@ -111,7 +139,7 @@ Low Impact Commits: 7 (23%)
 ### Weekly Team Report
 
 ```bash
-beaconled --since "1w" --format standard
+beaconled --since "1w" --format extended
 ```
 
 ```
@@ -154,6 +182,23 @@ Most Changed Components:
   backend/api/: 6 commits, 892 lines
   tests/: 5 commits, 567 lines
   docs/: 4 commits, 154 lines
+
+=== TIME-BASED ANALYTICS ===
+• Velocity: 5.2 commits/day
+• Peak hours: 10:00, 14:00
+• Bus factor: 3
+
+=== TEAM COLLABORATION ===
+• Core contributors: alice, bob
+• Knowledge distribution: Balanced
+
+=== CODE QUALITY ===
+• Churn rate: 12.5%
+• Complexity trend: Decreasing
+
+=== RISK ASSESSMENT ===
+• Risk score: 4/10
+• Hotspots: src/auth/, src/api/
 ```
 
 ## Features
