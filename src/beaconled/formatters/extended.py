@@ -1,5 +1,6 @@
 """Extended output formatter with additional analytics."""
 
+import subprocess
 from collections import defaultdict
 from typing import Any
 
@@ -361,6 +362,16 @@ class ExtendedFormatter(BaseFormatter):
 
         # Add file lifecycle section if we have date range information
         if hasattr(stats, "start_date") and hasattr(stats, "end_date"):
+            # Add frequently changed files section
+            try:
+                # Get frequently changed files in the last 30 days
+                since = "30 days ago"
+                frequent_files = self._get_frequently_changed_files(since)
+                if frequent_files:
+                    output.append("\n" + self._format_frequent_files(frequent_files))
+            except Exception as e:
+                output.append(f"\n{Fore.RED}Error analyzing file change frequency: {e}{Style.RESET_ALL}")
+
             # Convert dates to format expected by git
             since = stats.start_date.isoformat()
             until = stats.end_date.isoformat()
@@ -372,10 +383,6 @@ class ExtendedFormatter(BaseFormatter):
         output.extend(self._format_daily_activity_section(stats))
         output.extend(self._format_file_types_section(stats))
         output.extend(self._format_largest_file_changes_section(stats))
-
-        # Add frequently changed files section
-        frequent_files = self._get_frequently_changed_files("30 days ago")
-        output.extend(self._format_frequent_files(frequent_files))
 
         return "\n".join(output)
 
@@ -594,33 +601,36 @@ class ExtendedFormatter(BaseFormatter):
         Returns:
             List of tuples (file_path, total_changes) sorted by total_changes descending
         """
-        file_changes: dict[str, int] = defaultdict(int)
-
+        file_changes: dict[str, int] = {}
         for commit in commits:
-            for file_stat in commit.files:
-                file_changes[file_stat.path] += file_stat.lines_added + file_stat.lines_deleted
+            if commit.files:
+                for file in commit.files:
+                    total = file.added + file.deleted
+                    if file.filename in file_changes:
+                        file_changes[file.filename] += total
+                    else:
+                        file_changes[file.filename] = total
 
-        # Sort by total changes descending and return top 5
-        sorted_files = sorted(file_changes.items(), key=lambda x: x[1], reverse=True)
-        return sorted_files[:5]
+        # Sort by total changes in descending order
+        return sorted(file_changes.items(), key=lambda x: x[1], reverse=True)
 
     def _format_largest_file_changes_section(self, stats: RangeStats) -> list[str]:
         """Format the largest file changes section."""
-        if not stats.commits:
-            return []
-
-        largest_changes = self._get_largest_file_changes(stats.commits)
-
-        if not largest_changes:
-            return []
-
         output = [
-            "",
-            f"{self._get_emoji('added')} {Fore.MAGENTA}Largest File Changes:{Style.RESET_ALL}",
+            f"\n{self._get_emoji('breakdown')} {Fore.MAGENTA}Largest File Changes:{Style.RESET_ALL}"
         ]
 
-        for file_path, changes in largest_changes:
-            output.append(f"  • {file_path}: {changes:,} lines changed")
+        if not hasattr(stats, 'commits') or not stats.commits:
+            output.append("  No commit data available")
+            return output
+
+        largest_changes = self._get_largest_file_changes(stats.commits)
+        if not largest_changes:
+            output.append("  No file changes detected")
+            return output
+
+        for i, (filename, changes) in enumerate(largest_changes[:5], 1):
+            output.append(f"  {i}. {filename}: {changes:,} lines changed")
 
         return output
 
@@ -657,6 +667,49 @@ class ExtendedFormatter(BaseFormatter):
 
         except Exception:
             # Handle any errors gracefully
+=======
+        import os
+        from collections import defaultdict
+
+        file_changes: dict[str, int] = defaultdict(int)
+        
+        try:
+            # Use git log to get file change counts
+            # Format: --name-only shows only file names, one per line
+            # --since limits to commits in the specified time range
+            cmd = [
+                "git",
+                "log",
+                "--name-only",
+                f"--since={since}",
+                "--pretty=format:"
+            ]
+            
+            # Execute git command in the repository directory
+            result = subprocess.run(
+                cmd,
+                cwd=os.getcwd(),
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            
+            # Count occurrences of each file
+            lines = result.stdout.strip().split('\n')
+            for line in lines:
+                if line.strip():  # Skip empty lines
+                    file_changes[line.strip()] += 1
+            
+            # Sort by frequency (descending) and return top 5
+            sorted_files = sorted(file_changes.items(), key=lambda x: x[1], reverse=True)
+            return dict(sorted_files[:5])
+            
+        except subprocess.CalledProcessError:
+            # Handle git errors gracefully
+            return {}
+        except Exception:
+            # Handle any other errors gracefully
+>>>>>>> 7e46844 (feat: Implement frequently changed files highlighting in extended format)
             return {}
 
     def _format_frequent_files(self, frequent_files: dict[str, int]) -> list[str]:
@@ -679,4 +732,8 @@ class ExtendedFormatter(BaseFormatter):
         for file_path, count in frequent_files.items():
             output.append(f"  • {file_path}: {count} changes")
 
+<<<<<<< HEAD
         return output
+=======
+        return output
+>>>>>>> 7e46844 (feat: Implement frequently changed files highlighting in extended format)
