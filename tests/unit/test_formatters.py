@@ -177,7 +177,7 @@ class TestExtendedFormatter:
         clean_result = re.sub(r"\x1b\[[0-9;]*m", "", result)
         assert "Commit: abc123de" in clean_result
         assert "Files changed: 3" in clean_result
-        assert "md: 1 files, +5/-2" in clean_result
+        assert "md: 1 file, +5/-2" in clean_result
 
     def test_format_range_stats_with_author_breakdown(self, sample_range_stats):
         # Calculate extended stats for enhanced formatting

@@ -375,11 +375,6 @@ select = [
   "PLW1514", # open without encoding
 ]
 
-"run_test.py" = [
-  "I001",   # import sort not required
-  "ANN201", # return annotation optional
-  "T201",   # prints allowed
-]
 
 "check_env_imports.py" = [
   "T201",   # prints allowed in env checker

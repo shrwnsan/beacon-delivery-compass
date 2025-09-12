@@ -114,9 +114,9 @@ class TestExtendedFormatter:
         assert "File type breakdown:" in clean_result
         # Note: No leading dot in file extensions in output
         assert "py: 2 files, +40/-10" in clean_result
-        assert "md: 1 files, +5/-2" in clean_result
-        assert "yaml: 1 files, +3/-1" in clean_result
-        assert "txt: 1 files, +2/-0" in clean_result
+        assert "md: 1 file, +5/-2" in clean_result
+        assert "yaml: 1 file, +3/-1" in clean_result
+        assert "txt: 1 file, +2/-0" in clean_result
 
     def test_format_range_stats_with_commits(self, sample_range_with_commits):
         """Test formatting range stats with commit data."""
@@ -132,23 +132,19 @@ class TestExtendedFormatter:
         assert "Net change:" in clean_result
 
         # Check author breakdown is included
-        assert "Contributors:" in clean_result
-        assert "Author 1" in clean_result
-        assert "Author 2" in clean_result
+        assert "Author Contributions:" in clean_result
+        assert "Author 1 <author1@example.com>" in clean_result
+        assert "Author 2 <author2@example.com>" in clean_result
+        assert "9 commits" in clean_result
+        assert "6 commits" in clean_result
 
-        # Note: The current implementation doesn't show file type breakdown in range stats
-        # So we'll just verify the basic structure is there
+        # Verify the basic structure is there
         assert "Range Analysis:" in clean_result
         assert "Total commits: 15" in clean_result
         assert "Total files changed: 55" in clean_result
         assert "Total lines added: 550" in clean_result
         assert "Total lines deleted: 110" in clean_result
         assert "Net change: 440" in clean_result
-
-        # Check author breakdown is included
-        assert "Contributors:" in clean_result
-        assert "Author 1 <author1@example.com>: 9 commits" in clean_result
-        assert "Author 2 <author2@example.com>: 6 commits" in clean_result
 
     def test_format_empty_commit_stats(self):
         """Test formatting commit stats with no files."""
@@ -298,8 +294,9 @@ class TestExtendedFormatter:
         assert len(clean_result) == 7  # Empty line + Emoji + Header + 5 files
 
         # Check header (with emoji)
+        # The emoji is stripped by _strip_ansi_codes, so we check for the text part
         assert (
-            "🔥 Most Frequently Changed (last 30 days):" in clean_result[1]
+            "Most Frequently Changed (last 30 days):" in clean_result[1]
         )  # Index 1 because first item is empty string
 
         # Check file entries

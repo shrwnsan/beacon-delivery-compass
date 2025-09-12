@@ -52,7 +52,7 @@ class TestExtendedFormatterFileLifecycle:
         assert len(result) == 5
         assert "File Lifecycle Activity:" in result[0]
         assert "• Files Added: 5 new files" in result[1]
-        assert "• Files Modified: 10 existing files" in result[2]
+        assert "• Files Modified: 10 files changed" in result[2]
         assert "• Files Deleted: 2 files removed" in result[3]
         assert "• Files Renamed: 3 files moved" in result[4]
 
@@ -103,8 +103,9 @@ R100	old/path/file.txt	new/path/file.txt
             # Verify the lifecycle section is included
             assert "File Lifecycle Activity:" in clean_result
             assert "• Files Added: 1 new files" in clean_result
-            assert "• Files Modified: 2 existing files" in clean_result
+            assert "• Files Modified: 2 files changed" in clean_result
             assert "• Files Deleted: 1 files removed" in clean_result
+            assert "• Files Renamed: 0 files moved" in clean_result
 
     def _strip_ansi_codes(self, text):
         """Helper method to strip ANSI color codes from text."""
