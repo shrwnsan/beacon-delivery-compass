@@ -51,6 +51,9 @@ tmp/*
 !tmp/.gitkeep
 !tmp/.coverage
 
+# Generated chart files
+beacon-charts.png
+
 # Testing
 .coverage
 .coverage.*
