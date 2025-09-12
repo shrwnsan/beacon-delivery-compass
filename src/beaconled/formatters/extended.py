@@ -359,6 +359,7 @@ class ExtendedFormatter(BaseFormatter):
         output.extend(self._format_authors_section(stats))
         output.extend(self._format_daily_activity_section(stats))
         output.extend(self._format_file_types_section(stats))
+        output.extend(self._format_largest_file_changes_section(stats))
 
         return "\n".join(output)
 
@@ -428,3 +429,42 @@ class ExtendedFormatter(BaseFormatter):
             f"  {day}: {count} commit{'s' if count != 1 else ''}"
             for day, count in sorted(daily_activity.items())
         ]
+
+    def _get_largest_file_changes(self, commits: list[CommitStats]) -> list[tuple[str, int]]:
+        """Calculate the largest file changes by summing additions + deletions per file.
+
+        Args:
+            commits: List of CommitStats objects to analyze
+
+        Returns:
+            List of tuples (file_path, total_changes) sorted by total_changes descending
+        """
+        file_changes: dict[str, int] = defaultdict(int)
+
+        for commit in commits:
+            for file_stat in commit.files:
+                file_changes[file_stat.path] += file_stat.lines_added + file_stat.lines_deleted
+
+        # Sort by total changes descending and return top 5
+        sorted_files = sorted(file_changes.items(), key=lambda x: x[1], reverse=True)
+        return sorted_files[:5]
+
+    def _format_largest_file_changes_section(self, stats: RangeStats) -> list[str]:
+        """Format the largest file changes section."""
+        if not stats.commits:
+            return []
+
+        largest_changes = self._get_largest_file_changes(stats.commits)
+
+        if not largest_changes:
+            return []
+
+        output = [
+            "",
+            f"{self._get_emoji('added')} {Fore.MAGENTA}Largest File Changes:{Style.RESET_ALL}",
+        ]
+
+        for file_path, changes in largest_changes:
+            output.append(f"  • {file_path}: {changes:,} lines changed")
+
+        return output
