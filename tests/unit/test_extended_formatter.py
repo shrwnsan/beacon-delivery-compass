@@ -1,6 +1,7 @@
 """Tests for the ExtendedFormatter class."""
 
 from datetime import datetime, timedelta, timezone
+from unittest.mock import patch
 
 import pytest
 
@@ -167,8 +168,151 @@ class TestExtendedFormatter:
         assert "File type breakdown:" in clean_result
         assert "No files changed" in clean_result
 
+    def test_format_file_lifecycle_stats(self):
+        """Test formatting of file lifecycle statistics."""
+        # Mock the _get_file_lifecycle_stats method to return specific values
+        with patch.object(self.formatter, "_get_file_lifecycle_stats") as mock_get_stats:
+            mock_get_stats.return_value = {
+                "added": 15,
+                "modified": 245,
+                "deleted": 12,
+                "renamed": 3,
+            }
+
+            # Create a range stats object with date information
+            start_date = datetime(2023, 1, 1, tzinfo=timezone.utc)
+            end_date = datetime(2023, 1, 31, tzinfo=timezone.utc)
+            range_stats = RangeStats(
+                start_date=start_date,
+                end_date=end_date,
+                total_commits=100,
+                total_files_changed=200,
+                total_lines_added=1000,
+                total_lines_deleted=500,
+            )
+
+            result = self.formatter.format_range_stats(range_stats)
+            clean_result = self._strip_ansi_codes(result)
+
+            # Check that file lifecycle section is included
+            assert "File Lifecycle Activity:" in clean_result
+            assert "Files Added: 15 new files" in clean_result
+            assert "Files Modified: 245 existing files" in clean_result
+            assert "Files Deleted: 12 files removed" in clean_result
+            assert "Files Renamed: 3 files moved" in clean_result
+
+    def test_format_file_lifecycle_stats_empty(self):
+        """Test formatting when there's no file lifecycle activity."""
+        # Mock the _get_file_lifecycle_stats method to return zeros
+        with patch.object(self.formatter, "_get_file_lifecycle_stats") as mock_get_stats:
+            mock_get_stats.return_value = {
+                "added": 0,
+                "modified": 0,
+                "deleted": 0,
+                "renamed": 0,
+            }
+
+            # Create a range stats object with date information
+            start_date = datetime(2023, 1, 1, tzinfo=timezone.utc)
+            end_date = datetime(2023, 1, 31, tzinfo=timezone.utc)
+            range_stats = RangeStats(
+                start_date=start_date,
+                end_date=end_date,
+                total_commits=100,
+                total_files_changed=200,
+                total_lines_added=1000,
+                total_lines_deleted=500,
+            )
+
+            result = self.formatter.format_range_stats(range_stats)
+            clean_result = self._strip_ansi_codes(result)
+
+            # Check that file lifecycle section is not included when all counts are zero
+            assert "File Lifecycle Activity:" not in clean_result
+
+    def test_get_file_lifecycle_stats(self):
+        """Test the _get_file_lifecycle_stats method with mocked git output."""
+        # Mock the git.Repo and its log method
+        with patch("beaconled.formatters.extended.git.Repo") as mock_repo_class:
+            mock_repo = mock_repo_class.return_value
+            mock_repo.git.log.return_value = (
+                "A\tsrc/new_file.py\n"
+                "M\tsrc/existing_file.py\n"
+                "D\tsrc/deleted_file.py\n"
+                "R100\told_name.py\tnew_name.py\n"
+                "A\tsrc/another_new_file.py\n"
+                "M\tsrc/existing_file.py\n"  # Duplicate should be counted only once
+            )
+
+            result = self.formatter._get_file_lifecycle_stats("2023-01-01", "2023-01-31")
+
+            # Check that we get the expected counts
+            assert result["added"] == 2  # Two unique files added
+            assert result["modified"] == 1  # One unique file modified
+            assert result["deleted"] == 1  # One file deleted
+            assert result["renamed"] == 1  # One file renamed
+
     def _strip_ansi_codes(self, text):
         """Helper method to strip ANSI color codes from text."""
         import re
 
         return re.sub(r"\x1b\[[0-9;]*m", "", text)
+
+    def test_get_frequently_changed_files(self):
+        """Test the _get_frequently_changed_files method."""
+        # Since this method uses git commands, we'll test it returns a dictionary
+        # and handles errors gracefully
+
+        # Test with a short time period that should return empty results in most cases
+        frequent_files = self.formatter._get_frequently_changed_files("1 second ago")
+
+        # Should return a dictionary
+        assert isinstance(frequent_files, dict)
+
+        # Should have at most 5 entries (top 5)
+        assert len(frequent_files) <= 5
+
+        # Test with a longer time period
+        frequent_files = self.formatter._get_frequently_changed_files("30 days ago")
+
+        # Should return a dictionary
+        assert isinstance(frequent_files, dict)
+
+    def test_format_frequent_files_with_data(self):
+        """Test formatting frequent files with data."""
+        frequent_files = {
+            "src/beaconled/cli.py": 19,
+            "pyproject.toml": 18,
+            "src/beaconled/formatters/extended.py": 16,
+            "README.md": 11,
+            "src/beaconled/core/analyzer.py": 10,
+        }
+
+        result = self.formatter._format_frequent_files(frequent_files)
+        clean_result = self._strip_ansi_codes("\n".join(result)).split("\n")
+
+        # Should return a list
+        assert isinstance(result, list)
+
+        # Should have header and file entries
+        assert len(clean_result) == 7  # Empty line + Emoji + Header + 5 files
+
+        # Check header (with emoji)
+        assert (
+            "🔥 Most Frequently Changed (last 30 days):" in clean_result[1]
+        )  # Index 1 because first item is empty string
+
+        # Check file entries
+        assert "src/beaconled/cli.py: 19 changes" in clean_result[2]
+        assert "pyproject.toml: 18 changes" in clean_result[3]
+        assert "src/beaconled/formatters/extended.py: 16 changes" in clean_result[4]
+        assert "README.md: 11 changes" in clean_result[5]
+        assert "src/beaconled/core/analyzer.py: 10 changes" in clean_result[6]
+
+    def test_format_frequent_files_empty(self):
+        """Test formatting frequent files with empty data."""
+        result = self.formatter._format_frequent_files({})
+
+        # Should return an empty list
+        assert isinstance(result, list)
+        assert len(result) == 0

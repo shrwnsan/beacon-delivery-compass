@@ -66,6 +66,7 @@ coverage_output.txt
 htmlcov/
 .tox/
 .hypothesis/
+test_output.txt
 
 # Documentation
 docs/_build/
