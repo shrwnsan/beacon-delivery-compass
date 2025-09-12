@@ -26,7 +26,12 @@ class ExtendedFormatter(BaseFormatter):
     """
 
     def __init__(self, *, no_emoji: bool = False, repo_path: str = "."):
-        """Initializes the formatter."""
+        """Initializes the formatter.
+
+        Args:
+            no_emoji: Whether to disable emoji output
+            repo_path: Path to the git repository
+        """
         super().__init__()
         # Disable emojis in environments that don't support them
         self.no_emoji = no_emoji or not self._supports_emoji()
@@ -103,15 +108,19 @@ class ExtendedFormatter(BaseFormatter):
         # Add file type breakdown (match test expectation wording)
         # Always include this section for consistency in extended format
         file_types = self._get_file_type_breakdown(stats.files) if stats.files else {}
-        output.extend([
-            "",
-            f"{Fore.MAGENTA}File type breakdown:{Style.RESET_ALL}",
-        ])
+        output.extend(
+            [
+                "",
+                f"{Fore.MAGENTA}File type breakdown:{Style.RESET_ALL}",
+            ]
+        )
         if file_types:
-            output.extend([
-                self._format_file_type_line(ext, counts)
-                for ext, counts in sorted(file_types.items())
-            ])
+            output.extend(
+                [
+                    self._format_file_type_line(ext, counts)
+                    for ext, counts in sorted(file_types.items())
+                ]
+            )
         else:
             output.append("  No files changed")
 
@@ -262,7 +271,9 @@ class ExtendedFormatter(BaseFormatter):
     def _format_time_analytics_section(self, analytics: dict[str, Any]) -> list[str]:
         """Format the time-based analytics section."""
         has_time_analytics = (
-            isinstance(analytics, dict) and "time" in analytics and analytics["time"] is not None
+            isinstance(analytics, dict)
+            and "time" in analytics
+            and analytics["time"] is not None
         )
         if not has_time_analytics:
             return []
@@ -276,7 +287,9 @@ class ExtendedFormatter(BaseFormatter):
             f"  • Bus factor: {time_analytics.bus_factor.factor}",
         ]
 
-    def _format_team_collaboration_section(self, analytics: dict[str, Any]) -> list[str]:
+    def _format_team_collaboration_section(
+        self, analytics: dict[str, Any]
+    ) -> list[str]:
         """Format the team collaboration analytics section."""
         has_collab_analytics = (
             isinstance(analytics, dict)
@@ -367,19 +380,17 @@ class ExtendedFormatter(BaseFormatter):
             lifecycle_stats = self._get_file_lifecycle_stats(since, until)
             output.extend(self._format_file_lifecycle(lifecycle_stats))
 
-        # Add frequently changed files section
-        frequent_files = self._get_frequently_changed_files("30 days ago")
-        output.extend(self._format_frequent_files(frequent_files))
+        # Add frequently changed files section if we have date range information
+        if hasattr(stats, "start_date"):
+            since = stats.start_date.isoformat()
+            frequent_files = self._get_frequently_changed_files(since)
+            output.extend(self._format_frequent_files(frequent_files))
 
         # Add other sections
         output.extend(self._format_authors_section(stats))
         output.extend(self._format_daily_activity_section(stats))
         output.extend(self._format_file_types_section(stats))
         output.extend(self._format_largest_file_changes_section(stats))
-
-        # Add frequently changed files section
-        frequent_files = self._get_frequently_changed_files("30 days ago")
-        output.extend(self._format_frequent_files(frequent_files))
 
         return "\n".join(output)
 
@@ -589,7 +600,9 @@ class ExtendedFormatter(BaseFormatter):
             for day, count in sorted(daily_activity.items())
         ]
 
-    def _get_largest_file_changes(self, commits: list[CommitStats]) -> list[tuple[str, int]]:
+    def _get_largest_file_changes(
+        self, commits: list[CommitStats]
+    ) -> list[tuple[str, int]]:
         """Calculate the largest file changes by summing additions + deletions per file.
 
         Args:
@@ -602,7 +615,9 @@ class ExtendedFormatter(BaseFormatter):
 
         for commit in commits:
             for file_stat in commit.files:
-                file_changes[file_stat.path] += file_stat.lines_added + file_stat.lines_deleted
+                file_changes[file_stat.path] += (
+                    file_stat.lines_added + file_stat.lines_deleted
+                )
 
         # Sort by total changes descending and return top 5
         sorted_files = sorted(file_changes.items(), key=lambda x: x[1], reverse=True)
@@ -629,13 +644,14 @@ class ExtendedFormatter(BaseFormatter):
         return output
 
     def _get_frequently_changed_files(self, since: str) -> dict[str, int]:
-        """Get files ordered by change frequency.
+        """Get files ordered by change frequency within the analysis period.
 
         Args:
-            since: Time period to analyze (e.g., "30 days ago")
+            since: Start of the analysis period in ISO format (e.g., "2025-01-01")
 
         Returns:
-            Dictionary mapping file paths to change frequency
+            Dictionary mapping file paths to change frequency, sorted by frequency (descending)
+            and limited to the top 5 most frequently changed files.
         """
         from collections import defaultdict
 
@@ -656,7 +672,9 @@ class ExtendedFormatter(BaseFormatter):
                     file_changes[file_path] += 1
 
             # Sort by frequency (descending) and return top 5
-            sorted_files = sorted(file_changes.items(), key=lambda x: x[1], reverse=True)
+            sorted_files = sorted(
+                file_changes.items(), key=lambda x: x[1], reverse=True
+            )
             return dict(sorted_files[:5])
 
         except Exception:
