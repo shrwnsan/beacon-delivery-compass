@@ -1,6 +1,5 @@
 """Extended output formatter with additional analytics."""
 
-import subprocess
 from collections import defaultdict
 from typing import Any
 
@@ -669,47 +668,36 @@ class ExtendedFormatter(BaseFormatter):
             # Handle any errors gracefully
 =======
         import os
+=======
+>>>>>>> eb01792 (fix: Resolve ruff linting issues in frequently changed files feature)
         from collections import defaultdict
 
         file_changes: dict[str, int] = defaultdict(int)
-        
+
         try:
-            # Use git log to get file change counts
-            # Format: --name-only shows only file names, one per line
-            # --since limits to commits in the specified time range
-            cmd = [
-                "git",
-                "log",
-                "--name-only",
-                f"--since={since}",
-                "--pretty=format:"
-            ]
-            
-            # Execute git command in the repository directory
-            result = subprocess.run(
-                cmd,
-                cwd=os.getcwd(),
-                capture_output=True,
-                text=True,
-                check=True
-            )
-            
-            # Count occurrences of each file
-            lines = result.stdout.strip().split('\n')
-            for line in lines:
-                if line.strip():  # Skip empty lines
-                    file_changes[line.strip()] += 1
-            
+            # Use GitPython to get file change counts
+            repo = git.Repo()
+
+            # Get commits since the specified time
+            commits = list(repo.iter_commits(since=since))
+
+            # Count file changes across all commits
+            for commit in commits:
+                # Get the files changed in this commit
+                for file_obj in commit.stats.files:
+                    file_changes[file_obj] += 1
+
             # Sort by frequency (descending) and return top 5
             sorted_files = sorted(file_changes.items(), key=lambda x: x[1], reverse=True)
             return dict(sorted_files[:5])
-            
-        except subprocess.CalledProcessError:
-            # Handle git errors gracefully
-            return {}
+
         except Exception:
+<<<<<<< HEAD
             # Handle any other errors gracefully
 >>>>>>> 7e46844 (feat: Implement frequently changed files highlighting in extended format)
+=======
+            # Handle any errors gracefully
+>>>>>>> eb01792 (fix: Resolve ruff linting issues in frequently changed files feature)
             return {}
 
     def _format_frequent_files(self, frequent_files: dict[str, int]) -> list[str]:
@@ -733,7 +721,11 @@ class ExtendedFormatter(BaseFormatter):
             output.append(f"  • {file_path}: {count} changes")
 
 <<<<<<< HEAD
+<<<<<<< HEAD
         return output
 =======
         return output
 >>>>>>> 7e46844 (feat: Implement frequently changed files highlighting in extended format)
+=======
+        return output
+>>>>>>> eb01792 (fix: Resolve ruff linting issues in frequently changed files feature)
