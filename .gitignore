@@ -55,6 +55,7 @@ tmp/*
 .coverage
 .coverage.*
 coverage.xml
+coverage_output.txt
 *.cover
 *.py,cover
 .pytest_cache/
@@ -81,6 +82,3 @@ secrets/
 
 # Organized test output directory
 scripts/test_outputs/
-
-# Worktrees
-doc-cleanup/
