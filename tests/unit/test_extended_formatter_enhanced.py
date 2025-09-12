@@ -192,17 +192,17 @@ class TestEnhancedExtendedFormatter:
             ),
         )
 
-        # Create a mock analytics result with the required structure
-        class MockAnalyticsResult:
-            def __init__(self):
-                self.time = time_analytics
-                self.collaboration = collaboration_metrics
-                self.quality = type(
-                    "Quality", (), {"maintainability_index": 85.5, "test_coverage": 78.2}
-                )()
-                self.risk = type("Risk", (), {"risk_score": 2.5, "hotspots": ["src/core/"]})()
+        # Create a mock analytics result with the required structure as a dict
+        mock_analytics_result = {
+            "time": time_analytics,
+            "collaboration": collaboration_metrics,
+            "quality": type(
+                "Quality", (), {"maintainability_index": 85.5, "test_coverage": 78.2}
+            )(),
+            "risk": type("Risk", (), {"risk_score": 2.5, "hotspots": ["src/core/"]})(),
+        }
 
-        mock_analyze.return_value = MockAnalyticsResult()
+        mock_analyze.return_value = mock_analytics_result
 
         range_stats = RangeStats(
             start_date=datetime(2023, 1, 1, tzinfo=timezone.utc),
