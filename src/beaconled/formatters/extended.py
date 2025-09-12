@@ -458,7 +458,8 @@ class ExtendedFormatter(BaseFormatter):
             for commit in commits:
                 # Get the files changed in this commit
                 for file_obj in commit.stats.files:
-                    file_changes[file_obj] += 1
+                    file_path = str(file_obj)
+                    file_changes[file_path] += 1
 
             # Sort by frequency (descending) and return top 5
             sorted_files = sorted(file_changes.items(), key=lambda x: x[1], reverse=True)
