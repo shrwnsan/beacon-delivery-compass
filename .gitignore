@@ -81,3 +81,6 @@ secrets/
 
 # Organized test output directory
 scripts/test_outputs/
+
+# Worktrees
+doc-cleanup/

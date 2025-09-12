@@ -51,6 +51,7 @@ Welcome to the Beacon documentation! This is your delivery compass for empowered
 - **[API](api/api.md)** - Python/CLI concepts and stability
 - **[Analytics Dashboard](ANALYTICS_DASHBOARD.md)** - Understanding your development metrics
 - **[Configuration Guide](configuration.md)** - Customizing Beacon's behavior
+- **[Extended Format Guide](extended-format-guide.md)** - Comprehensive analytics and insights
 
 ### Integration & Automation
 - **[Integration Guide](integrations.md)** - CI/CD, Git hooks, and team workflows
