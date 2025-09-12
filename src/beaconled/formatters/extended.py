@@ -119,6 +119,42 @@ class ExtendedFormatter(BaseFormatter):
         count = counts["count"]
         return f"  {ext}: {count} files, +{added:,}/-{deleted:,}"
 
+    def _convert_analytics_object_to_dict(self, analytics: Any) -> dict[str, Any]:
+        """Convert an analytics object to a dictionary."""
+        # Ensure we return a dict, not just any object
+        if isinstance(analytics, dict):
+            return analytics
+        # If it's an object, convert to dict
+        elif hasattr(analytics, "__dict__"):
+            analytics_dict = analytics.__dict__
+            if isinstance(analytics_dict, dict):
+                return analytics_dict
+            else:
+                return {}
+        # Try to convert arbitrary objects to dict by accessing their attributes
+        elif hasattr(analytics, "__class__"):
+            result: dict[str, Any] = {}
+            for attr in ["time", "collaboration", "quality", "risk"]:
+                if hasattr(analytics, attr):
+                    result[attr] = getattr(analytics, attr)
+            return result
+        else:
+            # Fallback to empty dict
+            return {}
+
+    def _extract_stats_analytics(self, stats: RangeStats) -> dict[str, Any]:
+        """Extract analytics data from stats object attributes."""
+        stats_analytics: dict[str, Any] = {}
+        if hasattr(stats, "time"):
+            stats_analytics["time"] = stats.time
+        if hasattr(stats, "collaboration"):
+            stats_analytics["collaboration"] = stats.collaboration
+        if hasattr(stats, "quality"):
+            stats_analytics["quality"] = stats.quality
+        if hasattr(stats, "risk"):
+            stats_analytics["risk"] = stats.risk
+        return stats_analytics
+
     def _get_analytics_data(self, stats: RangeStats) -> dict[str, Any]:
         """Get analytics data from stats or by calling analytics engine."""
         result: dict[str, Any] = {}
@@ -126,36 +162,10 @@ class ExtendedFormatter(BaseFormatter):
         # First check if analytics is already attached to stats
         analytics = getattr(stats, "analytics", None)
         if analytics is not None:
-            # Ensure we return a dict, not just any object
-            if isinstance(analytics, dict):
-                result = analytics
-            # If it's an object, convert to dict
-            elif hasattr(analytics, "__dict__"):
-                analytics_dict = analytics.__dict__
-                if isinstance(analytics_dict, dict):
-                    result = analytics_dict
-                else:
-                    result = {}
-            # Try to convert arbitrary objects to dict by accessing their attributes
-            elif hasattr(analytics, "__class__"):
-                result = {}
-                for attr in ["time", "collaboration", "quality", "risk"]:
-                    if hasattr(analytics, attr):
-                        result[attr] = getattr(analytics, attr)
-            else:
-                # Fallback to empty dict
-                result = {}
+            result = self._convert_analytics_object_to_dict(analytics)
         else:
             # Check for individual analytics attributes on stats object
-            stats_analytics: dict[str, Any] = {}
-            if hasattr(stats, "time"):
-                stats_analytics["time"] = stats.time
-            if hasattr(stats, "collaboration"):
-                stats_analytics["collaboration"] = stats.collaboration
-            if hasattr(stats, "quality"):
-                stats_analytics["quality"] = stats.quality
-            if hasattr(stats, "risk"):
-                stats_analytics["risk"] = stats.risk
+            stats_analytics = self._extract_stats_analytics(stats)
 
             # If we have analytics data from attributes, use it
             if stats_analytics:
@@ -289,7 +299,6 @@ class ExtendedFormatter(BaseFormatter):
 
     def _format_code_quality_section(self, analytics: dict[str, Any]) -> list[str]:
         """Format the code quality analytics section."""
-        
         # Ensure we're working with a dictionary
         if not isinstance(analytics, dict):
             return []
@@ -311,7 +320,6 @@ class ExtendedFormatter(BaseFormatter):
 
     def _format_risk_assessment_section(self, analytics: dict[str, Any]) -> list[str]:
         """Format the risk assessment analytics section."""
-        
         # Ensure we're working with a dictionary
         if not isinstance(analytics, dict):
             return []
