@@ -43,14 +43,22 @@ beaconled --since 1w --format json
 
 # Example JSON output structure:
 {
-  "period": {"since": "1w", "until": "now"},
-  "total_commits": 25,
-  "total_files_changed": 87,
-  "total_insertions": 1543,
-  "total_deletions": 432,
+  "start_date": "2025-09-05T08:17:15.954891+00:00",
+  "end_date": "2025-09-12T23:59:59.999999+00:00",
+  "total_commits": 34,
+  "total_files_changed": 276,
+  "total_lines_added": 18811,
+  "total_lines_deleted": 8286,
+  "net_change": 10525,
   "authors": {
-    "john.doe@example.com": 12,
-    "jane.smith@example.com": 13
+    "john.doe@example.com": 15,
+    "jane.smith@example.com": 19
+  },
+  "risk_indicators": {
+    "large_commits_count": 2,
+    "recent_bug_fixes": 5,
+    "commit_velocity": 4.9,
+    "readiness_score": 75
   },
   "file_types": {
     ".py": 45,
@@ -140,7 +148,7 @@ weekly_stats = analyzer.get_range_analytics("1w")
 
 # Calculate key metrics
 velocity = weekly_stats.total_commits / 7  # commits per day
-churn = weekly_stats.total_deletions / weekly_stats.total_insertions
+churn = weekly_stats.total_lines_deleted / weekly_stats.total_lines_added if weekly_stats.total_lines_added > 0 else 0
 impact_score = weekly_stats.total_files_changed / weekly_stats.total_commits
 
 print(f"Daily velocity: {velocity:.1f} commits")
