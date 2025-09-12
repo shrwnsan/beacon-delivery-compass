@@ -1,6 +1,7 @@
 """Tests for the ExtendedFormatter class."""
 
 from datetime import datetime, timedelta, timezone
+from unittest.mock import patch
 
 import pytest
 
@@ -166,6 +167,90 @@ class TestExtendedFormatter:
         # File type breakdown should always be shown in extended format for consistency
         assert "File type breakdown:" in clean_result
         assert "No files changed" in clean_result
+
+    def test_format_file_lifecycle_stats(self):
+        """Test formatting of file lifecycle statistics."""
+        # Mock the _get_file_lifecycle_stats method to return specific values
+        with patch.object(self.formatter, "_get_file_lifecycle_stats") as mock_get_stats:
+            mock_get_stats.return_value = {
+                "added": 15,
+                "modified": 245,
+                "deleted": 12,
+                "renamed": 3,
+            }
+
+            # Create a range stats object with date information
+            start_date = datetime(2023, 1, 1, tzinfo=timezone.utc)
+            end_date = datetime(2023, 1, 31, tzinfo=timezone.utc)
+            range_stats = RangeStats(
+                start_date=start_date,
+                end_date=end_date,
+                total_commits=100,
+                total_files_changed=200,
+                total_lines_added=1000,
+                total_lines_deleted=500,
+            )
+
+            result = self.formatter.format_range_stats(range_stats)
+            clean_result = self._strip_ansi_codes(result)
+
+            # Check that file lifecycle section is included
+            assert "File Lifecycle Activity:" in clean_result
+            assert "Files Added: 15 new files" in clean_result
+            assert "Files Modified: 245 existing files" in clean_result
+            assert "Files Deleted: 12 files removed" in clean_result
+            assert "Files Renamed: 3 files moved" in clean_result
+
+    def test_format_file_lifecycle_stats_empty(self):
+        """Test formatting when there's no file lifecycle activity."""
+        # Mock the _get_file_lifecycle_stats method to return zeros
+        with patch.object(self.formatter, "_get_file_lifecycle_stats") as mock_get_stats:
+            mock_get_stats.return_value = {
+                "added": 0,
+                "modified": 0,
+                "deleted": 0,
+                "renamed": 0,
+            }
+
+            # Create a range stats object with date information
+            start_date = datetime(2023, 1, 1, tzinfo=timezone.utc)
+            end_date = datetime(2023, 1, 31, tzinfo=timezone.utc)
+            range_stats = RangeStats(
+                start_date=start_date,
+                end_date=end_date,
+                total_commits=100,
+                total_files_changed=200,
+                total_lines_added=1000,
+                total_lines_deleted=500,
+            )
+
+            result = self.formatter.format_range_stats(range_stats)
+            clean_result = self._strip_ansi_codes(result)
+
+            # Check that file lifecycle section is not included when all counts are zero
+            assert "File Lifecycle Activity:" not in clean_result
+
+    def test_get_file_lifecycle_stats(self):
+        """Test the _get_file_lifecycle_stats method with mocked git output."""
+        # Mock the git.Repo and its log method
+        with patch("beaconled.formatters.extended.git.Repo") as mock_repo_class:
+            mock_repo = mock_repo_class.return_value
+            mock_repo.git.log.return_value = (
+                "A\tsrc/new_file.py\n"
+                "M\tsrc/existing_file.py\n"
+                "D\tsrc/deleted_file.py\n"
+                "R100\told_name.py\tnew_name.py\n"
+                "A\tsrc/another_new_file.py\n"
+                "M\tsrc/existing_file.py\n"  # Duplicate should be counted only once
+            )
+
+            result = self.formatter._get_file_lifecycle_stats("2023-01-01", "2023-01-31")
+
+            # Check that we get the expected counts
+            assert result["added"] == 2  # Two unique files added
+            assert result["modified"] == 1  # One unique file modified
+            assert result["deleted"] == 1  # One file deleted
+            assert result["renamed"] == 1  # One file renamed
 
     def _strip_ansi_codes(self, text):
         """Helper method to strip ANSI color codes from text."""
