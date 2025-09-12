@@ -3,9 +3,9 @@
 # Pre-commit hook to check for machine-specific paths in committed files
 # This helps prevent committing sensitive information like local file paths
 
-# Check if any staged files contain machine-specific paths
-# We use a pattern that matches /Users/ followed by alphanumeric characters and underscores
-machine_path_pattern="/Users/[a-zA-Z0-9_]+"
+# Get the home directory and escape it for regex
+HOME_DIR=$(echo $HOME | sed 's/\//\\\//g')
+machine_path_pattern="$HOME_DIR/[^\s]+"
 staged_files=$(git diff --cached --name-only --diff-filter=ACMR)
 
 if [ -n "$staged_files" ]; then

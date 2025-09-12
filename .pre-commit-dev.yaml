@@ -35,6 +35,16 @@ repos:
     -   id: check-added-large-files
         args: ['--maxkb=500']
 
+# Machine path check (keep in development to prevent committing sensitive paths)
+-   repo: local
+    hooks:
+    -   id: check-machine-paths
+        name: check for machine-specific paths
+        entry: scripts/check_machine_paths.sh
+        language: script
+        pass_filenames: false
+        files: '.*'
+
 # Skip these in development
 # - isort (handled by ruff)
 # - flake8 (handled by ruff)
