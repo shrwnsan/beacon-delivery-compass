@@ -22,7 +22,7 @@ repos:
         args: [--ignore-missing-imports]
         additional_dependencies: [types-python-dateutil, types-pytz, types-requests]
         exclude: '^tests/'
-        files: '^src/beaconled/.*\.py$'
+        files: '^src/beaconled/.*\\.py$'
 
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -32,3 +32,12 @@ repos:
     -   id: check-yaml
     -   id: check-added-large-files
         args: ['--maxkb=1000']
+
+-   repo: local
+    hooks:
+    -   id: check-machine-paths
+        name: check for machine-specific paths
+        entry: scripts/check_machine_paths.sh
+        language: script
+        pass_filenames: false
+        files: '.*'
