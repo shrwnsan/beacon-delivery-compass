@@ -1,6 +1,7 @@
 """Extended output formatter with additional analytics."""
 
 from collections import defaultdict
+from typing import Any
 
 from colorama import Fore, Style
 
@@ -118,37 +119,54 @@ class ExtendedFormatter(BaseFormatter):
         count = counts["count"]
         return f"  {ext}: {count} files, +{added:,}/-{deleted:,}"
 
-    def _get_analytics_data(self, stats: RangeStats) -> dict:
+    def _get_analytics_data(self, stats: RangeStats) -> dict[str, Any]:
         """Get analytics data from stats or by calling analytics engine."""
+        result: dict[str, Any] = {}
+
+        # First check if analytics is already attached to stats
         analytics = getattr(stats, "analytics", None)
         if analytics is not None:
-            return analytics
-
-        # Check for individual analytics attributes
-        analytics = {}
-        if hasattr(stats, "time"):
-            analytics["time"] = stats.time
-        if hasattr(stats, "collaboration"):
-            analytics["collaboration"] = stats.collaboration
-        if hasattr(stats, "quality"):
-            analytics["quality"] = stats.quality
-        if hasattr(stats, "risk"):
-            analytics["risk"] = stats.risk
-
-        # If we still don't have analytics data, call our own analytics engine
-        if not analytics:
-            analytics_result = self.analytics_engine.analyze(stats)
-            # Handle case where analytics_result might be an object instead of dict
-            if hasattr(analytics_result, "__dict__"):
-                # Convert object to dictionary
-                analytics = {}
-                for key in ["time", "collaboration", "quality", "risk"]:
-                    if hasattr(analytics_result, key):
-                        analytics[key] = getattr(analytics_result, key)
+            # Ensure we return a dict, not just any object
+            if isinstance(analytics, dict):
+                result = analytics
+            # If it's an object, convert to dict
+            elif hasattr(analytics, "__dict__"):
+                analytics_dict = analytics.__dict__
+                if isinstance(analytics_dict, dict):
+                    result = analytics_dict
+                else:
+                    result = {}
+            # Try to convert arbitrary objects to dict by accessing their attributes
+            elif hasattr(analytics, "__class__"):
+                result = {}
+                for attr in ["time", "collaboration", "quality", "risk"]:
+                    if hasattr(analytics, attr):
+                        result[attr] = getattr(analytics, attr)
             else:
-                analytics = analytics_result
+                # Fallback to empty dict
+                result = {}
+        else:
+            # Check for individual analytics attributes on stats object
+            stats_analytics: dict[str, Any] = {}
+            if hasattr(stats, "time"):
+                stats_analytics["time"] = stats.time
+            if hasattr(stats, "collaboration"):
+                stats_analytics["collaboration"] = stats.collaboration
+            if hasattr(stats, "quality"):
+                stats_analytics["quality"] = stats.quality
+            if hasattr(stats, "risk"):
+                stats_analytics["risk"] = stats.risk
 
-        return analytics
+            # If we have analytics data from attributes, use it
+            if stats_analytics:
+                result = stats_analytics
+            else:
+                # Otherwise, call our own analytics engine
+                analytics_result = self.analytics_engine.analyze(stats)
+                # analytics_result is guaranteed to be a dict from the engine
+                result = analytics_result
+
+        return result
 
     def _format_basic_stats(self, stats: RangeStats) -> list[str]:
         """Format basic statistics section."""
@@ -227,7 +245,7 @@ class ExtendedFormatter(BaseFormatter):
             ],
         ]
 
-    def _format_time_analytics_section(self, analytics: dict) -> list[str]:
+    def _format_time_analytics_section(self, analytics: dict[str, Any]) -> list[str]:
         """Format the time-based analytics section."""
         has_time_analytics = (
             isinstance(analytics, dict) and "time" in analytics and analytics["time"] is not None
@@ -244,7 +262,7 @@ class ExtendedFormatter(BaseFormatter):
             f"  • Bus factor: {time_analytics.bus_factor.factor}",
         ]
 
-    def _format_team_collaboration_section(self, analytics: dict) -> list[str]:
+    def _format_team_collaboration_section(self, analytics: dict[str, Any]) -> list[str]:
         """Format the team collaboration analytics section."""
         has_collab_analytics = (
             isinstance(analytics, dict)
@@ -269,8 +287,10 @@ class ExtendedFormatter(BaseFormatter):
             f"  • Knowledge risk: {knowledge_risk}",
         ]
 
-    def _format_code_quality_section(self, analytics: dict) -> list[str]:
+    def _format_code_quality_section(self, analytics: dict[str, Any]) -> list[str]:
         """Format the code quality analytics section."""
+        
+        # Ensure we're working with a dictionary
         if not isinstance(analytics, dict):
             return []
 
@@ -289,8 +309,10 @@ class ExtendedFormatter(BaseFormatter):
             ]
         return []
 
-    def _format_risk_assessment_section(self, analytics: dict) -> list[str]:
+    def _format_risk_assessment_section(self, analytics: dict[str, Any]) -> list[str]:
         """Format the risk assessment analytics section."""
+        
+        # Ensure we're working with a dictionary
         if not isinstance(analytics, dict):
             return []
 
