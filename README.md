@@ -61,6 +61,10 @@ The extended format (`--format extended`) includes comprehensive analytics:
 - **Team Collaboration**: Co-authorship patterns, ownership distribution
 - **Code Quality**: Churn metrics, complexity trends, large changes
 - **Risk Assessment**: Risk indicators, hotspot detection, stability metrics
+- **File Analysis**:
+  - **Largest Changes**: Identify files with most modifications (additions + deletions)
+  - **Frequently Changed**: Track most active files during the analysis period
+  - **Lifecycle Tracking**: Monitor file operations (added/modified/deleted/renamed)
 
 Example:
 ```
@@ -80,6 +84,27 @@ Example:
 === RISK ASSESSMENT ===
 • Risk score: 4/10
 • Hotspots: src/auth/, src/api/
+
+=== FILE ANALYSIS ===
+• Largest Changes (Top 5):
+  - src/core/engine.py: 1,245 lines changed
+  - tests/test_engine.py: 856 lines changed
+  - src/api/endpoints.py: 732 lines changed
+  - src/utils/helpers.py: 521 lines changed
+  - docs/api_reference.md: 487 lines changed
+
+• Frequently Changed:
+  - src/utils/helpers.py: 12 changes
+  - src/config/settings.py: 8 changes
+  - tests/conftest.py: 7 changes
+  - src/api/middleware/auth.py: 6 changes
+  - src/core/models.py: 5 changes
+
+• File Lifecycle (this period):
+  - Added: 12 files
+  - Modified: 45 files
+  - Deleted: 5 files
+  - Renamed: 3 files
 ```
 
 #### Date Formats
@@ -199,6 +224,27 @@ Most Changed Components:
 === RISK ASSESSMENT ===
 • Risk score: 4/10
 • Hotspots: src/auth/, src/api/
+
+=== FILE ANALYSIS ===
+• Largest Changes (Top 5):
+  - src/core/engine.py: 1,245 lines changed
+  - tests/test_engine.py: 856 lines changed
+  - src/api/endpoints.py: 732 lines changed
+  - src/utils/helpers.py: 521 lines changed
+  - docs/api_reference.md: 487 lines changed
+
+• Frequently Changed:
+  - src/utils/helpers.py: 12 changes
+  - src/config/settings.py: 8 changes
+  - tests/conftest.py: 7 changes
+  - src/api/middleware/auth.py: 6 changes
+  - src/core/models.py: 5 changes
+
+• File Lifecycle (this period):
+  - Added: 12 files
+  - Modified: 45 files
+  - Deleted: 5 files
+  - Renamed: 3 files
 ```
 
 ## Features
