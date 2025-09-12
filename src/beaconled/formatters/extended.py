@@ -178,8 +178,7 @@ class ExtendedFormatter(BaseFormatter):
 
         return [
             "",
-            f"{self._get_emoji('contributors')} "
-            f"{Fore.MAGENTA}Contributors:{Style.RESET_ALL}",
+            f"{self._get_emoji('contributors')} {Fore.MAGENTA}Contributors:{Style.RESET_ALL}",
             *[
                 self._format_author_stats(a, c)
                 for a, c in sorted(
@@ -221,8 +220,7 @@ class ExtendedFormatter(BaseFormatter):
 
         return [
             "",
-            f"{self._get_emoji('breakdown')} "
-            f"{Fore.MAGENTA}File type breakdown:{Style.RESET_ALL}",
+            f"{self._get_emoji('breakdown')} {Fore.MAGENTA}File type breakdown:{Style.RESET_ALL}",
             *[
                 self._format_file_type_line(ext, counts)
                 for ext, counts in sorted(file_types.items())
@@ -232,9 +230,7 @@ class ExtendedFormatter(BaseFormatter):
     def _format_time_analytics_section(self, analytics: dict) -> list[str]:
         """Format the time-based analytics section."""
         has_time_analytics = (
-            isinstance(analytics, dict)
-            and "time" in analytics
-            and analytics["time"] is not None
+            isinstance(analytics, dict) and "time" in analytics and analytics["time"] is not None
         )
         if not has_time_analytics:
             return []
