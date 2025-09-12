@@ -3,6 +3,7 @@
 from collections import defaultdict
 from typing import Any
 
+import git
 from colorama import Fore, Style
 
 from beaconled.analytics.engine import AnalyticsEngine
@@ -21,14 +22,21 @@ class ExtendedFormatter(BaseFormatter):
     - Team collaboration analysis
     - Code quality insights
     - Risk assessment
+    - File lifecycle tracking
     """
 
-    def __init__(self, *, no_emoji: bool = False):
-        """Initializes the formatter."""
+    def __init__(self, *, no_emoji: bool = False, repo_path: str = "."):
+        """Initializes the formatter.
+
+        Args:
+            no_emoji: Whether to disable emoji output
+            repo_path: Path to the git repository
+        """
         super().__init__()
         # Disable emojis in environments that don't support them
         self.no_emoji = no_emoji or not self._supports_emoji()
         self.analytics_engine = AnalyticsEngine()
+        self.repo_path = repo_path
 
         self.EMOJIS = {
             "commit": "📊",
@@ -47,6 +55,7 @@ class ExtendedFormatter(BaseFormatter):
             "team": "👥",
             "quality": "🛠️",
             "risk": "⚠️",
+            "lifecycle": "🔄",
         }
 
     def _supports_emoji(self) -> bool:
@@ -355,27 +364,166 @@ class ExtendedFormatter(BaseFormatter):
         output.extend(self._format_code_quality_section(analytics))
         output.extend(self._format_risk_assessment_section(analytics))
 
+        # Add file lifecycle section if we have date range information
+        if hasattr(stats, "start_date") and hasattr(stats, "end_date"):
+            # Convert dates to format expected by git
+            since = stats.start_date.isoformat()
+            until = stats.end_date.isoformat()
+            lifecycle_stats = self._get_file_lifecycle_stats(since, until)
+            output.extend(self._format_file_lifecycle(lifecycle_stats))
+
+        # Add frequently changed files section if we have date range information
+        if hasattr(stats, "start_date"):
+            since = stats.start_date.isoformat()
+            frequent_files = self._get_frequently_changed_files(since)
+            output.extend(self._format_frequent_files(frequent_files))
+
         # Add other sections
         output.extend(self._format_authors_section(stats))
         output.extend(self._format_daily_activity_section(stats))
         output.extend(self._format_file_types_section(stats))
+        output.extend(self._format_largest_file_changes_section(stats))
 
         return "\n".join(output)
 
-    def _get_author_contribution_stats(
-        self,
-        authors: dict[str, int],
-        total_commits: int,
-    ) -> list[str]:
-        """Format author contribution statistics."""
-        return [
-            f"  {author}: {count} commits ({count / total_commits:.1%})"
-            for author, count in sorted(
-                authors.items(),
-                key=lambda x: x[1],
-                reverse=True,
+    def _get_file_lifecycle_stats(self, since: str, until: str) -> dict[str, int]:
+        """Get file lifecycle statistics from git log.
+
+        Args:
+            since: Start date for analysis
+            until: End date for analysis
+
+        Returns:
+            Dictionary with file lifecycle counts (added, modified, deleted, renamed)
+        """
+        # Initialize counts
+        stats = {
+            "added": 0,
+            "modified": 0,
+            "deleted": 0,
+            "renamed": 0,
+        }
+
+        try:
+            # Run git log with name-status to get file operations
+            repo = git.Repo(self.repo_path)
+            log_output = repo.git.log(
+                "--name-status",
+                "--pretty=format:",
+                f"--since={since}",
+                f"--until={until}",
             )
-        ]
+
+            # Parse the output to count file operations
+            stats = self._parse_git_log_output(log_output)
+        except Exception:
+            # If we can't get git info, return zeros
+            pass
+
+        return stats
+
+    def _parse_git_log_output(self, log_output: str) -> dict[str, int]:
+        """Parse git log output to count file operations.
+
+        Args:
+            log_output: Raw output from git log command
+
+        Returns:
+            Dictionary with file lifecycle counts
+        """
+        stats = {"added": 0, "modified": 0, "deleted": 0, "renamed": 0}
+        files_seen: set[str] = set()
+        lines = log_output.splitlines()
+
+        for line in lines:
+            if not line.strip():
+                continue
+
+            parts = line.split("\t")
+            if not parts:
+                continue
+
+            status = parts[0]
+            file_path = parts[1] if len(parts) > 1 else None
+
+            if not file_path:
+                continue
+
+            # Handle different status codes
+            if status == "A":  # Added
+                self._handle_added_file(stats, files_seen, file_path)
+            elif status == "M":  # Modified
+                self._handle_modified_file(stats, files_seen, file_path)
+            elif status == "D":  # Deleted
+                self._handle_deleted_file(stats, files_seen, file_path)
+            elif status.startswith("R"):  # Renamed
+                new_path = parts[2] if len(parts) > 2 else file_path
+                self._handle_renamed_file(stats, files_seen, new_path)
+
+        return stats
+
+    def _handle_added_file(
+        self, stats: dict[str, int], files_seen: set[str], file_path: str
+    ) -> None:
+        """Handle added file in git log."""
+        if file_path not in files_seen:
+            stats["added"] += 1
+            files_seen.add(file_path)
+
+    def _handle_modified_file(
+        self, stats: dict[str, int], files_seen: set[str], file_path: str
+    ) -> None:
+        """Handle modified file in git log."""
+        if file_path not in files_seen:
+            stats["modified"] += 1
+            files_seen.add(file_path)
+
+    def _handle_deleted_file(
+        self, stats: dict[str, int], files_seen: set[str], file_path: str
+    ) -> None:
+        """Handle deleted file in git log."""
+        if file_path not in files_seen:
+            stats["deleted"] += 1
+            files_seen.add(file_path)
+
+    def _handle_renamed_file(
+        self, stats: dict[str, int], files_seen: set[str], new_path: str
+    ) -> None:
+        """Handle renamed file in git log."""
+        if new_path not in files_seen:
+            stats["renamed"] += 1
+            files_seen.add(new_path)
+
+    def _format_file_lifecycle(self, stats: dict[str, int]) -> list[str]:
+        """Format file lifecycle statistics for display.
+
+        Args:
+            stats: Dictionary with file lifecycle counts
+
+        Returns:
+            List of formatted strings for display
+        """
+        output = []
+
+        # Only show the section if we have any activity
+        if any(count > 0 for count in stats.values()):
+            lifecycle_header = (
+                f"{self._get_emoji('lifecycle')} "
+                f"{Fore.MAGENTA}File Lifecycle Activity:{Style.RESET_ALL}"
+            )
+            output.append(lifecycle_header)
+
+            # Only show non-zero categories
+            if stats["added"] > 0:
+                output.append(f"  • Files Added: {stats['added']} new files")
+            if stats["modified"] > 0:
+                output.append(f"  • Files Modified: {stats['modified']} existing files")
+            if stats["deleted"] > 0:
+                output.append(f"  • Files Deleted: {stats['deleted']} files removed")
+            if stats["renamed"] > 0:
+                output.append(f"  • Files Renamed: {stats['renamed']} files moved")
+
+        return output
 
     def _get_file_type_breakdown_from_commits(
         self, commits: list[CommitStats]
@@ -407,6 +555,21 @@ class ExtendedFormatter(BaseFormatter):
 
         return dict(file_types)
 
+    def _get_author_contribution_stats(
+        self,
+        authors: dict[str, int],
+        total_commits: int,
+    ) -> list[str]:
+        """Format author contribution statistics."""
+        return [
+            f"  {author}: {count} commits ({count / total_commits:.1%})"
+            for author, count in sorted(
+                authors.items(),
+                key=lambda x: x[1],
+                reverse=True,
+            )
+        ]
+
     def _get_daily_activity_stats(self, commits: list[CommitStats]) -> list[str]:
         """Format daily activity statistics.
 
@@ -428,3 +591,100 @@ class ExtendedFormatter(BaseFormatter):
             f"  {day}: {count} commit{'s' if count != 1 else ''}"
             for day, count in sorted(daily_activity.items())
         ]
+
+    def _get_largest_file_changes(self, commits: list[CommitStats]) -> list[tuple[str, int]]:
+        """Calculate the largest file changes by summing additions + deletions per file.
+
+        Args:
+            commits: List of CommitStats objects to analyze
+
+        Returns:
+            List of tuples (file_path, total_changes) sorted by total_changes descending
+        """
+        file_changes: dict[str, int] = defaultdict(int)
+
+        for commit in commits:
+            for file_stat in commit.files:
+                file_changes[file_stat.path] += file_stat.lines_added + file_stat.lines_deleted
+
+        # Sort by total changes descending and return top 5
+        sorted_files = sorted(file_changes.items(), key=lambda x: x[1], reverse=True)
+        return sorted_files[:5]
+
+    def _format_largest_file_changes_section(self, stats: RangeStats) -> list[str]:
+        """Format the largest file changes section."""
+        if not stats.commits:
+            return []
+
+        largest_changes = self._get_largest_file_changes(stats.commits)
+
+        if not largest_changes:
+            return []
+
+        output = [
+            "",
+            f"{self._get_emoji('added')} {Fore.MAGENTA}Largest File Changes:{Style.RESET_ALL}",
+        ]
+
+        for file_path, changes in largest_changes:
+            output.append(f"  • {file_path}: {changes:,} lines changed")
+
+        return output
+
+    def _get_frequently_changed_files(self, since: str) -> dict[str, int]:
+        """Get files ordered by change frequency within the analysis period.
+
+        Args:
+            since: Start of the analysis period in ISO format (e.g., "2025-01-01")
+
+        Returns:
+            Dictionary mapping file paths to change frequency, sorted by frequency (descending)
+            and limited to the top 5 most frequently changed files.
+        """
+        from collections import defaultdict
+
+        file_changes: dict[str, int] = defaultdict(int)
+
+        try:
+            # Use GitPython to get file change counts
+            repo = git.Repo()
+
+            # Get commits since the specified time
+            commits = list(repo.iter_commits(since=since))
+
+            # Count file changes across all commits
+            for commit in commits:
+                # Get the files changed in this commit
+                for file_obj in commit.stats.files:
+                    file_path = str(file_obj)
+                    file_changes[file_path] += 1
+
+            # Sort by frequency (descending) and return top 5
+            sorted_files = sorted(file_changes.items(), key=lambda x: x[1], reverse=True)
+            return dict(sorted_files[:5])
+
+        except Exception:
+            # Handle any errors gracefully
+            return {}
+
+    def _format_frequent_files(self, frequent_files: dict[str, int]) -> list[str]:
+        """Format frequently changed files section.
+
+        Args:
+            frequent_files: Dictionary mapping file paths to change frequency
+
+        Returns:
+            List of formatted strings for the output
+        """
+        if not frequent_files:
+            return []
+
+        output = [
+            "",
+            f"{self._get_emoji('activity')} {Fore.MAGENTA}Most Frequently Changed "
+            f"(last 30 days):{Style.RESET_ALL}",
+        ]
+        for file_path, count in frequent_files.items():
+            output.append(f"  • {file_path}: {count} changes")
+
+        return output
