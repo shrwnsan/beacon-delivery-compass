@@ -1,4 +1,7 @@
 name: CI
+# Restrict permissions to minimum required (security best practice)
+permissions:
+  contents: read
 
 on:
   push:
