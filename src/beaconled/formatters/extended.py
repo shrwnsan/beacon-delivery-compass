@@ -299,9 +299,6 @@ class ExtendedFormatter(BaseFormatter):
 
     def _format_code_quality_section(self, analytics: dict[str, Any]) -> list[str]:
         """Format the code quality analytics section."""
-        # Ensure we're working with a dictionary
-        if not isinstance(analytics, dict):
-            return []
 
         quality = None
         if "quality" in analytics:
@@ -320,9 +317,6 @@ class ExtendedFormatter(BaseFormatter):
 
     def _format_risk_assessment_section(self, analytics: dict[str, Any]) -> list[str]:
         """Format the risk assessment analytics section."""
-        # Ensure we're working with a dictionary
-        if not isinstance(analytics, dict):
-            return []
 
         risk = None
         if "risk" in analytics:
