@@ -1,12 +1,13 @@
-"""Integration tests for the AnalyticsEngine and EnhancedExtendedSystem.
+"""Integration tests from beaconled.analytics.engine import ExtendedFormatSystem.
 
 These tests verify that all components integrate correctly and produce
 expected output for the enhanced extended format.
 """
 
+import time
 from datetime import datetime, timedelta, timezone
 
-from beaconled.analytics import AnalyticsEngine, EnhancedExtendedSystem
+from beaconled.analytics import AnalyticsEngine, ExtendedFormatSystem
 from beaconled.core.models import CommitStats, RangeStats
 
 
@@ -67,16 +68,16 @@ class TestAnalyticsEngine:
         assert result["collaboration"] is not None
 
 
-class TestEnhancedExtendedSystem:
+class TestExtendedFormatSystem:
     """Test suite for the EnhancedExtendedSystem class."""
 
     def test_system_initialization(self):
-        """Test that EnhancedExtendedSystem initializes correctly."""
-        system = EnhancedExtendedSystem()
+        """Test that ExtendedFormatSystem initializes correctly."""
+        system = ExtendedFormatSystem()
         assert system.analytics_engine is not None
         assert system.chart_renderer is None  # Not yet implemented
         assert system.heatmap_renderer is None  # Not yet implemented
-        assert system.extended_formatter is None  # Not yet set
+        assert system.formatter is None  # Not yet set
 
     def test_analyze_and_format_with_simple_data(self):
         """Test the complete analysis and formatting pipeline."""
@@ -106,11 +107,17 @@ class TestEnhancedExtendedSystem:
         )
 
         # Test the system
-        system = EnhancedExtendedSystem()
-        result = system.analyze_and_format(range_stats)
+        system = ExtendedFormatSystem()
+        from beaconled.formatters.standard import StandardFormatter
 
-        # Verify we get a string result
+        system.set_formatter(StandardFormatter())
+
+        # Benchmark the pipeline
+        start_time = time.time()
+        result = system.format_analysis(range_stats)
         assert isinstance(result, str)
         assert len(result) > 0
-        # Should contain information about the analysis
-        assert "Enhanced analysis complete" in result
+        # Should contain expected output sections
+        assert "Analysis Period:" in result
+        assert "TEAM OVERVIEW" in result
+        assert "CONTRIBUTOR BREAKDOWN" in result

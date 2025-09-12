@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Enhanced Extended Format Features**: Integrated all enhanced-extended format features into the standard extended format
+  - Added time-based analytics including velocity, peak hours, and bus factor
+  - Integrated team collaboration metrics with core contributor identification
+  - Added code quality analysis with churn rate and complexity trends
+  - Implemented risk assessment with security vulnerability detection
+  - Added comprehensive test coverage for all new analytics features
+
+### Changed
+- **Format Consolidation**: Merged enhanced-extended format into extended format
+  - Removed `--format enhanced-extended` CLI option
+  - All enhanced features are now available in the standard `--format extended`
+  - Updated all documentation to reflect the unified format
+  - Improved output formatting for better readability of analytics
+
+### Deprecated
+- **Enhanced-Extended Format**: The separate `enhanced-extended` format is deprecated in favor of the enhanced `extended` format
+  - A migration guide is available at `docs/migration/enhanced-extended-migration-guide.md`
+  - Backward compatibility is maintained for existing scripts using the extended format
+
+### Fixed
+- **Analytics Integration**: Fixed issues with analytics engine integration
+  - Improved error handling for missing analytics data
+  - Fixed type hints and return types in analytics components
+  - Enhanced test coverage for analytics functionality
+
 ## [v0.3.0] - 2025-08-20
 
 ### Added
