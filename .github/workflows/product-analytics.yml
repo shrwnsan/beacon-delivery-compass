@@ -1,4 +1,6 @@
 name: Product Analytics
+permissions:
+  contents: read
 
 on:
   schedule:
