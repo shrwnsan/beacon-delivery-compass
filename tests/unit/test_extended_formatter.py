@@ -262,19 +262,19 @@ class TestExtendedFormatter:
         """Test the _get_frequently_changed_files method."""
         # Since this method uses git commands, we'll test it returns a dictionary
         # and handles errors gracefully
-        
+
         # Test with a short time period that should return empty results in most cases
         frequent_files = self.formatter._get_frequently_changed_files("1 second ago")
-        
+
         # Should return a dictionary
         assert isinstance(frequent_files, dict)
-        
+
         # Should have at most 5 entries (top 5)
         assert len(frequent_files) <= 5
-        
+
         # Test with a longer time period
         frequent_files = self.formatter._get_frequently_changed_files("30 days ago")
-        
+
         # Should return a dictionary
         assert isinstance(frequent_files, dict)
 
