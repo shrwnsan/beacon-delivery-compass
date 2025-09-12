@@ -1,5 +1,6 @@
 """Extended output formatter with additional analytics."""
 
+import subprocess
 from collections import defaultdict
 from typing import Any
 
@@ -355,6 +356,10 @@ class ExtendedFormatter(BaseFormatter):
         output.extend(self._format_code_quality_section(analytics))
         output.extend(self._format_risk_assessment_section(analytics))
 
+        # Add frequently changed files section
+        frequent_files = self._get_frequently_changed_files("30 days ago")
+        output.extend(self._format_frequent_files(frequent_files))
+
         # Add other sections
         output.extend(self._format_authors_section(stats))
         output.extend(self._format_daily_activity_section(stats))
@@ -428,3 +433,78 @@ class ExtendedFormatter(BaseFormatter):
             f"  {day}: {count} commit{'s' if count != 1 else ''}"
             for day, count in sorted(daily_activity.items())
         ]
+
+
+    def _get_frequently_changed_files(self, since: str) -> dict[str, int]:
+        """Get files ordered by change frequency.
+
+        Args:
+            since: Time period to analyze (e.g., "30 days ago")
+
+        Returns:
+            Dictionary mapping file paths to change frequency
+        """
+        import os
+        from collections import defaultdict
+
+        file_changes: dict[str, int] = defaultdict(int)
+        
+        try:
+            # Use git log to get file change counts
+            # Format: --name-only shows only file names, one per line
+            # --since limits to commits in the specified time range
+            cmd = [
+                "git",
+                "log",
+                "--name-only",
+                f"--since={since}",
+                "--pretty=format:"
+            ]
+            
+            # Execute git command in the repository directory
+            result = subprocess.run(
+                cmd,
+                cwd=os.getcwd(),
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            
+            # Count occurrences of each file
+            lines = result.stdout.strip().split('\n')
+            for line in lines:
+                if line.strip():  # Skip empty lines
+                    file_changes[line.strip()] += 1
+            
+            # Sort by frequency (descending) and return top 5
+            sorted_files = sorted(file_changes.items(), key=lambda x: x[1], reverse=True)
+            return dict(sorted_files[:5])
+            
+        except subprocess.CalledProcessError:
+            # Handle git errors gracefully
+            return {}
+        except Exception:
+            # Handle any other errors gracefully
+            return {}
+
+    def _format_frequent_files(self, frequent_files: dict[str, int]) -> list[str]:
+        """Format frequently changed files section.
+
+        Args:
+            frequent_files: Dictionary mapping file paths to change frequency
+
+        Returns:
+            List of formatted strings for the output
+        """
+        if not frequent_files:
+            return []
+
+        output = [
+            "",
+            f"{self._get_emoji('activity')} {Fore.MAGENTA}Most Frequently Changed "
+            f"(last 30 days):{Style.RESET_ALL}",
+        ]
+        for file_path, count in frequent_files.items():
+            output.append(f"  • {file_path}: {count} changes")
+
+        return output
