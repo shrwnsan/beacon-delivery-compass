@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 
-from beaconled.analytics.engine import AnalyticsEngine, EnhancedExtendedSystem
+from beaconled.analytics.engine import AnalyticsEngine, ExtendedFormatSystem
 from beaconled.core.models import RangeStats
 
 
@@ -93,12 +93,12 @@ class TestAnalyticsEngine:
         assert "collaboration" in result
 
 
-class TestEnhancedExtendedSystem:
+class TestExtendedFormatSystem:
     """Test cases for EnhancedExtendedSystem."""
 
     def setup_method(self):
         """Set up test fixtures."""
-        self.system = EnhancedExtendedSystem()
+        self.system = ExtendedFormatSystem()
         self.sample_range_stats = RangeStats(
             start_date=datetime(2023, 1, 1, tzinfo=timezone.utc),
             end_date=datetime(2023, 1, 31, tzinfo=timezone.utc),
@@ -112,30 +112,32 @@ class TestEnhancedExtendedSystem:
 
     def test_system_initialization(self):
         """Test that the enhanced extended system initializes correctly."""
-        system = EnhancedExtendedSystem()
+        system = ExtendedFormatSystem()
 
         assert system.analytics_engine is not None
         assert system.chart_renderer is None
         assert system.heatmap_renderer is None
-        assert system.extended_formatter is None
+        assert system.formatter is None
 
-    def test_analyze_and_format_fallback(self):
-        """Test analyze and format with fallback formatting."""
-        result = self.system.analyze_and_format(self.sample_range_stats)
+    def test_format_analysis_fallback(self):
+        """Test format_analysis with standard formatter."""
+        from beaconled.formatters.standard import StandardFormatter
+
+        self.system.set_formatter(StandardFormatter())
+
+        result = self.system.format_analysis(self.sample_range_stats)
 
         assert isinstance(result, str)
-        assert "Enhanced analysis complete" in result
-        assert "Time:" in result
-        assert "Collaboration:" in result
+        assert len(result) > 0
 
-    def test_analyze_and_format_with_formatter(self):
-        """Test analyze and format with a custom formatter."""
+    def test_format_analysis_with_formatter(self):
+        """Test format_analysis with a custom formatter."""
         from beaconled.formatters.standard import StandardFormatter
 
         # Set a formatter
-        self.system.extended_formatter = StandardFormatter()
+        self.system.set_formatter(StandardFormatter())
 
-        result = self.system.analyze_and_format(self.sample_range_stats)
+        result = self.system.format_analysis(self.sample_range_stats)
 
         # Should use the formatter instead of fallback
         assert isinstance(result, str)

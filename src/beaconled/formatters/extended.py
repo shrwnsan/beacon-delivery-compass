@@ -4,6 +4,7 @@ from collections import defaultdict
 
 from colorama import Fore, Style
 
+from beaconled.analytics.engine import AnalyticsEngine
 from beaconled.core.models import CommitStats, RangeStats
 from beaconled.formatters.base_formatter import BaseFormatter
 
@@ -15,12 +16,18 @@ class ExtendedFormatter(BaseFormatter):
     - File type breakdown
     - Author contribution details
     - Daily activity patterns
+    - Time-based analytics
+    - Team collaboration analysis
+    - Code quality insights
+    - Risk assessment
     """
 
     def __init__(self, *, no_emoji: bool = False):
         """Initializes the formatter."""
+        super().__init__()
         # Disable emojis in environments that don't support them
         self.no_emoji = no_emoji or not self._supports_emoji()
+        self.analytics_engine = AnalyticsEngine()
 
         self.EMOJIS = {
             "commit": "📊",
@@ -35,6 +42,10 @@ class ExtendedFormatter(BaseFormatter):
             "contributors": "👥",
             "activity": "🔥",
             "breakdown": "🔍",
+            "time": "⏱️",
+            "team": "👥",
+            "quality": "🛠️",
+            "risk": "⚠️",
         }
 
     def _supports_emoji(self) -> bool:
@@ -127,6 +138,107 @@ class ExtendedFormatter(BaseFormatter):
             f"{self._get_emoji('net')} {Fore.YELLOW}Net change:{Style.RESET_ALL} "
             f"{range_net_change}",
         ]
+
+        # Get analytics data - either from a single 'analytics' attribute, individual attributes,
+        # or by calling our own analytics engine
+        analytics = getattr(stats, "analytics", None)
+        if analytics is None:
+            # Check for individual analytics attributes
+            analytics = {}
+            if hasattr(stats, "time"):
+                analytics["time"] = stats.time
+            if hasattr(stats, "collaboration"):
+                analytics["collaboration"] = stats.collaboration
+            if hasattr(stats, "quality"):
+                analytics["quality"] = stats.quality
+            if hasattr(stats, "risk"):
+                analytics["risk"] = stats.risk
+
+            # If we still don't have analytics data, call our own analytics engine
+            if not analytics:
+                analytics_result = self.analytics_engine.analyze(stats)
+                # Handle case where analytics_result might be an object instead of dict
+                if hasattr(analytics_result, "__dict__"):
+                    # Convert object to dictionary
+                    analytics = {}
+                    for key in ["time", "collaboration", "quality", "risk"]:
+                        if hasattr(analytics_result, key):
+                            analytics[key] = getattr(analytics_result, key)
+                else:
+                    analytics = analytics_result
+
+        # Add Time-Based Analytics
+        if isinstance(analytics, dict) and "time" in analytics and analytics["time"] is not None:
+            time_analytics = analytics["time"]
+            output.extend([
+                "",
+                f"{self._get_emoji('time')} {Fore.MAGENTA}Time-Based Analytics:{Style.RESET_ALL}",
+                f"  • Velocity: {time_analytics.velocity_trends.weekly_average:.1f} commits/week",
+                f"  • Peak day: {time_analytics.activity_heatmap.peak_day}",
+                f"  • Bus factor: {time_analytics.bus_factor.factor}",
+            ])
+
+        # Add Team Collaboration Analysis
+        if (
+            isinstance(analytics, dict)
+            and "collaboration" in analytics
+            and analytics["collaboration"] is not None
+        ):
+            collab = analytics["collaboration"]
+            collab_patterns = getattr(collab, "collaboration_patterns", None)
+            knowledge_risk = (
+                collab_patterns.knowledge_risk
+                if collab_patterns and hasattr(collab_patterns, "knowledge_risk")
+                else "N/A"
+            )
+
+            output.extend([
+                "",
+                f"{self._get_emoji('team')} {Fore.MAGENTA}Team Collaboration:{Style.RESET_ALL}",
+                f"  • Team connectivity: {getattr(collab_patterns, 'team_connectivity', 'N/A'):.1%}",
+                f"  • Knowledge risk: {knowledge_risk}",
+            ])
+
+        # Add Code Quality Insights
+        if isinstance(analytics, dict):
+            quality = None
+            if "quality" in analytics:
+                quality = analytics["quality"]
+            elif hasattr(analytics, "quality"):
+                quality = getattr(analytics, "quality", None)
+
+            if quality is not None:
+                output.extend([
+                    "",
+                    f"{self._get_emoji('quality')} {Fore.MAGENTA}Code Quality:{Style.RESET_ALL}",
+                    f"  • Maintainability: {getattr(quality, 'maintainability_index', 'N/A')}",
+                    f"  • Test coverage: {getattr(quality, 'test_coverage', 'N/A')}%",
+                ])
+
+        # Add Risk Assessment
+        if isinstance(analytics, dict):
+            risk = None
+            if "risk" in analytics:
+                risk = analytics["risk"]
+            elif hasattr(analytics, "risk"):
+                risk = getattr(analytics, "risk", None)
+
+            if risk is not None:
+                risk_score = getattr(risk, "risk_score", "N/A")
+                output.extend([
+                    "",
+                    f"{self._get_emoji('risk')} {Fore.MAGENTA}Risk Assessment:{Style.RESET_ALL}",
+                    (
+                        f"  • Overall risk: {risk_score}/10"
+                        if risk_score != "N/A"
+                        else "  • Overall risk: N/A"
+                    ),
+                    (
+                        f"  • Hotspots: {len(getattr(risk, 'hotspots', []))} files"
+                        if isinstance(getattr(risk, "hotspots", []), list)
+                        else "  • Hotspots: N/A"
+                    ),
+                ])
 
         # Add authors section
         if stats.authors:
