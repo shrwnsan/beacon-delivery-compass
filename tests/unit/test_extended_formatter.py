@@ -192,10 +192,10 @@ class TestExtendedFormatter:
 
             # Check that file lifecycle section is included
             assert "File Lifecycle Activity:" in clean_result
-            assert "Files Added: 15 new files" in clean_result
-            assert "Files Modified: 245 existing files" in clean_result
-            assert "Files Deleted: 12 files removed" in clean_result
-            assert "Files Renamed: 3 files moved" in clean_result
+            assert "• Files Added: 15 new files" in clean_result
+            assert "• Files Modified: 245 files changed" in clean_result
+            assert "• Files Deleted: 12 files removed" in clean_result
+            assert "• Files Renamed: 3 files moved" in clean_result
 
     def test_format_file_lifecycle_stats_empty(self):
         """Test formatting when there's no file lifecycle activity."""
