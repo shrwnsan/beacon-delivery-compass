@@ -153,7 +153,7 @@ class ExtendedFormatter(BaseFormatter):
             return []
 
         emoji = self._get_emoji
-        lines = [f"{emoji('contributors')} Author Contributions:"]
+        lines = [f"{emoji('contributors')} Contributors:"]
 
         # Sort authors by commit count (descending)
         sorted_authors = sorted(
@@ -597,7 +597,11 @@ class ExtendedFormatter(BaseFormatter):
 
         lines = ["File type breakdown:"]
         for ext, data in sorted(file_types.items()):
-            lines.append(f"  {ext}: {data['count']} files, +{data['added']}/-{data['deleted']}")
+            # Handle both old and new key formats
+            files_changed = data.get("files_changed", data.get("count", 0))
+            lines_added = data.get("lines_added", data.get("added", 0))
+            lines_deleted = data.get("lines_deleted", data.get("deleted", 0))
+            lines.append(f"  {ext}: {files_changed} files, +{lines_added}/-{lines_deleted}")
         return lines
 
     def _get_author_contribution_stats(

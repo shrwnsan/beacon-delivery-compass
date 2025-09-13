@@ -132,7 +132,7 @@ class TestExtendedFormatter:
         assert "Net change:" in clean_result
 
         # Check author breakdown is included
-        assert "Author Contributions:" in clean_result
+        assert "Contributors:" in clean_result
         assert "Author 1 <author1@example.com>" in clean_result
         assert "Author 2 <author2@example.com>" in clean_result
         assert "9 commits" in clean_result
