@@ -1,6 +1,7 @@
 """Extended output formatter with additional analytics."""
 
 from collections import defaultdict
+from collections.abc import Callable
 from datetime import datetime
 
 import git
@@ -310,7 +311,9 @@ class ExtendedFormatter(BaseFormatter):
 
         return "\n".join(lines)
 
-    def _format_enhanced_analytics(self, stats: RangeStats, emoji_func) -> list[str]:  # noqa: C901
+    def _format_enhanced_analytics(  # noqa: C901
+        self, stats: RangeStats, emoji_func: Callable[[str], str]
+    ) -> list[str]:
         """Format enhanced analytics section.
 
         Args:
