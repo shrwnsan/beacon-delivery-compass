@@ -182,9 +182,7 @@ class ExtendedFormatter(BaseFormatter):
         )
 
         for author, commit_count in sorted_authors:
-            lines.append(
-                f"• {author}: {commit_count} commit{'s' if commit_count != 1 else ''}"
-            )
+            lines.append(f"• {author}: {commit_count} commit{'s' if commit_count != 1 else ''}")
 
         return lines
 
@@ -391,9 +389,7 @@ class ExtendedFormatter(BaseFormatter):
         ]
 
         # Add file changes
-        lines.append(
-            f"{emoji('files')} Files changed: {len(stats.files) if stats.files else 0}"
-        )
+        lines.append(f"{emoji('files')} Files changed: {len(stats.files) if stats.files else 0}")
 
         if stats.files:
             for file_stat in stats.files:
@@ -403,9 +399,7 @@ class ExtendedFormatter(BaseFormatter):
         file_types = {}
         if stats.files:
             for file_stat in stats.files:
-                ext = (
-                    file_stat.path.split(".")[-1] if "." in file_stat.path else "other"
-                )
+                ext = file_stat.path.split(".")[-1] if "." in file_stat.path else "other"
                 if ext not in file_types:
                     file_types[ext] = {"count": 0, "added": 0, "deleted": 0}
                 file_types[ext]["count"] += 1
@@ -427,15 +421,13 @@ class ExtendedFormatter(BaseFormatter):
         total_deleted = sum(f.lines_deleted for f in stats.files) if stats.files else 0
         net_change = total_added - total_deleted
 
-        lines.extend(
-            [
-                "",
-                f"{emoji('added')} Lines added: {Fore.GREEN}+{total_added:,}{Style.RESET_ALL}",
-                f"{emoji('deleted')} Lines deleted: {Fore.RED}-{total_deleted:,}{Style.RESET_ALL}",
-                f"{emoji('net')} Net change: "
-                f"{Fore.GREEN if net_change >= 0 else Fore.RED}{net_change:+,}{Style.RESET_ALL}",
-            ]
-        )
+        lines.extend([
+            "",
+            f"{emoji('added')} Lines added: {Fore.GREEN}+{total_added:,}{Style.RESET_ALL}",
+            f"{emoji('deleted')} Lines deleted: {Fore.RED}-{total_deleted:,}{Style.RESET_ALL}",
+            f"{emoji('net')} Net change: "
+            f"{Fore.GREEN if net_change >= 0 else Fore.RED}{net_change:+,}{Style.RESET_ALL}",
+        ])
 
         return "\n".join(lines)
 
@@ -516,9 +508,7 @@ class ExtendedFormatter(BaseFormatter):
                     file_changes[file_path] += 1
 
             # Sort by frequency (descending) and return top 5
-            sorted_files = sorted(
-                file_changes.items(), key=lambda x: x[1], reverse=True
-            )
+            sorted_files = sorted(file_changes.items(), key=lambda x: x[1], reverse=True)
             return dict(sorted_files[:5])
 
         except Exception:
@@ -572,9 +562,9 @@ class ExtendedFormatter(BaseFormatter):
         ]
 
         # Sort by frequency (descending) and take top 5
-        for file_path, changes in sorted(
-            frequent_files.items(), key=lambda x: x[1], reverse=True
-        )[:5]:
+        for file_path, changes in sorted(frequent_files.items(), key=lambda x: x[1], reverse=True)[
+            :5
+        ]:
             output.append(f"  • {file_path}: {changes} changes")
 
         return output

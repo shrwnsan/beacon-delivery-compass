@@ -116,6 +116,13 @@ extend-exclude = '''
 [tool.ruff]
 line-length = 100
 preview = true  # Enable preview rules like RUF059
+extend-exclude = [
+    ".venv",
+    ".git",
+    "__pycache__",
+    ".ruff_cache",
+    ".mypy_cache",
+]
 
 [tool.ruff.lint]
 # Ignore these rules globally

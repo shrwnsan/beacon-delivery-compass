@@ -2,12 +2,6 @@
 # Optimized for both development and CI
 
 repos:
--   repo: https://github.com/psf/black
-    rev: 25.1.0
-    hooks:
-    -   id: black
-        args: [--line-length=100]
-
 -   repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.12.9
     hooks:
