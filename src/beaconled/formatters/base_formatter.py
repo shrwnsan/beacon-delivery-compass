@@ -14,6 +14,37 @@ colorama.init()
 class BaseFormatter:
     """Base formatter providing common formatting functionality."""
 
+    def _supports_emoji(self) -> bool:
+        """Check if the current terminal supports emoji output.
+
+        Returns:
+            bool: True if emojis are supported, False otherwise
+        """
+        try:
+            # Check if we're running in a terminal that supports emoji
+            import os
+            import sys
+
+            # Check for common terminals that support emoji
+            term = os.environ.get("TERM", "").lower()
+            if "xterm" in term or "screen" in term or "tmux" in term:
+                return True
+
+            # Check if we're in a Jupyter notebook
+            if "ipykernel" in sys.modules:
+                return True
+
+            # Check for Windows Terminal
+            if "WT_SESSION" in os.environ:
+                return True
+
+            # Default to False if we can't determine support
+            return False
+
+        except Exception:
+            # If any error occurs, assume no emoji support
+            return False
+
     def _format_date(self, dt: datetime) -> str:
         """Format a datetime object consistently across formatters."""
         return dt.strftime("%Y-%m-%d %H:%M:%S")

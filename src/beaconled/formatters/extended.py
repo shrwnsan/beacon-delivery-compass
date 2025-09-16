@@ -1,7 +1,8 @@
 """Extended output formatter with additional analytics."""
 
 from collections import defaultdict
-from typing import Any
+from collections.abc import Callable
+from datetime import datetime
 
 import git
 from colorama import Fore, Style
@@ -25,8 +26,8 @@ class ExtendedFormatter(BaseFormatter):
     - File lifecycle tracking
     """
 
-    def __init__(self, *, no_emoji: bool = False, repo_path: str = "."):
-        """Initializes the formatter.
+    def __init__(self, *, no_emoji: bool | None = None, repo_path: str = ".") -> None:
+        """Initialize the formatter.
 
         Args:
             no_emoji: Whether to disable emoji output
@@ -34,13 +35,14 @@ class ExtendedFormatter(BaseFormatter):
         """
         super().__init__()
         # Disable emojis in environments that don't support them
-        self.no_emoji = no_emoji or not self._supports_emoji()
+        self.no_emoji = no_emoji if no_emoji is not None else not self._supports_emoji()
         self.analytics_engine = AnalyticsEngine()
         self.repo_path = repo_path
 
         self.EMOJIS = {
             "commit": "📊",
             "author": "👤",
+            "contributors": "👥",
             "date": "📅",
             "message": "💬",
             "files": "📂",
@@ -48,588 +50,446 @@ class ExtendedFormatter(BaseFormatter):
             "deleted": "📉",
             "net": "🔀",
             "range": "📊",
-            "contributors": "👥",
-            "activity": "🔥",
-            "breakdown": "🔍",
-            "time": "⏱️",
-            "team": "👥",
-            "quality": "🛠️",
-            "risk": "⚠️",
-            "lifecycle": "🔄",
         }
 
-    def _supports_emoji(self) -> bool:
-        """Check if the environment supports emoji."""
-        import sys
+    def _get_emoji(self, emoji_name: str) -> str:
+        """Get emoji if enabled, otherwise return empty string."""
+        if self.no_emoji:
+            return ""
+        return self.EMOJIS.get(emoji_name, "")
 
-        # A simple check for UTF-8 encoding is usually sufficient.
-        # Also, handle environments where stdout might be redirected or missing (like in tests).
-        encoding = getattr(sys.stdout, "encoding", "")
-        if encoding:
-            return encoding.lower() == "utf-8"
-        return False
-
-    def _get_emoji(self, name: str) -> str:
-        """Return emoji if supported, else empty string."""
-        return self.EMOJIS.get(name, "") if not self.no_emoji else ""
-
-    def format_commit_stats(self, stats: CommitStats) -> str:
-        """Format commit statistics with extended details."""
-        net_change_str = self._format_net_change(
-            stats.lines_added,
-            stats.lines_deleted,
-        )
-        output = [
-            f"{self._get_emoji('commit')} {Fore.CYAN}Commit:{Style.RESET_ALL} {stats.hash[:8]}",
-            f"{self._get_emoji('author')} {Fore.CYAN}Author:{Style.RESET_ALL} {stats.author}",
-            f"{self._get_emoji('date')} {Fore.CYAN}Date:{Style.RESET_ALL} "
-            f"{self._format_date(stats.date)}",
-            f"{self._get_emoji('message')} {Fore.CYAN}Message:{Style.RESET_ALL} {stats.message}",
-            "",
-            f"{self._get_emoji('files')} {Fore.YELLOW}Files changed:{Style.RESET_ALL} "
-            f"{stats.files_changed:,}",
-            f"{self._get_emoji('added')} {Fore.GREEN}Lines added:{Style.RESET_ALL} "
-            f"{stats.lines_added:,}",
-            f"{self._get_emoji('deleted')} {Fore.RED}Lines deleted:{Style.RESET_ALL} "
-            f"{stats.lines_deleted:,}",
-            f"{self._get_emoji('net')} {Fore.YELLOW}Net change:{Style.RESET_ALL} {net_change_str}",
-        ]
-
-        if stats.files:
-            # Add file changes
-            output.extend(
-                [
-                    "",
-                    f"{Fore.MAGENTA}File changes:{Style.RESET_ALL}",
-                    *[self._format_file_stats(f) for f in stats.files],
-                ],
-            )
-
-        # Add file type breakdown (match test expectation wording)
-        # Always include this section for consistency in extended format
-        file_types = self._get_file_type_breakdown(stats.files) if stats.files else {}
-        output.extend([
-            "",
-            f"{Fore.MAGENTA}File type breakdown:{Style.RESET_ALL}",
-        ])
-        if file_types:
-            output.extend([
-                self._format_file_type_line(ext, counts)
-                for ext, counts in sorted(file_types.items())
-            ])
-        else:
-            output.append("  No files changed")
-
-        return "\n".join(output)
-
-    def _format_file_type_line(self, ext: str, counts: dict[str, int]) -> str:
-        added = counts["added"]
-        deleted = counts["deleted"]
-        count = counts["count"]
-        return f"  {ext}: {count} files, +{added:,}/-{deleted:,}"
-
-    def _convert_analytics_object_to_dict(self, analytics: Any) -> dict[str, Any]:
-        """Convert an analytics object to a dictionary."""
-        # Ensure we return a dict, not just any object
-        if isinstance(analytics, dict):
-            return analytics
-        # If it's an object, convert to dict
-        elif hasattr(analytics, "__dict__"):
-            analytics_dict = analytics.__dict__
-            if isinstance(analytics_dict, dict):
-                return analytics_dict
-            else:
-                return {}
-        # Try to convert arbitrary objects to dict by accessing their attributes
-        elif hasattr(analytics, "__class__"):
-            result: dict[str, Any] = {}
-            for attr in ["time", "collaboration", "quality", "risk"]:
-                if hasattr(analytics, attr):
-                    result[attr] = getattr(analytics, attr)
-            return result
-        else:
-            # Fallback to empty dict
-            return {}
-
-    def _extract_stats_analytics(self, stats: RangeStats) -> dict[str, Any]:
-        """Extract analytics data from stats object attributes."""
-        stats_analytics: dict[str, Any] = {}
-        if hasattr(stats, "time"):
-            stats_analytics["time"] = stats.time
-        if hasattr(stats, "collaboration"):
-            stats_analytics["collaboration"] = stats.collaboration
-        if hasattr(stats, "quality"):
-            stats_analytics["quality"] = stats.quality
-        if hasattr(stats, "risk"):
-            stats_analytics["risk"] = stats.risk
-        return stats_analytics
-
-    def _get_analytics_data(self, stats: RangeStats) -> dict[str, Any]:
-        """Get analytics data from stats or by calling analytics engine."""
-        result: dict[str, Any] = {}
-
-        # First check if analytics is already attached to stats
-        analytics = getattr(stats, "analytics", None)
-        if analytics is not None:
-            result = self._convert_analytics_object_to_dict(analytics)
-        else:
-            # Check for individual analytics attributes on stats object
-            stats_analytics = self._extract_stats_analytics(stats)
-
-            # If we have analytics data from attributes, use it
-            if stats_analytics:
-                result = stats_analytics
-            else:
-                # Otherwise, call our own analytics engine
-                analytics_result = self.analytics_engine.analyze(stats)
-                # analytics_result is guaranteed to be a dict from the engine
-                result = analytics_result
-
-        return result
-
-    def _format_basic_stats(self, stats: RangeStats) -> list[str]:
-        """Format basic statistics section."""
-        range_net_change = self._format_net_change(
-            stats.total_lines_added,
-            stats.total_lines_deleted,
-        )
-        return [
-            f"{self._get_emoji('range')} {Fore.CYAN}Range Analysis:{Style.RESET_ALL} "
-            f"{self._format_date(stats.start_date).split()[0]} to "
-            f"{self._format_date(stats.end_date).split()[0]}",
-            "",
-            f"{Fore.YELLOW}Total commits:{Style.RESET_ALL} {stats.total_commits:,}",
-            f"{Fore.YELLOW}Total files changed:{Style.RESET_ALL} {stats.total_files_changed:,}",
-            f"{self._get_emoji('added')} {Fore.GREEN}Total lines added:{Style.RESET_ALL} "
-            f"{stats.total_lines_added:,}",
-            f"{self._get_emoji('deleted')} {Fore.RED}Total lines deleted:{Style.RESET_ALL} "
-            f"{stats.total_lines_deleted:,}",
-            f"{self._get_emoji('net')} {Fore.YELLOW}Net change:{Style.RESET_ALL} "
-            f"{range_net_change}",
-        ]
-
-    def _format_authors_section(self, stats: RangeStats) -> list[str]:
-        """Format authors section."""
-        if not stats.authors:
-            return []
-
-        return [
-            "",
-            f"{self._get_emoji('contributors')} {Fore.MAGENTA}Contributors:{Style.RESET_ALL}",
-            *[
-                self._format_author_stats(a, c)
-                for a, c in sorted(
-                    stats.authors.items(),
-                    key=lambda x: x[1],
-                    reverse=True,
-                )
-            ],
-        ]
-
-    def _format_daily_activity_section(self, stats: RangeStats) -> list[str]:
-        """Format daily activity section."""
-        if not hasattr(stats, "commits_by_day"):
-            return []
-
-        return [
-            "",
-            (
-                f"{self._get_emoji('activity')} "
-                f"{Fore.MAGENTA}Temporal Analysis - Daily Activity "
-                f"Timeline:{Style.RESET_ALL}"
-            ),
-            *[
-                f"  {day}: {count} commit{'s' if count != 1 else ''}"
-                for day, count in sorted(stats.commits_by_day.items())
-            ],
-        ]
-
-    def _format_file_types_section(self, stats: RangeStats) -> list[str]:
-        """Format file types section."""
-        file_types = {}
-        if stats.commits:
-            file_types = self._get_file_type_breakdown_from_commits(stats.commits)
-        elif hasattr(stats, "file_types") and stats.file_types:
-            file_types = stats.file_types
-
-        if not file_types:
-            return []
-
-        return [
-            "",
-            f"{self._get_emoji('breakdown')} {Fore.MAGENTA}File type breakdown:{Style.RESET_ALL}",
-            *[
-                self._format_file_type_line(ext, counts)
-                for ext, counts in sorted(file_types.items())
-            ],
-        ]
-
-    def _format_time_analytics_section(self, analytics: dict[str, Any]) -> list[str]:
-        """Format the time-based analytics section."""
-        has_time_analytics = (
-            isinstance(analytics, dict) and "time" in analytics and analytics["time"] is not None
-        )
-        if not has_time_analytics:
-            return []
-
-        time_analytics = analytics["time"]
-        return [
-            "",
-            f"{self._get_emoji('time')} {Fore.MAGENTA}Time-Based Analytics:{Style.RESET_ALL}",
-            f"  • Velocity: {time_analytics.velocity_trends.weekly_average:.1f} commits/week",
-            f"  • Peak day: {time_analytics.activity_heatmap.peak_day}",
-            f"  • Bus factor: {time_analytics.bus_factor.factor}",
-        ]
-
-    def _format_team_collaboration_section(self, analytics: dict[str, Any]) -> list[str]:
-        """Format the team collaboration analytics section."""
-        has_collab_analytics = (
-            isinstance(analytics, dict)
-            and "collaboration" in analytics
-            and analytics["collaboration"] is not None
-        )
-        if not has_collab_analytics:
-            return []
-
-        collab = analytics["collaboration"]
-        collab_patterns = getattr(collab, "collaboration_patterns", None)
-        knowledge_risk = (
-            collab_patterns.knowledge_risk
-            if collab_patterns and hasattr(collab_patterns, "knowledge_risk")
-            else "N/A"
-        )
-
-        return [
-            "",
-            f"{self._get_emoji('team')} {Fore.MAGENTA}Team Collaboration:{Style.RESET_ALL}",
-            f"  • Team connectivity: {getattr(collab_patterns, 'team_connectivity', 'N/A'):.1%}",
-            f"  • Knowledge risk: {knowledge_risk}",
-        ]
-
-    def _format_code_quality_section(self, analytics: dict[str, Any]) -> list[str]:
-        """Format the code quality analytics section."""
-
-        quality = None
-        if "quality" in analytics:
-            quality = analytics["quality"]
-        elif hasattr(analytics, "quality"):
-            quality = getattr(analytics, "quality", None)
-
-        if quality is not None:
-            return [
-                "",
-                f"{self._get_emoji('quality')} {Fore.MAGENTA}Code Quality:{Style.RESET_ALL}",
-                f"  • Maintainability: {getattr(quality, 'maintainability_index', 'N/A')}",
-                f"  • Test coverage: {getattr(quality, 'test_coverage', 'N/A')}%",
-            ]
-        return []
-
-    def _format_risk_assessment_section(self, analytics: dict[str, Any]) -> list[str]:
-        """Format the risk assessment analytics section."""
-
-        risk = None
-        if "risk" in analytics:
-            risk = analytics["risk"]
-        elif hasattr(analytics, "risk"):
-            risk = getattr(analytics, "risk", None)
-
-        if risk is not None:
-            risk_score = getattr(risk, "risk_score", "N/A")
-            return [
-                "",
-                f"{self._get_emoji('risk')} {Fore.MAGENTA}Risk Assessment:{Style.RESET_ALL}",
-                (
-                    f"  • Overall risk: {risk_score}/10"
-                    if risk_score != "N/A"
-                    else "  • Overall risk: N/A"
-                ),
-                (
-                    f"  • Hotspots: {len(getattr(risk, 'hotspots', []))} files"
-                    if isinstance(getattr(risk, "hotspots", []), list)
-                    else "  • Hotspots: N/A"
-                ),
-            ]
-        return []
-
-    def format_range_stats(self, stats: RangeStats) -> str:
-        """Format range statistics with extended details."""
-        output = self._format_basic_stats(stats)
-
-        # Get analytics data
-        analytics = self._get_analytics_data(stats)
-
-        # Add analytics sections
-        output.extend(self._format_time_analytics_section(analytics))
-        output.extend(self._format_team_collaboration_section(analytics))
-        output.extend(self._format_code_quality_section(analytics))
-        output.extend(self._format_risk_assessment_section(analytics))
-
-        # Add file lifecycle section if we have date range information
-        if hasattr(stats, "start_date") and hasattr(stats, "end_date"):
-            # Convert dates to format expected by git
-            since = stats.start_date.isoformat()
-            until = stats.end_date.isoformat()
-            lifecycle_stats = self._get_file_lifecycle_stats(since, until)
-            output.extend(self._format_file_lifecycle(lifecycle_stats))
-
-        # Add frequently changed files section if we have date range information
-        if hasattr(stats, "start_date"):
-            since = stats.start_date.isoformat()
-            frequent_files = self._get_frequently_changed_files(since)
-            output.extend(self._format_frequent_files(frequent_files))
-
-        # Add other sections
-        output.extend(self._format_authors_section(stats))
-        output.extend(self._format_daily_activity_section(stats))
-        output.extend(self._format_file_types_section(stats))
-        output.extend(self._format_largest_file_changes_section(stats))
-
-        return "\n".join(output)
-
-    def _get_file_lifecycle_stats(self, since: str, until: str) -> dict[str, int]:
-        """Get file lifecycle statistics from git log.
+    def _get_file_lifecycle_stats(self, since: str, until: str | None = None) -> dict[str, int]:
+        """Get file lifecycle statistics for the given date range.
 
         Args:
-            since: Start date for analysis
-            until: End date for analysis
+            since: Start date in ISO format (YYYY-MM-DD)
+            until: End date in ISO format (YYYY-MM-DD), defaults to now
 
         Returns:
-            Dictionary with file lifecycle counts (added, modified, deleted, renamed)
+            Dictionary with counts of added, modified, deleted, and renamed files
         """
-        # Initialize counts
-        stats = {
-            "added": 0,
-            "modified": 0,
-            "deleted": 0,
-            "renamed": 0,
-        }
+        import git
 
         try:
-            # Run git log with name-status to get file operations
             repo = git.Repo(self.repo_path)
-            log_output = repo.git.log(
-                "--name-status",
-                "--pretty=format:",
-                f"--since={since}",
-                f"--until={until}",
-            )
 
-            # Parse the output to count file operations
-            stats = self._parse_git_log_output(log_output)
-        except Exception:
-            # If we can't get git info, return zeros
-            pass
+            # Format date range for git log
+            date_args = ["--since", since]
+            if until:
+                date_args.extend(["--until", until])
 
-        return stats
+            # Get git log with name status
+            log_output = repo.git.log("--name-status", "--pretty=format:", *date_args)
+
+            return self._parse_git_log_output(log_output)
+
+        except Exception as e:
+            # Log error and return empty stats
+            import logging
+
+            logging.error("Error getting file lifecycle stats: %s", str(e))
+            return {"added": 0, "modified": 0, "deleted": 0, "renamed": 0}
 
     def _parse_git_log_output(self, log_output: str) -> dict[str, int]:
-        """Parse git log output to count file operations.
+        """Parse git log output and count file statuses.
 
         Args:
-            log_output: Raw output from git log command
+            log_output: Raw output from 'git log --name-status'
 
         Returns:
-            Dictionary with file lifecycle counts
+            Dictionary with counts of each file status
         """
-        stats = {"added": 0, "modified": 0, "deleted": 0, "renamed": 0}
-        files_seen: set[str] = set()
-        lines = log_output.splitlines()
+        # Use sets to track unique files for each status
+        added = set()
+        modified = set()
+        deleted = set()
+        renamed = set()
 
-        for line in lines:
-            if not line.strip():
+        for raw_line in log_output.splitlines():
+            line = raw_line.strip()
+            if not line:
                 continue
 
+            # Split the line into parts
             parts = line.split("\t")
             if not parts:
                 continue
 
-            status = parts[0]
-            file_path = parts[1] if len(parts) > 1 else None
+            # First character indicates status
+            status = parts[0][0].upper()
 
-            if not file_path:
-                continue
+            # Get the file path
+            if status == "R" and len(parts) >= 3:
+                # For renames, the format is: R100\told_path\tnew_path
+                file_path = parts[2]  # Use the new path for renames
+                renamed.add(file_path)
+            elif len(parts) >= 2:
+                file_path = parts[1]
+                if status == "A":
+                    added.add(file_path)
+                elif status == "M":
+                    modified.add(file_path)
+                elif status == "D":
+                    deleted.add(file_path)
 
-            # Handle different status codes
-            if status == "A":  # Added
-                self._handle_added_file(stats, files_seen, file_path)
-            elif status == "M":  # Modified
-                self._handle_modified_file(stats, files_seen, file_path)
-            elif status == "D":  # Deleted
-                self._handle_deleted_file(stats, files_seen, file_path)
-            elif status.startswith("R"):  # Renamed
-                new_path = parts[2] if len(parts) > 2 else file_path
-                self._handle_renamed_file(stats, files_seen, new_path)
+        # Return counts of unique files for each status
+        return {
+            "added": len(added),
+            "modified": len(modified),
+            "deleted": len(deleted),
+            "renamed": len(renamed),
+        }
 
-        return stats
-
-    def _handle_added_file(
-        self, stats: dict[str, int], files_seen: set[str], file_path: str
-    ) -> None:
-        """Handle added file in git log."""
-        if file_path not in files_seen:
-            stats["added"] += 1
-            files_seen.add(file_path)
-
-    def _handle_modified_file(
-        self, stats: dict[str, int], files_seen: set[str], file_path: str
-    ) -> None:
-        """Handle modified file in git log."""
-        if file_path not in files_seen:
-            stats["modified"] += 1
-            files_seen.add(file_path)
-
-    def _handle_deleted_file(
-        self, stats: dict[str, int], files_seen: set[str], file_path: str
-    ) -> None:
-        """Handle deleted file in git log."""
-        if file_path not in files_seen:
-            stats["deleted"] += 1
-            files_seen.add(file_path)
-
-    def _handle_renamed_file(
-        self, stats: dict[str, int], files_seen: set[str], new_path: str
-    ) -> None:
-        """Handle renamed file in git log."""
-        if new_path not in files_seen:
-            stats["renamed"] += 1
-            files_seen.add(new_path)
-
-    def _format_file_lifecycle(self, stats: dict[str, int]) -> list[str]:
-        """Format file lifecycle statistics for display.
+    def _format_author_breakdown(self, stats: RangeStats) -> list[str]:
+        """Format author contribution breakdown.
 
         Args:
-            stats: Dictionary with file lifecycle counts
+            stats: RangeStats object with author information
 
         Returns:
-            List of formatted strings for display
+            List of formatted strings with author contributions
         """
-        output = []
+        if not hasattr(stats, "authors") or not stats.authors:
+            return []
 
-        # Only show the section if we have any activity
-        if any(count > 0 for count in stats.values()):
-            lifecycle_header = (
-                f"{self._get_emoji('lifecycle')} "
-                f"{Fore.MAGENTA}File Lifecycle Activity:{Style.RESET_ALL}"
-            )
-            output.append(lifecycle_header)
+        emoji = self._get_emoji
+        lines = [f"{emoji('contributors')} Contributors:"]
 
-            # Only show non-zero categories
-            if stats["added"] > 0:
-                output.append(f"  • Files Added: {stats['added']} new files")
-            if stats["modified"] > 0:
-                output.append(f"  • Files Modified: {stats['modified']} existing files")
-            if stats["deleted"] > 0:
-                output.append(f"  • Files Deleted: {stats['deleted']} files removed")
-            if stats["renamed"] > 0:
-                output.append(f"  • Files Renamed: {stats['renamed']} files moved")
-
-        return output
-
-    def _get_file_type_breakdown_from_commits(
-        self, commits: list[CommitStats]
-    ) -> dict[str, dict[str, int]]:
-        """Calculate file type breakdown from commits.
-
-        Args:
-            commits: List of CommitStats objects to analyze
-
-        Returns:
-            Dictionary mapping file extensions to their statistics
-        """
-        file_types: dict[str, dict[str, int]] = defaultdict(
-            lambda: {"count": 0, "added": 0, "deleted": 0}
+        # Sort authors by commit count (descending)
+        sorted_authors = sorted(
+            stats.authors.items(),
+            key=lambda x: x[1],  # x[1] is the commit count (int)
+            reverse=True,
         )
 
-        for commit in commits:
-            for file_stat in commit.files:
-                # Extract file extension
-                path_parts = file_stat.path.split(".")
-                if len(path_parts) > 1:
-                    ext = "." + path_parts[-1]
-                else:
-                    ext = "no extension"
+        for author, commit_count in sorted_authors:
+            lines.append(f"• {author}: {commit_count} commit{'s' if commit_count != 1 else ''}")
 
-                file_types[ext]["count"] += 1
-                file_types[ext]["added"] += file_stat.lines_added
-                file_types[ext]["deleted"] += file_stat.lines_deleted
+        return lines
 
-        return dict(file_types)
-
-    def _get_author_contribution_stats(
-        self,
-        authors: dict[str, int],
-        total_commits: int,
-    ) -> list[str]:
-        """Format author contribution statistics."""
-        return [
-            f"  {author}: {count} commits ({count / total_commits:.1%})"
-            for author, count in sorted(
-                authors.items(),
-                key=lambda x: x[1],
-                reverse=True,
-            )
-        ]
-
-    def _get_daily_activity_stats(self, commits: list[CommitStats]) -> list[str]:
-        """Format daily activity statistics.
+    def _format_temporal_analysis(self, stats: RangeStats) -> list[str]:
+        """Format temporal analysis of commits.
 
         Args:
-            commits: List of CommitStats objects to analyze
+            stats: RangeStats object with temporal analysis data
 
         Returns:
-            List of formatted strings showing daily commit activity
+            List of formatted strings with temporal analysis
         """
-        if not commits:
-            return ["  No commits in the specified range"]
+        if not hasattr(stats, "commits_by_day") or not stats.commits_by_day:
+            return []
 
-        daily_activity: dict[str, int] = defaultdict(int)
-        for commit in commits:
-            day = commit.date.strftime("%Y-%m-%d")
-            daily_activity[day] += 1
+        emoji = self._get_emoji
+        lines = [f"{emoji('date')} Temporal Analysis - Daily Activity Timeline:"]
 
-        return [
-            f"  {day}: {count} commit{'s' if count != 1 else ''}"
-            for day, count in sorted(daily_activity.items())
-        ]
+        # Sort dates chronologically
+        sorted_dates = sorted(stats.commits_by_day.items(), key=lambda x: x[0])
 
-    def _get_largest_file_changes(self, commits: list[CommitStats]) -> list[tuple[str, int]]:
+        for date, count in sorted_dates:
+            lines.append(f"  {date}: {count} commit{'s' if count != 1 else ''}")
+
+        return lines
+
+    def _get_largest_file_changes(
+        self, commits: list[CommitStats], top_n: int = 5
+    ) -> list[tuple[str, int]]:
         """Calculate the largest file changes by summing additions + deletions per file.
 
         Args:
             commits: List of CommitStats objects to analyze
+            top_n: Number of top changes to return (default: 5)
 
         Returns:
-            List of tuples (file_path, total_changes) sorted by total_changes descending
+            List of tuples (file_path, total_changes) sorted by total_changes in descending order
         """
-        file_changes: dict[str, int] = defaultdict(int)
+        file_changes: dict[str, int] = {}
 
         for commit in commits:
-            for file_stat in commit.files:
-                file_changes[file_stat.path] += file_stat.lines_added + file_stat.lines_deleted
+            if not hasattr(commit, "files") or not commit.files:
+                continue
 
-        # Sort by total changes descending and return top 5
+            for file_stat in commit.files:
+                file_path = file_stat.path
+                changes = file_stat.lines_added + file_stat.lines_deleted
+
+                if file_path in file_changes:
+                    file_changes[file_path] += changes
+                else:
+                    file_changes[file_path] = changes
+
+        # Sort files by total changes in descending order
         sorted_files = sorted(file_changes.items(), key=lambda x: x[1], reverse=True)
-        return sorted_files[:5]
+
+        return sorted_files[:top_n]
+
+    def format_range_stats(self, stats: RangeStats) -> str:  # noqa: C901
+        """Format range statistics with extended information.
+
+        Args:
+            stats: RangeStats object containing commit range information
+
+        Returns:
+            Formatted string with range statistics
+        """
+        emoji = self._get_emoji
+        date_range = (
+            f"{emoji('range')} Commit Range: "
+            f"{self._format_date_range(stats.start_date)} to "
+            f"{self._format_date_range(stats.end_date)}"
+        )
+        commit_count = stats.total_commits if hasattr(stats, "total_commits") else 0
+        # Get total files changed from the stats object if available, otherwise count from commits
+        if hasattr(stats, "total_files_changed"):
+            total_files = stats.total_files_changed
+        else:
+            total_files = sum(
+                getattr(
+                    commit,
+                    "files_changed",
+                    len(commit.files) if hasattr(commit, "files") else 0,
+                )
+                for commit in getattr(stats, "commits", [])
+            )
+        # Get total lines added and deleted from stats if available, otherwise calculate
+        if hasattr(stats, "total_lines_added"):
+            total_added = stats.total_lines_added
+        else:
+            total_added = sum(
+                f.lines_added
+                for commit in getattr(stats, "commits", [])
+                for f in getattr(commit, "files", [])
+            )
+        if hasattr(stats, "total_lines_deleted"):
+            total_deleted = stats.total_lines_deleted
+        else:
+            total_deleted = sum(
+                f.lines_deleted
+                for commit in getattr(stats, "commits", [])
+                for f in getattr(commit, "files", [])
+            )
+        net_change = total_added - total_deleted
+        lines = [
+            date_range,
+            "",
+            f"{emoji('bar_chart')} Range Analysis:",
+            f"Total commits: {commit_count}",
+            f"Total files changed: {total_files}",
+            f"{emoji('added')} Total lines added: {total_added}",
+            f"{emoji('deleted')} Total lines deleted: {total_deleted}",
+            f"{emoji('net')} Net change: {net_change}",
+            "",
+        ]
+
+        # Add file lifecycle stats if date range is available
+        if hasattr(stats, "start_date") and hasattr(stats, "end_date"):
+            since = stats.start_date.strftime("%Y-%m-%d")
+            until = stats.end_date.strftime("%Y-%m-%d")
+            lifecycle_stats = self._get_file_lifecycle_stats(since, until)
+            if lifecycle_stats and any(lifecycle_stats.values()):
+                lines.extend(["", *self._format_file_lifecycle(lifecycle_stats)])
+
+        # Add author breakdown if available
+        if hasattr(stats, "authors") and stats.authors:
+            lines.extend(["", *self._format_author_breakdown(stats)])
+
+        # Add temporal analysis if available
+        if hasattr(stats, "commits_by_day") and stats.commits_by_day:
+            lines.extend(["", *self._format_temporal_analysis(stats)])
+
+        # Add largest file changes section if there are commits
+        if hasattr(stats, "commits") and stats.commits:
+            largest_changes = self._format_largest_file_changes_section(stats)
+            if largest_changes:
+                lines.extend(["", *largest_changes])
+
+        # Add file type breakdown if available
+        if hasattr(stats, "file_types") and stats.file_types:
+            lines.extend(["", *self._format_file_types(stats.file_types)])
+
+        # Add enhanced analytics if available
+        lines.extend(self._format_enhanced_analytics(stats, emoji))
+
+        return "\n".join(lines)
+
+    def _format_enhanced_analytics(  # noqa: C901
+        self, stats: RangeStats, emoji_func: Callable[[str], str]
+    ) -> list[str]:
+        """Format enhanced analytics section.
+
+        Args:
+            stats: RangeStats object containing statistics
+            emoji_func: Emoji function to use for formatting
+
+        Returns:
+            List of formatted strings with enhanced analytics
+        """
+        lines = []
+
+        # Add enhanced analytics if available
+        if hasattr(stats, "time") and stats.time:
+            time_analytics = stats.time
+            if hasattr(time_analytics, "velocity_trends") and time_analytics.velocity_trends:
+                velocity = time_analytics.velocity_trends
+                if hasattr(velocity, "weekly_average") and velocity.weekly_average:
+                    lines.extend([
+                        "",
+                        f"{emoji_func('added')} Velocity: "
+                        f"{velocity.weekly_average:.1f} commits/week",
+                    ])
+        else:
+            # Try to get enhanced analytics from the analytics engine if not already present
+            try:
+                # Get analytics data using the range_stats object directly
+                analytics_data = self.analytics_engine.analyze(stats)
+
+                # Add velocity information if available
+                if analytics_data.get("time"):
+                    time_analytics = analytics_data["time"]
+                    if (
+                        hasattr(time_analytics, "velocity_trends")
+                        and time_analytics.velocity_trends
+                    ):
+                        velocity = time_analytics.velocity_trends
+                        if hasattr(velocity, "weekly_average") and velocity.weekly_average:
+                            lines.extend([
+                                "",
+                                f"{emoji_func('added')} Velocity: "
+                                f"{velocity.weekly_average:.1f} commits/week",
+                            ])
+
+                # Add collaboration information if available
+                if analytics_data.get("collaboration"):
+                    collaboration = analytics_data["collaboration"]
+                    if (
+                        hasattr(collaboration, "collaboration_patterns")
+                        and collaboration.collaboration_patterns
+                    ):
+                        patterns = collaboration.collaboration_patterns
+                        if hasattr(patterns, "team_connectivity") and patterns.team_connectivity:
+                            connectivity = patterns.team_connectivity * 100  # Convert to percentage
+                            lines.extend([
+                                f"{emoji_func('contributors')} Team connectivity: "
+                                f"{connectivity:.1f}%"
+                            ])
+                        if hasattr(patterns, "knowledge_risk") and patterns.knowledge_risk:
+                            lines.extend([
+                                f"{emoji_func('warning')} Knowledge risk: {patterns.knowledge_risk}"
+                            ])
+
+                # Add quality information if available
+                if analytics_data.get("quality"):
+                    quality = analytics_data["quality"]
+                    if hasattr(quality, "maintainability_index") and quality.maintainability_index:
+                        lines.extend([
+                            f"{emoji_func('net')} Maintainability: "
+                            f"{quality.maintainability_index:.1f}"
+                        ])
+                    if hasattr(quality, "test_coverage") and quality.test_coverage:
+                        coverage = quality.test_coverage
+                        lines.extend([f"{emoji_func('added')} Test coverage: {coverage:.1f}%"])
+
+                # Add risk information if available
+                if analytics_data.get("risk"):
+                    risk = analytics_data["risk"]
+                    if hasattr(risk, "risk_score") and risk.risk_score:
+                        lines.extend([
+                            f"{emoji_func('warning')} Overall risk: {risk.risk_score:.1f}/10"
+                        ])
+            except Exception:
+                # Gracefully handle any analytics errors
+                pass
+
+        return lines
+
+    def format_commit_stats(self, stats: CommitStats) -> str:
+        """Format commit statistics with emoji support.
+
+        Args:
+            stats: CommitStats object containing commit information
+
+        Returns:
+            Formatted string with commit statistics
+        """
+        emoji = self._get_emoji
+
+        # Format commit header
+        lines = [
+            f"{emoji('commit')} Commit: {stats.hash}",
+            f"{emoji('author')} Author: {stats.author}",
+            f"{emoji('date')} Date:   {self._format_date(stats.date)}",
+            f"{emoji('message')} Message: {stats.message}",
+            "",
+        ]
+
+        # Add file changes
+        lines.append(f"{emoji('files')} Files changed: {len(stats.files) if stats.files else 0}")
+
+        if stats.files:
+            for file_stat in stats.files:
+                lines.append(self._format_file_stats(file_stat))
+
+        # Add file type breakdown (always shown, even for empty commits)
+        file_types = {}
+        if stats.files:
+            for file_stat in stats.files:
+                ext = file_stat.path.split(".")[-1] if "." in file_stat.path else "other"
+                if ext not in file_types:
+                    file_types[ext] = {"count": 0, "added": 0, "deleted": 0}
+                file_types[ext]["count"] += 1
+                file_types[ext]["added"] += file_stat.lines_added
+                file_types[ext]["deleted"] += file_stat.lines_deleted
+
+        lines.append("\nFile type breakdown:")
+        if file_types:
+            for ext, data in sorted(file_types.items()):
+                lines.append(
+                    f"  {ext}: {data['count']} file{'s' if data['count'] != 1 else ''}, "
+                    f"+{data['added']}/-{data['deleted']}"
+                )
+        else:
+            lines.append("  No files changed")
+
+        # Add summary
+        total_added = sum(f.lines_added for f in stats.files) if stats.files else 0
+        total_deleted = sum(f.lines_deleted for f in stats.files) if stats.files else 0
+        net_change = total_added - total_deleted
+
+        lines.extend([
+            "",
+            f"{emoji('added')} Lines added: {Fore.GREEN}+{total_added:,}{Style.RESET_ALL}",
+            f"{emoji('deleted')} Lines deleted: {Fore.RED}-{total_deleted:,}{Style.RESET_ALL}",
+            f"{emoji('net')} Net change: "
+            f"{Fore.GREEN if net_change >= 0 else Fore.RED}{net_change:+,}{Style.RESET_ALL}",
+        ])
+
+        return "\n".join(lines)
 
     def _format_largest_file_changes_section(self, stats: RangeStats) -> list[str]:
-        """Format the largest file changes section."""
-        if not stats.commits:
+        """Format the largest file changes section.
+
+        Args:
+            stats: RangeStats object containing commit information
+
+        Returns:
+            List of formatted strings with largest file changes
+        """
+        if not hasattr(stats, "commits") or not stats.commits:
             return []
 
         largest_changes = self._get_largest_file_changes(stats.commits)
-
         if not largest_changes:
             return []
 
-        output = [
+        emoji = self._get_emoji
+        lines = [
             "",
-            f"{self._get_emoji('added')} {Fore.MAGENTA}Largest File Changes:{Style.RESET_ALL}",
+            f"{emoji('files')} {Fore.MAGENTA}Largest File Changes:{Style.RESET_ALL}",
         ]
 
         for file_path, changes in largest_changes:
-            output.append(f"  • {file_path}: {changes:,} lines changed")
+            lines.append(f"  {file_path}: {changes} lines changed")
 
-        return output
+        return lines
 
     def _get_frequently_changed_files(self, since: str) -> dict[str, int]:
         """Get files ordered by change frequency within the analysis period.
@@ -641,9 +501,7 @@ class ExtendedFormatter(BaseFormatter):
             Dictionary mapping file paths to change frequency, sorted by frequency (descending)
             and limited to the top 5 most frequently changed files.
         """
-        from collections import defaultdict
-
-        file_changes: dict[str, int] = defaultdict(int)
+        file_changes: defaultdict[str, int] = defaultdict(int)
 
         try:
             # Use GitPython to get file change counts
@@ -665,7 +523,35 @@ class ExtendedFormatter(BaseFormatter):
 
         except Exception:
             # Handle any errors gracefully
+            # Log the error instead of printing
             return {}
+
+    def _format_file_lifecycle(self, stats: dict[str, int] | None) -> list[str]:
+        """Format file lifecycle statistics for display.
+
+        Args:
+            stats: Dictionary with file lifecycle statistics
+
+        Returns:
+            List of formatted strings with header and stats, or empty list if all counts are zero
+        """
+        if not stats:
+            return []
+
+        # Check if all counts are zero
+        if all(v == 0 for v in stats.values()):
+            return []
+
+        emoji = self._get_emoji
+        output = [
+            f"{emoji('activity')} {Fore.MAGENTA}File Lifecycle Activity:{Style.RESET_ALL}",
+            f"• Files Added: {stats.get('added', 0)} new files",
+            f"• Files Modified: {stats.get('modified', 0)} files changed",
+            f"• Files Deleted: {stats.get('deleted', 0)} files removed",
+            f"• Files Renamed: {stats.get('renamed', 0)} files moved",
+        ]
+
+        return output
 
     def _format_frequent_files(self, frequent_files: dict[str, int]) -> list[str]:
         """Format frequently changed files section.
@@ -681,10 +567,79 @@ class ExtendedFormatter(BaseFormatter):
 
         output = [
             "",
-            f"{self._get_emoji('activity')} {Fore.MAGENTA}Most Frequently Changed "
+            f"{self._get_emoji('fire')} {Fore.MAGENTA}Most Frequently Changed "
             f"(last 30 days):{Style.RESET_ALL}",
         ]
-        for file_path, count in frequent_files.items():
-            output.append(f"  • {file_path}: {count} changes")
+
+        # Sort by frequency (descending) and take top 5
+        for file_path, changes in sorted(frequent_files.items(), key=lambda x: x[1], reverse=True)[
+            :5
+        ]:
+            output.append(f"  • {file_path}: {changes} changes")
 
         return output
+
+    def _format_date_range(self, dt: datetime) -> str:
+        """Format a datetime object for use in date ranges (date only)."""
+        return dt.strftime("%Y-%m-%d")
+
+    def _format_file_types(self, file_types: dict[str, dict[str, int]]) -> list[str]:
+        """Format file type breakdown.
+
+        Args:
+            file_types: Dictionary mapping file extensions to stats
+
+        Returns:
+            List of formatted strings with file type breakdown
+        """
+        if not file_types:
+            return []
+
+        lines = ["File type breakdown:"]
+        for ext, data in sorted(file_types.items()):
+            # Handle both old and new key formats
+            files_changed = data.get("files_changed", data.get("count", 0))
+            lines_added = data.get("lines_added", data.get("added", 0))
+            lines_deleted = data.get("lines_deleted", data.get("deleted", 0))
+            lines.append(f"  {ext}: {files_changed} files, +{lines_added}/-{lines_deleted}")
+        return lines
+
+    def _get_author_contribution_stats(
+        self, authors: dict[str, int], total_commits: int
+    ) -> list[str]:
+        """Get formatted author contribution statistics.
+
+        Args:
+            authors: Dictionary mapping author names to commit counts
+            total_commits: Total number of commits
+
+        Returns:
+            List of formatted strings with author contributions and percentages
+        """
+        lines = []
+        for author, commit_count in sorted(authors.items(), key=lambda x: x[1], reverse=True):
+            percentage = (commit_count / max(total_commits, 1)) * 100
+            lines.append(f"  {author}: {commit_count} commits ({percentage:.1f}%)")
+        return lines
+
+    def _get_daily_activity_stats(self, commits: list[CommitStats]) -> list[str]:
+        """Get formatted daily activity statistics.
+
+        Args:
+            commits: List of CommitStats objects
+
+        Returns:
+            List of formatted strings with daily activity
+        """
+        from collections import defaultdict
+
+        daily_activity: defaultdict[str, int] = defaultdict(int)
+        for commit in commits:
+            if hasattr(commit, "date") and commit.date:
+                date_key = commit.date.strftime("%Y-%m-%d")
+                daily_activity[date_key] += 1
+
+        lines = []
+        for date, count in sorted(daily_activity.items()):
+            lines.append(f"  {date}: {count} commits")
+        return lines

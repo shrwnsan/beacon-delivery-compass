@@ -48,6 +48,9 @@ Thumbs.db
 
 # Temporary files
 tmp/*
+
+# Security reports
+vulnerability-report.json
 !tmp/.gitkeep
 !tmp/.coverage
 
