@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "beaconled"
-version = "0.3.0"  # Minor release with advanced usage framework and comprehensive improvements
+version = "0.4.0"  # Enhanced extended format integration and analytics improvements
 description = "Your delivery compass for empowered product builders. A comprehensive toolkit for analyzing git repository statistics and development metrics."
 readme = "README.md"
 requires-python = ">=3.10"

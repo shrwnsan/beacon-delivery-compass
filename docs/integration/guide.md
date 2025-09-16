@@ -1,18 +1,18 @@
-# Integration Guide for Enhanced Extended Format
+# Integration Guide for Extended Format
 
-This document provides guidance on integrating and using the enhanced extended format feature in BeaconLED.
+This document provides guidance on integrating and using the extended format feature in BeaconLED.
 
 ## Overview
 
-The enhanced extended format brings together all the analytics components (time-based, team collaboration, quality assessment, and risk indicators) with rich visualization capabilities to provide comprehensive insights into your git repository.
+The extended format brings together all the analytics components (time-based, team collaboration, quality assessment, and risk indicators) with rich visualization capabilities to provide comprehensive insights into your git repository.
 
 ## System Architecture
 
-The enhanced extended format is built on the following components:
+The extended format is built on the following components:
 
 1. **Analytics Engine** - Integrates all analytics components
-2. **Enhanced Extended System** - Coordinates the full pipeline
-3. **CLI Integration** - Provides command-line access to the enhanced format
+2. **Extended System** - Coordinates the full pipeline
+3. **CLI Integration** - Provides command-line access to the extended format
 
 ### Analytics Engine
 
@@ -25,30 +25,30 @@ engine = AnalyticsEngine()
 analytics = engine.analyze(range_stats)
 ```
 
-### Enhanced Extended System
+### Extended System
 
-The `EnhancedExtendedSystem` coordinates the full pipeline:
+The `ExtendedSystem` coordinates the full pipeline:
 
 ```python
-from beaconled.analytics import EnhancedExtendedSystem
+from beaconled.analytics import ExtendedSystem
 
-system = EnhancedExtendedSystem()
+system = ExtendedSystem()
 result = system.analyze_and_format(range_stats)
 ```
 
 ## CLI Usage
 
-To use the enhanced extended format from the command line:
+To use the extended format from the command line:
 
 ```bash
 # For range analysis
-beaconled --format enhanced-extended --since 1month
+beaconled --format extended --since 1month
 
 # For single commit analysis
-beaconled --format enhanced-extended <commit-hash>
+beaconled --format extended <commit-hash>
 
 # Without emojis
-beaconled --format enhanced-extended --no-emoji --since 1week
+beaconled --format extended --no-emoji --since 1week
 ```
 
 ## Performance Optimization
@@ -73,7 +73,7 @@ The analytics engine includes caching to improve performance for repeated analys
 
 3. **CLI Format Not Recognized**
    - Ensure you're using the latest version of the code
-   - The `enhanced-extended` format option should be available in the help
+   - The `extended` format option should be available in the help
 
 ### Debugging Performance
 
@@ -111,12 +111,12 @@ class AnalyticsEngine:
         """
 ```
 
-### EnhancedExtendedSystem
+### ExtendedSystem
 
 ```python
-class EnhancedExtendedSystem:
+class ExtendedSystem:
     def __init__(self) -> None:
-        """Initialize the enhanced extended system."""
+        """Initialize the extended system."""
 
     def analyze_and_format(self, range_stats: RangeStats) -> str:
         """Complete analysis and formatting pipeline.

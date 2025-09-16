@@ -158,6 +158,7 @@ Welcome to the Beacon documentation! This is your delivery compass for empowered
 | [Configuration Guide](configuration.md) | Customizing Beacon's behavior |
 | [Architecture](architecture.md) | System design overview |
 | [Scripts (dev)](development/scripts.md) | Analytics scripts (developer/internal) |
+| [Archive (historical)](archive/) | Historical development documentation |
 
 ## 💡 Next Steps
 

@@ -158,5 +158,8 @@ See [Security Roadmap](./security/roadmap.md) for detailed security-related impr
 ## Contributing
 Contributions are welcome! Please see our [Contributing Guidelines](../CONTRIBUTING.md) for details.
 
+## Historical Context
+For documentation about previous major development efforts, see the [archive/](../archive/) directory.
+
 ## License
 This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details.
