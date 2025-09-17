@@ -354,82 +354,81 @@ class GitAnalyzer:
                 # We'll continue processing with the files we've collected so far
                 # rather than failing the entire operation for a diff error
 
-            try:
-                # Get commit message and author info
-                message = commit.message.strip() if commit.message else ""
-                if isinstance(message, bytes):
-                    message = message.decode("utf-8", errors="replace")
-                # Only take the first line of the commit message
-                message_str = str(message).split("\n", 1)[0].strip()
+            # Get commit message and author info
+            message = commit.message.strip() if commit.message else ""
+            if isinstance(message, bytes):
+                message = message.decode("utf-8", errors="replace")
+            # Only take the first line of the commit message
+            message_str = str(message).split("\n", 1)[0].strip()
 
-                logger.debug(
-                    "Processed commit message: %s",
-                    message_str[:50] + (message_str[50:] and "..."),
-                )
+            logger.debug(
+                "Processed commit message: %s",
+                message_str[:50] + (message_str[50:] and "..."),
+            )
 
-                # Ensure we have a valid date
-                commit_date = commit.authored_datetime
-                if commit_date is None:
-                    logger.warning(
-                        "No authored_datetime for commit %s, using current time",
-                        commit_hash[:7],
-                    )
-                    commit_date = datetime.now(timezone.utc)
-                else:
-                    logger.debug("Commit date: %s", commit_date.isoformat())
-
-                # Format author information
-                author_info = ""
-                try:
-                    if hasattr(commit.author, "name") and hasattr(
-                        commit.author,
-                        "email",
-                    ):
-                        author_info = f"{commit.author.name} <{commit.author.email}>"
-                        logger.debug("Commit author: %s", author_info)
-                    else:
-                        author_info = str(commit.author)
-                        logger.debug("Using fallback author info: %s", author_info)
-                except Exception as e:
-                    logger.warning(
-                        "Error getting author info: %s",
-                        str(e),
-                        exc_info=True,
-                    )
-                    author_info = "Unknown Author <unknown@example.com>"
-
-                # Create and return the CommitStats object
-                # Preserve the commit's reported hash as-is
-                # (tests may assert exact mock value)
-                stats = CommitStats(
-                    hash=str(commit.hexsha),
-                    author=author_info,
-                    date=commit_date,
-                    message=message_str,
-                    files_changed=len(files),
-                    lines_added=total_additions,
-                    lines_deleted=total_deletions,
-                    files=files,
-                )
-
-                logger.debug(
-                    "Successfully processed commit %s: %d files, +%d -%d lines",
+            # Ensure we have a valid date
+            commit_date = commit.authored_datetime
+            if commit_date is None:
+                logger.warning(
+                    "No authored_datetime for commit %s, using current time",
                     commit_hash[:7],
-                    len(files),
-                    total_additions,
-                    total_deletions,
                 )
+                commit_date = datetime.now(timezone.utc)
 
-                return stats
+            logger.debug("Commit date: %s", commit_date.isoformat())
 
+            # Format author information
+            author_info = ""
+            try:
+                if hasattr(commit.author, "name") and hasattr(
+                    commit.author,
+                    "email",
+                ):
+                    author_info = f"{commit.author.name} <{commit.author.email}>"
+                    logger.debug("Commit author: %s", author_info)
+                else:
+                    author_info = str(commit.author)
+                    logger.debug("Using fallback author info: %s", author_info)
             except Exception as e:
-                error_msg = f"Error processing commit {commit_hash}"
-                logger.exception("%s", error_msg)
-                raise CommitParseError(
-                    commit_ref=commit_hash,
-                    parse_error=e,
-                    details={"original_error": str(e)},
-                ) from e
+                logger.warning(
+                    "Error getting author info: %s",
+                    str(e),
+                    exc_info=True,
+                )
+                author_info = "Unknown Author <unknown@example.com>"
+
+            # Create and return the CommitStats object
+            # Preserve the commit's reported hash as-is
+            # (tests may assert exact mock value)
+            stats = CommitStats(
+                hash=str(commit.hexsha),
+                author=author_info,
+                date=commit_date,
+                message=message_str,
+                files_changed=len(files),
+                lines_added=total_additions,
+                lines_deleted=total_deletions,
+                files=files,
+            )
+
+            logger.debug(
+                "Successfully processed commit %s: %d files, +%d -%d lines",
+                commit_hash[:7],
+                len(files),
+                total_additions,
+                total_deletions,
+            )
+
+            return stats
+
+        except Exception as e:
+            error_msg = f"Error processing commit {commit_hash}"
+            logger.exception("%s", error_msg)
+            raise CommitParseError(
+                commit_ref=commit_hash,
+                parse_error=e,
+                details={"original_error": str(e)},
+            ) from e
 
         except git.GitCommandError as e:
             msg = f"Failed to analyze commit {commit_hash}: {e!s}"
@@ -441,11 +440,6 @@ class GitAnalyzer:
             raise
         except DateRangeError:
             raise
-        except Exception as e:
-            msg = f"Unexpected error analyzing commit {commit_hash}: {e!s}"
-            raise RuntimeError(
-                msg,
-            ) from e
 
     def get_range_analytics(
         self,

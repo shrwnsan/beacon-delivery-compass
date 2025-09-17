@@ -6,6 +6,7 @@ import sys
 
 from . import __version__
 from .core.analyzer import GitAnalyzer
+
 # Domain-specific date errors for clearer CLI messages
 from .core.date_errors import DateParseError, DateRangeError
 from .formatters.ascii_chart import ASCIIChartFormatter

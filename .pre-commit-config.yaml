@@ -30,11 +30,7 @@ repos:
     -   id: check-toml
     -   id: check-json
 
--   repo: https://github.com/pycqa/isort
-    rev: 5.13.2
-    hooks:
-    -   id: isort
-        name: isort (python)
+
 
 -   repo: local
     hooks:

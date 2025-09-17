@@ -18,8 +18,7 @@ from .time_analyzer import TimeAnalyzer, TimeAnalyzerConfig
 if TYPE_CHECKING:
     from beaconled.formatters.base_formatter import BaseFormatter
     from beaconled.formatters.chart import ChartFormatter as ChartRenderer
-    from beaconled.formatters.heatmap import \
-        HeatmapFormatter as HeatmapRenderer
+    from beaconled.formatters.heatmap import HeatmapFormatter as HeatmapRenderer
 
 
 @dataclass

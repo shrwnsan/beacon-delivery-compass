@@ -4,8 +4,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from beaconled.analytics.collaboration_analyzer import (CollaborationAnalyzer,
-                                                        CollaborationConfig)
+from beaconled.analytics.collaboration_analyzer import CollaborationAnalyzer, CollaborationConfig
 from beaconled.core.models import CommitStats, FileStats, RangeStats
 
 
