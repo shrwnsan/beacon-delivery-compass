@@ -8,10 +8,6 @@ from typing import TYPE_CHECKING, Any
 from .base_formatter import BaseFormatter
 
 if TYPE_CHECKING:
-    import matplotlib.pyplot as plt
-    import numpy as np
-    import pandas as pd
-
     from beaconled.core.models import CommitStats, RangeStats
 
 
@@ -31,9 +27,9 @@ class ChartFormatter(BaseFormatter):
         """
         self.output_path = Path(output_path)
         self.no_emoji = no_emoji
-        self.plt: plt | None = None
-        self.pd: pd | None = None
-        self.np: np | None = None
+        self.plt: Any = None
+        self.pd: Any = None
+        self.np: Any = None
         self._check_dependencies()
 
     def _check_dependencies(self) -> None:

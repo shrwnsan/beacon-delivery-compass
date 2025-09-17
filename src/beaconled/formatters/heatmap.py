@@ -153,7 +153,7 @@ class HeatmapFormatter(BaseFormatter):
         commits: list[int],
     ) -> None:
         """Create a simplified calendar heatmap."""
-        if not MATPLOTLIB_AVAILABLE or not plt or not np or not LinearSegmentedColormap:
+        if not MATPLOTLIB_AVAILABLE or plt is None or np is None or LinearSegmentedColormap is None:
             return
 
         # Group by month and day
@@ -223,7 +223,7 @@ class HeatmapFormatter(BaseFormatter):
 
     def _create_author_heatmap(self, stats: RangeStats) -> None:
         """Create a heatmap showing author activity by day of week."""
-        if not MATPLOTLIB_AVAILABLE or not plt or not np or not LinearSegmentedColormap:
+        if not MATPLOTLIB_AVAILABLE or plt is None or np is None or LinearSegmentedColormap is None:
             return
 
         if not hasattr(stats, "author_activity_by_day") or not stats.author_activity_by_day:
