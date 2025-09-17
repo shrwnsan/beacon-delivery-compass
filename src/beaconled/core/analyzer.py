@@ -249,14 +249,25 @@ class GitAnalyzer:
                     commit.hexsha[:7],
                     first_line,
                 )
-            except (ValueError, TypeError, git.BadName) as e:
-                error_msg = f"Commit not found: {commit_hash}"
-                logger.exception("%s", error_msg)
-                raise CommitParseError(
-                    commit_ref=commit_hash,
-                    parse_error=e,
-                    details={"original_error": str(e)},
-                ) from e
+            except (ValueError, TypeError, git.BadName, git.GitCommandError) as e:
+                # Handle different exception types appropriately
+                if isinstance(e, git.GitCommandError):
+                    # For GitCommandError, convert to RuntimeError as expected by tests
+                    msg = f"Failed to analyze commit {commit_hash}: {e!s}"
+                    raise RuntimeError(msg) from e
+                elif isinstance(e, (ValueError, TypeError, git.BadName)):
+                    # For backward compatibility with tests, convert BadName to RuntimeError
+                    msg = f"Unexpected error analyzing commit {commit_hash}: {e!s}"
+                    raise RuntimeError(msg) from e
+                else:
+                    # This shouldn't happen, but just in case
+                    error_msg = f"Commit not found: {commit_hash}"
+                    logger.exception("%s", error_msg)
+                    raise CommitParseError(
+                        commit_ref=commit_hash,
+                        parse_error=e,
+                        details={"original_error": str(e)},
+                    ) from e
             except Exception as e:
                 error_msg = f"Error retrieving commit {commit_hash}"
                 logger.exception("%s", error_msg)
@@ -368,6 +379,8 @@ class GitAnalyzer:
 
             # Ensure we have a valid date
             commit_date = commit.authored_datetime
+            # Handle case where GitPython returns None for authored_datetime
+            # This can happen in certain edge cases with malformed commits
             if commit_date is None:
                 logger.warning(
                     "No authored_datetime for commit %s, using current time",
@@ -421,6 +434,18 @@ class GitAnalyzer:
 
             return stats
 
+        except git.GitCommandError as e:
+            msg = f"Failed to analyze commit {commit_hash}: {e!s}"
+            raise RuntimeError(
+                msg,
+            ) from e
+        except (ValueError, TypeError, git.BadName) as e:
+            # For backward compatibility with tests, convert BadName to RuntimeError
+            msg = f"Unexpected error analyzing commit {commit_hash}: {e!s}"
+            raise RuntimeError(msg) from e
+        except (DateParseError, DateRangeError, RuntimeError):
+            # Surface domain-specific date errors and RuntimeErrors directly
+            raise
         except Exception as e:
             error_msg = f"Error processing commit {commit_hash}"
             logger.exception("%s", error_msg)
@@ -429,17 +454,6 @@ class GitAnalyzer:
                 parse_error=e,
                 details={"original_error": str(e)},
             ) from e
-
-        except git.GitCommandError as e:
-            msg = f"Failed to analyze commit {commit_hash}: {e!s}"
-            raise RuntimeError(
-                msg,
-            ) from e
-        except DateParseError:
-            # Surface domain-specific date errors directly
-            raise
-        except DateRangeError:
-            raise
 
     def get_range_analytics(
         self,

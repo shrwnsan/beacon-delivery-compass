@@ -21,9 +21,9 @@ try:
 
     MATPLOTLIB_AVAILABLE = True
 except ImportError:
-    plt = None
-    np = None
-    LinearSegmentedColormap = None
+    plt = None  # type: ignore[assignment]
+    np = None  # type: ignore[assignment]
+    LinearSegmentedColormap = None  # type: ignore[assignment,misc]
     MATPLOTLIB_AVAILABLE = False
 
 

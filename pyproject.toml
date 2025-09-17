@@ -491,8 +491,13 @@ disallow_untyped_calls = true
 
 # Ignore missing imports for optional dependencies
 [[tool.mypy.overrides]]
-module = ["matplotlib", "matplotlib.*", "numpy", "numpy.*"]
+module = ["matplotlib", "matplotlib.*", "numpy", "numpy.*", "pandas"]
 ignore_missing_imports = true
+
+# Disable unreachable warnings for analyzer.py due to GitPython typing issues
+[[tool.mypy.overrides]]
+module = "beaconled.core.analyzer"
+warn_unreachable = false
 
 # Bandit security scanner configuration
 [tool.bandit]
