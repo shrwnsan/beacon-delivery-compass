@@ -7,17 +7,10 @@ insights for the enhanced extended format.
 
 from .collaboration_analyzer import CollaborationAnalyzer, CollaborationConfig
 from .engine import AnalyticsEngine, ExtendedFormatSystem
-from .models import (
-    ActivityHeatmap,
-    BusFactor,
-    CoAuthorshipMetrics,
-    CollaborationMetrics,
-    CollaborationPatterns,
-    KnowledgeDistribution,
-    ReviewMetrics,
-    TimeAnalytics,
-    VelocityTrends,
-)
+from .models import (ActivityHeatmap, BusFactor, CoAuthorshipMetrics,
+                     CollaborationMetrics, CollaborationPatterns,
+                     KnowledgeDistribution, ReviewMetrics, TimeAnalytics,
+                     VelocityTrends)
 from .time_analyzer import TimeAnalyzer, TimeAnalyzerConfig
 
 __all__ = [

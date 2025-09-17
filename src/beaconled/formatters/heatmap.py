@@ -123,7 +123,7 @@ class HeatmapFormatter(BaseFormatter):
 
         # Sort by date
         date_commit_pairs = sorted(zip(dates, commits, strict=False))
-        sorted_dates, sorted_commits = zip(*date_commit_pairs, strict=False)  # type: ignore
+        sorted_dates, sorted_commits = zip(*date_commit_pairs, strict=False)
         dates = list(sorted_dates)
         commits = list(sorted_commits)
 
@@ -136,7 +136,7 @@ class HeatmapFormatter(BaseFormatter):
         ax1.set_title("Daily Commit Activity", fontsize=14)
         ax1.set_xlabel("Date")
         ax1.set_ylabel("Commits")
-        ax1.grid(visible=True, alpha=0.3)  # type: ignore
+        ax1.grid(visible=True, alpha=0.3)
 
         # Rotate x-axis labels for better readability
         ax1.tick_params(axis="x", rotation=45)
@@ -194,24 +194,24 @@ class HeatmapFormatter(BaseFormatter):
         cmap = LinearSegmentedColormap.from_list("custom_blue", colors)
 
         # Plot heatmap
-        im = ax.imshow(heatmap_data, cmap=cmap, aspect="auto")  # type: ignore
+        im = ax.imshow(heatmap_data, cmap=cmap, aspect="auto")
 
         # Add colorbar
         cbar = plt.colorbar(im, ax=ax, shrink=0.8)
         cbar.set_label("Commits")
 
         # Set labels
-        ax.set_title(f"Commit Activity - {current_month}", fontsize=14)  # type: ignore
-        ax.set_xticks(range(7))  # type: ignore
-        ax.set_yticks(range(5))  # type: ignore
-        ax.set_xticklabels(day_names)  # type: ignore
-        ax.set_yticklabels([f"Week {i + 1}" for i in range(5)])  # type: ignore
+        ax.set_title(f"Commit Activity - {current_month}", fontsize=14)
+        ax.set_xticks(range(7))
+        ax.set_yticks(range(5))
+        ax.set_xticklabels(day_names)
+        ax.set_yticklabels([f"Week {i + 1}" for i in range(5)])
 
         # Add commit counts as text
         for i in range(5):
             for j in range(7):
                 if heatmap_data[i, j] > 0:
-                    ax.text(  # type: ignore
+                    ax.text(
                         j,
                         i,
                         int(heatmap_data[i, j]),

@@ -18,14 +18,15 @@ from .time_analyzer import TimeAnalyzer, TimeAnalyzerConfig
 if TYPE_CHECKING:
     from beaconled.formatters.base_formatter import BaseFormatter
     from beaconled.formatters.chart import ChartFormatter as ChartRenderer
-    from beaconled.formatters.heatmap import HeatmapFormatter as HeatmapRenderer
+    from beaconled.formatters.heatmap import \
+        HeatmapFormatter as HeatmapRenderer
 
 
 @dataclass
 class RangeStatsWithAnalytics(RangeStats):
     """Wrapper for RangeStats that includes analytics data."""
 
-    analytics: dict | None = None
+    analytics: dict[str, Any] | None = None
 
 
 class AnalyticsEngine:
@@ -94,7 +95,7 @@ class AnalyticsEngine:
 
         return result
 
-    def _get_cache_key(self, range_stats: RangeStats) -> tuple:
+    def _get_cache_key(self, range_stats: RangeStats) -> tuple[Any, ...]:
         """Generate a cache key for the given range stats."""
         return (
             range_stats.total_commits,

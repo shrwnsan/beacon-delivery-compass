@@ -1,9 +1,9 @@
 """Tests for RichFormatter class."""
 
-import pytest
 from datetime import datetime, timezone
 from io import StringIO
 
+import pytest
 from rich.console import Console
 
 from beaconled.core.models import CommitStats, FileStats, RangeStats

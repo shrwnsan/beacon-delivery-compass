@@ -1,8 +1,9 @@
 """Tests for heatmap formatter."""
 
-import pytest
 from datetime import datetime, timezone
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from beaconled.core.models import CommitStats, RangeStats
 from beaconled.formatters.heatmap import HeatmapFormatter

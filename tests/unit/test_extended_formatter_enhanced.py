@@ -2,22 +2,17 @@
 
 from datetime import datetime, timezone
 from unittest.mock import patch
+
 import pytest
 
-from beaconled.analytics.models import (
-    TimeAnalytics,
-    VelocityTrends,
-    ActivityHeatmap,
-    BusFactor,
-    CollaborationMetrics,
-    CollaborationPatterns,
-    CoAuthorshipMetrics,
-    KnowledgeDistribution,
-    ReviewMetrics,
-)
+from beaconled.analytics.models import (ActivityHeatmap, BusFactor,
+                                        CoAuthorshipMetrics,
+                                        CollaborationMetrics,
+                                        CollaborationPatterns,
+                                        KnowledgeDistribution, ReviewMetrics,
+                                        TimeAnalytics, VelocityTrends)
 from beaconled.core.models import RangeStats
 from beaconled.formatters.extended import ExtendedFormatter
-
 
 """Unit tests for the ExtendedFormatter with enhanced analytics."""
 

@@ -1,7 +1,8 @@
 """Unit tests for TimeAnalyzer."""
 
-import pytest
 from datetime import datetime, timedelta, timezone
+
+import pytest
 
 from beaconled.analytics.time_analyzer import TimeAnalyzer, TimeAnalyzerConfig
 from beaconled.core.models import CommitStats, RangeStats

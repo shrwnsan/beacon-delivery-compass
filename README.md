@@ -286,39 +286,26 @@ Beacon is built with a strong focus on code quality and maintainability. We use 
 
 #### Pre-commit Configuration
 
-We provide two pre-commit configurations:
+We use a unified pre-commit configuration (`.pre-commit-config.yaml`) that works for both development and production environments:
 
-1. **Development Mode** (`.pre-commit-dev.yaml`):
-   - More lenient rules for local development
-   - Focuses on critical issues only
-   - Faster feedback loop
+```bash
+# Setup pre-commit hooks (unified configuration for dev and prod)
+make dev-setup
+```
 
-   ```bash
-   # Setup development pre-commit hooks
-   make dev-setup
-   ```
-
-2. **Production Mode** (`.pre-commit-config.yaml`):
-   - Strict rules for CI/CD and production
-   - Enforces all code quality standards
-   - Includes all linters and formatters
-
-   ```bash
-   # Setup production pre-commit hooks
-   make prod-setup
-   ```
+Note: Both `dev-setup` and `prod-setup` now use the same unified configuration for consistency.
 
 #### Key Quality Tools
 
 - **Type Safety**: Full static type checking with [mypy](https://mypy-lang.org/)
-- **Code Style**: Consistent code formatting with [Black](https://black.readthedocs.io/)
+- **Code Style**: Consistent code formatting with [Ruff](https://github.com/charliermarsh/ruff)
 - **Linting**: Code quality enforcement with [Ruff](https://github.com/charliermarsh/ruff)
 - **Documentation**: Comprehensive docstrings and API documentation
 
 #### Development Workflow
 
-1. During active development, use `dev-setup` for faster commits
-2. Before pushing changes, run `prod-setup` to ensure all checks pass
+1. Use `make dev-setup` to install the pre-commit hooks
+2. Before pushing changes, ensure all checks pass (they will run automatically on commit)
 3. Use `git commit --no-verify` sparingly when needed
 
 #### Manual Checks

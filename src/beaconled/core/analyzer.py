@@ -370,7 +370,7 @@ class GitAnalyzer:
                 # Ensure we have a valid date
                 commit_date = commit.authored_datetime
                 if commit_date is None:
-                    logger.warning(  # type: ignore[unreachable]
+                    logger.warning(
                         "No authored_datetime for commit %s, using current time",
                         commit_hash[:7],
                     )

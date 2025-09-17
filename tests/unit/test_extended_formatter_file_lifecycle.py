@@ -2,8 +2,7 @@
 
 import re
 from datetime import datetime, timezone
-from unittest.mock import patch, MagicMock
-
+from unittest.mock import MagicMock, patch
 
 from beaconled.core.models import RangeStats
 from beaconled.formatters.extended import ExtendedFormatter

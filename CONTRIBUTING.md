@@ -134,34 +134,23 @@ We follow a structured branching model to maintain a clean and organized reposit
    - Update documentation as needed
 
 3. **Run pre-commit hooks**
-   We use different pre-commit configurations for development and production environments:
+   We now use a unified pre-commit configuration that works for both development and production environments:
 
-   - **Development** (default):
-     ```bash
-     # Installs the development hooks (faster, less strict)
-     pre-commit install
+   ```bash
+   # Install the unified pre-commit hooks
+   pre-commit install
 
-     # Run all hooks on all files
-     pre-commit run --all-files
-     ```
-     The development configuration is more lenient to avoid slowing down development. It includes:
-     - Black with 100-character line length
-     - Basic Ruff linting and formatting
-     - Basic MyPy type checking
-     - Faster execution by excluding some checks
+   # Run all hooks on all files
+   pre-commit run --all-files
+   ```
 
-   - **Production/CI**:
-     ```bash
-     # Run production hooks (stricter, includes all checks)
-     pre-commit run --config .pre-commit-prod.yaml --all-files
-     ```
-     The production configuration enforces additional quality checks:
-     - Stricter MyPy with `--strict` flag
-     - Additional validations (TOML, JSON, merge conflicts)
-     - More comprehensive code quality checks
-     - Used in CI/CD pipelines
+   The unified configuration includes:
+   - Ruff for linting and formatting with auto-fix enabled
+   - Mypy for type checking with additional dependencies
+   - Basic file validation (trailing whitespace, EOF, YAML, large files)
+   - Custom machine path checking
 
-   > **Note**: The production configuration runs automatically in CI. For local development, the development hooks are installed by default.
+   > **Note**: Previously we had separate development and production configurations, but we've simplified to a single unified configuration that provides the right balance of strictness and performance.
 
 4. **Test your changes**
    ```bash

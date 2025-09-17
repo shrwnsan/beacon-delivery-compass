@@ -1,10 +1,11 @@
 """Tests for ChartFormatter."""
 
-import pytest
 from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
-from src.beaconled.core.models import RangeStats, CommitStats, FileStats
+import pytest
+
+from src.beaconled.core.models import CommitStats, FileStats, RangeStats
 from src.beaconled.formatters.chart import ChartFormatter
 
 

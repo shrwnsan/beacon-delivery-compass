@@ -8,9 +8,9 @@ from typing import TYPE_CHECKING, Any
 from .base_formatter import BaseFormatter
 
 if TYPE_CHECKING:
-    import matplotlib.pyplot as plt  # type: ignore
-    import numpy as np  # type: ignore
-    import pandas as pd  # type: ignore
+    import matplotlib.pyplot as plt
+    import numpy as np
+    import pandas as pd
 
     from beaconled.core.models import CommitStats, RangeStats
 
@@ -39,9 +39,9 @@ class ChartFormatter(BaseFormatter):
     def _check_dependencies(self) -> None:
         """Check if required dependencies for chart generation are available."""
         try:
-            import matplotlib.pyplot as plt  # type: ignore
-            import numpy as np  # type: ignore
-            import pandas as pd  # type: ignore
+            import matplotlib.pyplot as plt
+            import numpy as np
+            import pandas as pd
 
             self.plt = plt
             self.pd = pd

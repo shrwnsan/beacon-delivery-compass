@@ -1,9 +1,11 @@
 """Unit tests for CollaborationAnalyzer."""
 
-import pytest
 from datetime import datetime, timedelta, timezone
 
-from beaconled.analytics.collaboration_analyzer import CollaborationAnalyzer, CollaborationConfig
+import pytest
+
+from beaconled.analytics.collaboration_analyzer import (CollaborationAnalyzer,
+                                                        CollaborationConfig)
 from beaconled.core.models import CommitStats, FileStats, RangeStats
 
 

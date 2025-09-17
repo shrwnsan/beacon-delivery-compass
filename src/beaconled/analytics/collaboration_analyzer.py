@@ -9,13 +9,9 @@ from dataclasses import dataclass
 
 from beaconled.core.models import RangeStats
 
-from .models import (
-    CoAuthorshipMetrics,
-    CollaborationMetrics,
-    CollaborationPatterns,
-    KnowledgeDistribution,
-    ReviewMetrics,
-)
+from .models import (CoAuthorshipMetrics, CollaborationMetrics,
+                     CollaborationPatterns, KnowledgeDistribution,
+                     ReviewMetrics)
 
 
 @dataclass
