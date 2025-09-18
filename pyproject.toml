@@ -74,6 +74,7 @@ dev = [
     "types-pytz>=2023.0.0",
     "types-requests>=2.28.0",
     "types-colorama>=0.4.0",
+    "types-defusedxml>=0.7.0.20240215",
     "pandas-stubs>=1.5.0",
 
     # Security
