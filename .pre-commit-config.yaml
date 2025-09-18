@@ -1,36 +1,78 @@
-# Main pre-commit configuration
-# Optimized for both development and CI
+# Streamlined precommit configuration
+# Optimized for speed and effectiveness
+# Removes redundancy and focuses on essential checks
 
 repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+    # Fast file checks (run first)
+    -   id: trailing-whitespace
+    -   id: end-of-file-fixer
+    -   id: check-yaml
+    -   id: check-json
+    -   id: check-toml
+    -   id: check-merge-conflict
+    -   id: check-added-large-files
+        args: ['--maxkb=1000']
+    -   id: check-case-conflict
+    -   id: check-executables-have-shebangs
+    -   id: check-shebang-scripts-are-executable
+
 -   repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.12.9
     hooks:
+    # Fast linting and formatting (replaces flake8, isort, black)
     -   id: ruff
-        args: [--fix]
+        args: [--fix, --exit-non-zero-on-fix]
     -   id: ruff-format
 
 -   repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.17.1
     hooks:
     -   id: mypy
-        additional_dependencies: [types-python-dateutil, types-pytz, types-requests, pandas-stubs]
-        exclude: '^tests/'
+        additional_dependencies: [types-python-dateutil, types-pytz, types-requests, pandas-stubs, types-colorama]
         files: '^src/beaconled/.*\.py$'
+        args: [--show-error-codes, --pretty, --ignore-missing-imports]
 
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0
+-   repo: https://github.com/pycqa/bandit
+    rev: 1.7.10
     hooks:
-    -   id: trailing-whitespace
-    -   id: end-of-file-fixer
-    -   id: check-yaml
-    -   id: check-added-large-files
-        args: ['--maxkb=1000']
-    -   id: check-merge-conflict
-    -   id: check-toml
-    -   id: check-json
+    -   id: bandit
+        args: ['-c', 'pyproject.toml', '-r', 'src']
+        files: '^src/beaconled/.*\.py$'
 
 -   repo: local
     hooks:
+    # Security and dependency checks
+    -   id: pip-audit
+        name: pip-audit
+        entry: pip-audit
+        language: system
+        args: [--desc]
+        pass_filenames: false
+        files: 'pyproject\.toml$'
+
+    # Intelligent test execution with testmon (5-10x faster)
+    -   id: pytest-unit
+        name: pytest unit tests (testmon)
+        entry: pytest
+        language: system
+        args: [tests/unit, --testmon, -x, --tb=short, -q]
+        pass_filenames: false
+        files: '^src/beaconled/.*\.py$|^tests/unit/.*\.py$'
+
+    # Integration tests (smart selection when core files change)
+    -   id: pytest-integration
+        name: pytest integration tests (testmon)
+        entry: pytest
+        language: system
+        args: [tests/integration, --testmon, -x, --tb=short, -q]
+        pass_filenames: false
+        files: '^src/beaconled/(core|cli|analytics).*\.py$|^tests/integration/.*\.py$'
+        always_run: false
+
+    # Custom project checks
     -   id: check-machine-paths
         name: check for machine-specific paths
         entry: scripts/check_machine_paths.sh
