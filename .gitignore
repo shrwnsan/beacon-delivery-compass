@@ -72,6 +72,11 @@ htmlcov/
 .hypothesis/
 test_output.txt
 
+# pytest-testmon cache files
+.testmondata
+.testmondata-shm
+.testmondata-wal
+
 # Documentation
 docs/_build/
 site/
