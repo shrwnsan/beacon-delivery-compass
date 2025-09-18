@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any, cast
 from beaconled.core.models import RangeStats
 
 from .collaboration_analyzer import CollaborationAnalyzer, CollaborationConfig
+from .coverage_analyzer import CoverageAnalyzer
 from .quality_analyzer import QualityAnalyzer, QualityConfig
 from .risk_analyzer import RiskAnalyzer, RiskConfig
 from .time_analyzer import TimeAnalyzer, TimeAnalyzerConfig
@@ -52,6 +53,9 @@ class AnalyticsEngine:
 
         # Risk assessment analytics
         self.risk_analyzer = RiskAnalyzer(RiskConfig())
+
+        # Test coverage analytics
+        self.coverage_analyzer = CoverageAnalyzer()
 
         # Caching for performance optimization
         self._cache: dict[Any, Any] = {}
@@ -95,12 +99,13 @@ class AnalyticsEngine:
         Returns:
             Dictionary with results from all analyzers
         """
-        with ThreadPoolExecutor(max_workers=4) as executor:
+        with ThreadPoolExecutor(max_workers=5) as executor:
             # Submit all analysis tasks
             future_time = executor.submit(self.time_analyzer.analyze, range_stats)
             future_collaboration = executor.submit(self.collaboration_analyzer.analyze, range_stats)
             future_quality = executor.submit(self.quality_analyzer.analyze, range_stats)
             future_risk = executor.submit(self.risk_analyzer.analyze, range_stats)
+            future_coverage = executor.submit(self._analyze_coverage, range_stats)
 
             # Collect results as they complete
             return self._collect_analysis_results([
@@ -108,6 +113,7 @@ class AnalyticsEngine:
                 (future_collaboration, "collaboration"),
                 (future_quality, "quality"),
                 (future_risk, "risk"),
+                (future_coverage, "coverage"),
             ])
 
     def _collect_analysis_results(self, futures: list[tuple[Any, str]]) -> dict[str, Any]:
@@ -170,6 +176,49 @@ class AnalyticsEngine:
         while len(self._cache) > self._max_cache_size:
             oldest_key = next(iter(self._cache))
             del self._cache[oldest_key]
+
+    def _analyze_coverage(self, range_stats: RangeStats) -> dict[str, Any]:
+        """Analyze test coverage data for the range.
+
+        Args:
+            range_stats: The range statistics to analyze
+
+        Returns:
+            Dictionary with coverage analysis results
+        """
+        try:
+            # Get coverage history
+            coverage_history = self.coverage_analyzer.get_coverage_history()
+
+            # Add coverage data to range stats
+            if coverage_history:
+                range_stats.coverage_history = coverage_history
+
+                # Analyze trends if we have enough data
+                if len(coverage_history) >= 2:
+                    range_stats.coverage_trends = self.coverage_analyzer.analyze_coverage_trends(
+                        coverage_history
+                    )
+
+            # Get latest coverage for current state
+            latest_coverage = self.coverage_analyzer.get_latest_coverage()
+
+            return {
+                "coverage_history": coverage_history,
+                "latest_coverage": latest_coverage,
+                "file_count": len(latest_coverage.file_coverage) if latest_coverage else 0,
+                "has_coverage_data": bool(coverage_history or latest_coverage),
+            }
+
+        except Exception as e:
+            self.logger.error("Coverage analysis failed: %s", e)
+            return {
+                "coverage_history": [],
+                "latest_coverage": None,
+                "file_count": 0,
+                "has_coverage_data": False,
+                "error": str(e),
+            }
 
 
 class ExtendedFormatSystem:
