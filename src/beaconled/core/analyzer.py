@@ -283,15 +283,15 @@ class GitAnalyzer:
             total_deletions = 0
 
             try:
-                # Get diff stats for this commit
+                # Get diff stats for this commit (optimized - no patch creation)
                 if commit.parents:
                     # Compare with first parent (most common case)
                     logger.debug("Generating diff with parent commit")
-                    diff_index = commit.parents[0].diff(commit, create_patch=True)
+                    diff_index = commit.parents[0].diff(commit, create_patch=False)
                 else:
                     # For initial commit, compare with empty tree
                     logger.debug("Generating diff for initial commit (no parent)")
-                    diff_index = commit.diff(git.NULL_TREE, create_patch=True)
+                    diff_index = commit.diff(git.NULL_TREE, create_patch=False)
 
                 logger.debug("Processing %d changed files", len(diff_index))
 
@@ -306,19 +306,31 @@ class GitAnalyzer:
                             )
                             continue
 
-                        # Parse the diff to count added/removed lines
-                        diff_content = diff.diff
-                        if isinstance(diff_content, bytes):
-                            added = diff_content.count(b"\n+") - 1  # Subtract 1 for the header line
-                            deleted = (
-                                diff_content.count(b"\n-") - 1
-                            )  # Subtract 1 for the header line
-                        else:
-                            # Convert to bytes if it's a string
-                            if isinstance(diff_content, str):
-                                diff_content = diff_content.encode("utf-8")
-                            added = diff_content.count(b"\n+") - 1
-                            deleted = diff_content.count(b"\n-") - 1
+                        # Use GitPython's built-in diff stats for performance when available
+                        added = 0
+                        deleted = 0
+
+                        # Check if diff.diff is a dictionary (GitPython stats) or bytes (raw diff)
+                        if diff.diff and isinstance(diff.diff, dict):
+                            # Use GitPython's built-in diff stats (faster)
+                            added = diff.diff.get("insertions", 0)
+                            deleted = diff.diff.get("deletions", 0)
+                        elif diff.diff:
+                            # Fallback to manual byte counting for raw diff content
+                            diff_content = diff.diff
+                            if isinstance(diff_content, bytes):
+                                added = (
+                                    diff_content.count(b"\n+") - 1
+                                )  # Subtract 1 for the header line
+                                deleted = (
+                                    diff_content.count(b"\n-") - 1
+                                )  # Subtract 1 for the header line
+                            else:
+                                # Convert to bytes if it's a string
+                                if isinstance(diff_content, str):
+                                    diff_content = diff_content.encode("utf-8")
+                                added = diff_content.count(b"\n+") - 1
+                                deleted = diff_content.count(b"\n-") - 1
 
                         # Ensure non-negative values
                         added = max(0, added)
@@ -549,12 +561,14 @@ class GitAnalyzer:
                 rev_list = []
 
             # Fall back to git log if iter_commits failed or returned no results
+            # Optimized: use --no-patch to avoid generating diff content
             if not rev_list:
                 try:
                     rev_list = repo.git.log(
                         "--all",
                         "--reverse",
                         "--pretty=format:%H",
+                        "--no-patch",  # Optimized: don't generate patch content
                         f"--since={git_since}",
                         f"--until={git_until}",
                     ).splitlines()
