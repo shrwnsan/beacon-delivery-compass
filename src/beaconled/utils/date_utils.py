@@ -17,8 +17,16 @@ class DateUtils:
     # Constants
     YEAR_MIN = 1970
     YEAR_MAX = 2100
+
+    # Performance optimization: Pre-compiled regex patterns for date parsing
     RELATIVE_DATE_PATTERN = re.compile(r"^\d+[dwmy]$")
     COMMIT_HASH_PATTERN = re.compile(r"^[0-9a-fA-F]{7,40}$")
+    ISO_DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+    YYYYMMDD_PATTERN = re.compile(r"^\d{8}$")
+    ISO_DATETIME_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?$")
+    SPACE_DATETIME_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$")
+    GIT_TIMESTAMP_PATTERN = re.compile(r"^\d+\s*[+-]?\d{4}$")
+    UNIX_TIMESTAMP_PATTERN = re.compile(r"^\d{10,}$")
 
     @classmethod
     def parse_date(cls, date_str: str) -> datetime:
@@ -41,18 +49,18 @@ class DateUtils:
         if cls.RELATIVE_DATE_PATTERN.match(date_str):
             return cls._parse_relative_date(date_str)
 
-        # Handle ISO date (YYYY-MM-DD)
-        if re.match(r"^\d{4}-\d{2}-\d{2}$", original_date_str):
+        # Handle ISO date (YYYY-MM-DD) - using compiled pattern for performance
+        if cls.ISO_DATE_PATTERN.match(original_date_str):
             dt = cls._parse_iso_date(original_date_str)
             return dt.replace(tzinfo=timezone.utc)
 
-        # Handle YYYYMMDD format
-        if re.match(r"^\d{8}$", original_date_str):
+        # Handle YYYYMMDD format - using compiled pattern
+        if cls.YYYYMMDD_PATTERN.match(original_date_str):
             return cls._parse_yyyymmdd_date(original_date_str)
 
-        # Handle ISO datetime (YYYY-MM-DD HH:MM or YYYY-MM-DDTHH:MM:SS)
-        if re.match(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$", original_date_str) or re.match(
-            r"^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?$", original_date_str
+        # Handle ISO datetime (YYYY-MM-DD HH:MM or YYYY-MM-DDTHH:MM:SS) - using compiled patterns
+        if cls.SPACE_DATETIME_PATTERN.match(original_date_str) or cls.ISO_DATETIME_PATTERN.match(
+            original_date_str
         ):
             dt = cls._parse_iso_datetime(original_date_str)
             return (
@@ -61,10 +69,10 @@ class DateUtils:
                 else dt.astimezone(timezone.utc)
             )
 
-        # Match timestamps with at least 10 digits (to avoid matching single digits as timestamps)
-        # or Unix timestamp with timezone offset
-        if re.match(r"^\d+\s*[+-]?\d{4}$", original_date_str) or re.match(
-            r"^\d{10,}$", original_date_str
+        # Match timestamps with at least 10 digits or Unix timestamp with timezone offset
+        # Using compiled patterns for better performance
+        if cls.GIT_TIMESTAMP_PATTERN.match(original_date_str) or cls.UNIX_TIMESTAMP_PATTERN.match(
+            original_date_str
         ):
             return cls._parse_git_date(original_date_str)
 

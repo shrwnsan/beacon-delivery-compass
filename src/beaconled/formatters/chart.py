@@ -71,31 +71,47 @@ class ChartFormatter(BaseFormatter):
             error_msg = "Matplotlib not available"
             raise RuntimeError(error_msg)
 
-        # Create figure with subplots
-        fig, ((ax1, ax2), (ax3, ax4)) = self.plt.subplots(2, 2, figsize=(15, 10))
-        fig.suptitle(
-            f"Code Health Trends - {stats.start_date.strftime('%Y-%m-%d')} to "
-            f"{stats.end_date.strftime('%Y-%m-%d')}",
-            fontsize=16,
-            fontweight="bold",
-        )
+        # Memory optimization: Use context manager for figure lifecycle
+        with self.plt.style.context("default"):
+            # Create figure with optimized memory usage
+            fig, ((ax1, ax2), (ax3, ax4)) = self.plt.subplots(2, 2, figsize=(12, 8))  # Reduced size
+            fig.suptitle(
+                f"Code Health Trends - {stats.start_date.strftime('%Y-%m-%d')} to "
+                f"{stats.end_date.strftime('%Y-%m-%d')}",
+                fontsize=14,  # Reduced font size
+                fontweight="bold",
+            )
 
-        # Chart 1: Commit Activity Timeline
-        self._plot_commit_timeline(ax1, stats)
+            # Progressive rendering: render charts one at a time and cleanup
+            try:
+                # Chart 1: Commit Activity Timeline
+                self._plot_commit_timeline(ax1, stats)
+                self.plt.draw()  # Force render to clear memory
 
-        # Chart 2: Author Contribution Breakdown
-        self._plot_author_breakdown(ax2, stats)
+                # Chart 2: Author Contribution Breakdown
+                self._plot_author_breakdown(ax2, stats)
+                self.plt.draw()
 
-        # Chart 3: Code Health Metrics
-        self._plot_health_metrics(ax3, stats)
+                # Chart 3: Code Health Metrics
+                self._plot_health_metrics(ax3, stats)
+                self.plt.draw()
 
-        # Chart 4: File Change Patterns
-        self._plot_file_patterns(ax4, stats)
+                # Chart 4: File Change Patterns
+                self._plot_file_patterns(ax4, stats)
+                self.plt.draw()
 
-        # Adjust layout and save
-        self.plt.tight_layout()
-        self.plt.savefig(self.output_path, dpi=300, bbox_inches="tight")
-        self.plt.close()
+                # Adjust layout and save with optimized settings
+                self.plt.tight_layout()
+                self.plt.savefig(
+                    self.output_path,
+                    dpi=150,  # Reduced DPI for smaller file size
+                    bbox_inches="tight",
+                    optimize=True,
+                )
+
+            finally:
+                # Ensure figure is always closed to free memory
+                self.plt.close(fig)
 
     def _plot_commit_timeline(self, ax: Any, stats: RangeStats) -> None:
         """Plot commit activity over time."""
@@ -111,9 +127,16 @@ class ChartFormatter(BaseFormatter):
             ax.set_title("Commit Timeline")
             return
 
-        # Sort dates and create timeline
+        # Memory optimization: Sample data for large datasets
         dates = sorted(stats.commits_by_day.keys())
         commits = [stats.commits_by_day[date] for date in dates]
+
+        # If dataset is too large, sample it to reduce memory usage
+        max_points = 100  # Maximum data points for timeline
+        if len(dates) > max_points:
+            step = len(dates) // max_points
+            dates = dates[::step]
+            commits = commits[::step]
 
         ax.plot(dates, commits, marker="o", linewidth=2, color="#2E86AB", markersize=4)
         ax.set_title("Daily Commit Activity", fontweight="bold")
@@ -152,8 +175,15 @@ class ChartFormatter(BaseFormatter):
         authors = list(stats.authors.keys())
         commits = list(stats.authors.values())
 
-        # Sort by commit count
+        # Memory optimization: Limit to top 10 authors to prevent overcrowding
         sorted_data = sorted(zip(authors, commits, strict=False), key=lambda x: x[1], reverse=True)
+
+        if len(sorted_data) > 10:
+            # Take top 9 and group rest as "Others"
+            top_data = sorted_data[:9]
+            others_sum = sum(count for _, count in sorted_data[9:])
+            sorted_data = [*top_data, ("Others", others_sum)]
+
         authors_sorted, commits_sorted = zip(*sorted_data, strict=False)
 
         bars = ax.bar(range(len(authors_sorted)), commits_sorted, color="#F18F01", alpha=0.8)

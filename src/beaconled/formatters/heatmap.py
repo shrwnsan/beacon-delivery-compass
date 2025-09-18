@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 import tempfile
 from datetime import date as date_type
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING, Any
 
 from .base_formatter import BaseFormatter
@@ -88,63 +88,91 @@ class HeatmapFormatter(BaseFormatter):
 
     def _create_activity_heatmap(self, stats: RangeStats) -> None:
         """Create a calendar-style heatmap of daily commit activity."""
-        if not MATPLOTLIB_AVAILABLE or not plt or not np:
+        if not self._is_matplotlib_available() or not self._has_commit_data(stats):
             return
 
-        if not hasattr(stats, "commits_by_day") or not stats.commits_by_day:
-            return
-
-        # Parse dates and commit counts
-        dates = []
-        commits = []
-
-        for date_str, count in stats.commits_by_day.items():
-            try:
-                # Handle different date formats that might be in commits_by_day
-                if isinstance(date_str, str):
-                    # Try different date formats
-                    for fmt in ["%Y-%m-%d", "%Y/%m/%d", "%m/%d/%Y"]:
-                        try:
-                            parsed_dt = datetime.strptime(date_str, fmt)  # noqa: DTZ007
-                            date_obj = parsed_dt.replace(tzinfo=timezone.utc).date()
-                            dates.append(date_obj)
-                            commits.append(count)
-                            break
-                        except ValueError:
-                            continue
-                    else:
-                        # If no format works, skip this date
-                        continue
-            except (ValueError, AttributeError):
-                continue
-
+        # Parse and prepare data
+        dates, commits = self._parse_commit_data(stats)
         if not dates:
             return
 
-        # Sort by date
+        # Create visualization
+        self._render_heatmap(dates, commits)
+
+    def _is_matplotlib_available(self) -> bool:
+        """Check if matplotlib dependencies are available."""
+        return MATPLOTLIB_AVAILABLE and plt is not None and np is not None
+
+    def _has_commit_data(self, stats: RangeStats) -> bool:
+        """Check if stats has commit data for heatmap."""
+        return hasattr(stats, "commits_by_day") and bool(stats.commits_by_day)
+
+    def _parse_commit_data(self, stats: RangeStats) -> tuple[list[date_type], list[int]]:
+        """Parse and sort commit data from stats."""
+        dates = []
+        commits = []
+        date_formats = ["%Y-%m-%d", "%Y/%m/%d", "%m/%d/%Y"]
+
+        for date_str, count in stats.commits_by_day.items():
+            if isinstance(date_str, str):
+                date_obj = self._try_parse_date(date_str, date_formats)
+                if date_obj:
+                    dates.append(date_obj)
+                    commits.append(count)
+
+        if not dates:
+            return [], []
+
+        # Sort by date and optimize size
         date_commit_pairs = sorted(zip(dates, commits, strict=False))
         sorted_dates, sorted_commits = zip(*date_commit_pairs, strict=False)
-        dates = list(sorted_dates)
-        commits = list(sorted_commits)
 
-        # Create figure with subplots
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
-        fig.suptitle("Git Repository Activity Heatmap", fontsize=16, fontweight="bold")
+        # Sample data if too large
+        dates_list = list(sorted_dates)
+        commits_list = list(sorted_commits)
 
-        # Daily activity line plot
-        ax1.plot(dates, commits, marker="o", linewidth=2, markersize=4, color="#2E86AB")
-        ax1.set_title("Daily Commit Activity", fontsize=14)
-        ax1.set_xlabel("Date")
-        ax1.set_ylabel("Commits")
-        ax1.grid(visible=True, alpha=0.3)
+        if len(dates_list) > 200:
+            step = len(dates_list) // 200
+            return dates_list[::step], commits_list[::step]
 
-        # Rotate x-axis labels for better readability
-        ax1.tick_params(axis="x", rotation=45)
+        return dates_list, commits_list
 
-        # Calendar heatmap (simplified version)
-        self._create_calendar_heatmap(ax2, dates, commits)
+    def _try_parse_date(self, date_str: str, date_formats: list[str]) -> date_type | None:
+        """Try parsing a date string with multiple formats."""
+        for fmt in date_formats:
+            try:
+                parsed_dt = datetime.strptime(date_str, fmt)  # noqa: DTZ007
+                return parsed_dt.replace(tzinfo=timezone.utc).date()
+            except ValueError:
+                continue
+        return None
 
-        plt.tight_layout()
+    def _render_heatmap(self, dates: list[date_type], commits: list[int]) -> None:
+        """Render the heatmap visualization."""
+        try:
+            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 6))
+            fig.suptitle("Git Repository Activity Heatmap", fontsize=14, fontweight="bold")
+        except Exception as e:
+            if hasattr(self, "logger"):
+                self.logger.warning("Failed to create figure: %s", e)
+            return
+
+        try:
+            # Plot daily activity
+            ax1.plot(dates, commits, marker="o", linewidth=1, markersize=3, color="#2E86AB")
+            ax1.set_title("Daily Commit Activity", fontsize=12)
+            ax1.set_xlabel("Date")
+            ax1.set_ylabel("Commits")
+            ax1.grid(visible=True, alpha=0.3)
+            ax1.tick_params(axis="x", rotation=45)
+
+            # Create calendar heatmap
+            self._create_calendar_heatmap(ax2, dates, commits)
+
+            plt.tight_layout()
+            plt.draw()
+        finally:
+            plt.close(fig)
 
     def _create_calendar_heatmap(
         self,
@@ -153,71 +181,156 @@ class HeatmapFormatter(BaseFormatter):
         commits: list[int],
     ) -> None:
         """Create a simplified calendar heatmap."""
-        if not MATPLOTLIB_AVAILABLE or plt is None or np is None or LinearSegmentedColormap is None:
+        if not self._is_matplotlib_available():
             return
 
-        # Group by month and day
+        # Process data for heatmap
+        month_data, max_commits = self._process_heatmap_data(dates, commits)
+        if not month_data:
+            return
+
+        # Create visualization
+        self._render_calendar_heatmap(ax, month_data, max_commits)
+
+    def _process_heatmap_data(
+        self, dates: list[date_type], commits: list[int]
+    ) -> tuple[dict[str, dict[int, int]], int]:
+        """Process dates and commits for heatmap visualization.
+
+        Args:
+            dates: List of dates
+            commits: List of commit counts
+
+        Returns:
+            Tuple of (month_data, max_commits) where month_data maps month->day->commits
+        """
         month_data: dict[str, dict[int, int]] = {}
         max_commits = max(commits) if commits else 1
 
-        for commit_date, commit_count in zip(dates, commits, strict=False):
+        # Limit to last 12 months for memory efficiency
+        if dates:
+            cutoff_date = dates[-1] - timedelta(days=365)
+            filtered_pairs = [
+                (d, c) for d, c in zip(dates, commits, strict=False) if d >= cutoff_date
+            ]
+        else:
+            filtered_pairs = []
+
+        # Group by month and day
+        for commit_date, commit_count in filtered_pairs:
             month_key = commit_date.strftime("%Y-%m")
             if month_key not in month_data:
                 month_data[month_key] = {}
+            month_data[month_key][commit_date.day] = commit_count
 
-            day = commit_date.day
-            month_data[month_key][day] = commit_count
+        return month_data, max_commits
 
-        # Create a simple grid visualization
+    def _render_calendar_heatmap(
+        self, ax: Any, month_data: dict[str, dict[int, int]], max_commits: int
+    ) -> None:
+        """Render the calendar heatmap visualization.
+
+        Args:
+            ax: Matplotlib axis
+            month_data: Processed month data
+            max_commits: Maximum commit count for color scaling
+        """
         months = sorted(month_data.keys())
         if not months:
             return
 
-        # Use the most recent month for the heatmap
+        # Use most recent month
         current_month = months[-1]
         days_in_month = month_data[current_month]
 
-        # Create a 7x5 grid (weeks x days)
-        heatmap_data = np.zeros((5, 7))
+        # Create grid data
+        heatmap_data = self._create_heatmap_grid(days_in_month)
         day_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
-        # Fill the grid (simplified - doesn't handle month boundaries perfectly)
+        # Create and apply colormap
+        cmap = self._create_colormap()
+        im = ax.imshow(heatmap_data, cmap=cmap, aspect="auto")
+
+        # Add colorbar and labels
+        self._add_heatmap_styling(ax, im, current_month, day_names, heatmap_data, max_commits)
+
+    def _create_heatmap_grid(self, days_in_month: dict[int, int]) -> Any:
+        """Create the heatmap grid data.
+
+        Args:
+            days_in_month: Dictionary mapping day->commit_count
+
+        Returns:
+            NumPy array with heatmap data
+        """
+        heatmap_data = np.zeros((5, 7))
+
         for day, commit_count in days_in_month.items():
             week_row = (day - 1) // 7
             day_col = (day - 1) % 7
 
-            if week_row < 5:  # Stay within our 5-week grid
+            if week_row < 5:  # Stay within 5-week grid
                 heatmap_data[week_row, day_col] = commit_count
 
-        # Create custom colormap
+        return heatmap_data
+
+    def _create_colormap(self) -> Any:
+        """Create custom colormap for heatmap."""
         colors = ["#f7fbff", "#08306b"]  # Light blue to dark blue
-        cmap = LinearSegmentedColormap.from_list("custom_blue", colors)
+        return LinearSegmentedColormap.from_list("custom_blue", colors)
 
-        # Plot heatmap
-        im = ax.imshow(heatmap_data, cmap=cmap, aspect="auto")
+    def _add_heatmap_styling(
+        self,
+        ax: Any,
+        im: Any,
+        current_month: str,
+        day_names: list[str],
+        heatmap_data: Any,
+        max_commits: int,
+    ) -> None:
+        """Add styling elements to the heatmap.
 
+        Args:
+            ax: Matplotlib axis
+            im: Image object
+            current_month: Current month string
+            day_names: List of day names
+            heatmap_data: Heatmap data array
+            max_commits: Maximum commit count
+        """
         # Add colorbar
         cbar = plt.colorbar(im, ax=ax, shrink=0.8)
         cbar.set_label("Commits")
 
-        # Set labels
+        # Set labels and title
         ax.set_title(f"Commit Activity - {current_month}", fontsize=14)
         ax.set_xticks(range(7))
         ax.set_yticks(range(5))
         ax.set_xticklabels(day_names)
         ax.set_yticklabels([f"Week {i + 1}" for i in range(5)])
 
-        # Add commit counts as text
+        # Add commit count text
+        self._add_commit_count_text(ax, heatmap_data, max_commits)
+
+    def _add_commit_count_text(self, ax: Any, heatmap_data: Any, max_commits: int) -> None:
+        """Add commit count text to heatmap cells.
+
+        Args:
+            ax: Matplotlib axis
+            heatmap_data: Heatmap data array
+            max_commits: Maximum commit count for color threshold
+        """
         for i in range(5):
             for j in range(7):
                 if heatmap_data[i, j] > 0:
+                    color = "white" if heatmap_data[i, j] > max_commits * 0.6 else "black"
                     ax.text(
                         j,
                         i,
                         int(heatmap_data[i, j]),
                         ha="center",
                         va="center",
-                        color="white" if heatmap_data[i, j] > max_commits * 0.6 else "black",
+                        color=color,
                         fontweight="bold",
                     )
 

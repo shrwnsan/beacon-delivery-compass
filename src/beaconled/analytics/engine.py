@@ -5,6 +5,8 @@ analytics components (time, team, quality, risk) into a unified system
 for the extended format.
 """
 
+import logging
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
@@ -37,6 +39,8 @@ class AnalyticsEngine:
 
     def __init__(self) -> None:
         """Initialize the analytics engine with all component analyzers."""
+        self.logger = logging.getLogger(__name__)
+
         # Time-based analytics
         self.time_analyzer = TimeAnalyzer(TimeAnalyzerConfig())
 
@@ -68,40 +72,94 @@ class AnalyticsEngine:
                 'risk': {...}  # Risk assessment
             }
         """
-        # Create a cache key based on the range stats
+        # Check cache first
         cache_key = self._get_cache_key(range_stats)
-
-        # Check if we have cached results
         if cache_key in self._cache:
             return cast("dict[str, Any]", self._cache[cache_key])
 
-        # Perform all analyses in parallel (could be optimized with threads/async)
-        time_analytics = self.time_analyzer.analyze(range_stats)
-        collaboration_analytics = self.collaboration_analyzer.analyze(range_stats)
-        quality_analytics = self.quality_analyzer.analyze(range_stats)
-        risk_analytics = self.risk_analyzer.analyze(range_stats)
+        # Perform parallel analysis
+        results = self._run_parallel_analysis(range_stats)
 
-        # Combine all results
-        result = {
-            "time": time_analytics,
-            "collaboration": collaboration_analytics,
-            "quality": quality_analytics,
-            "risk": risk_analytics,
-        }
-
-        # Cache the result
+        # Format and cache results
+        result = self._format_analysis_results(results)
         self._cache_result(cache_key, result)
 
         return result
 
+    def _run_parallel_analysis(self, range_stats: RangeStats) -> dict[str, Any]:
+        """Run all analysis tasks in parallel.
+
+        Args:
+            range_stats: The range statistics to analyze
+
+        Returns:
+            Dictionary with results from all analyzers
+        """
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            # Submit all analysis tasks
+            future_time = executor.submit(self.time_analyzer.analyze, range_stats)
+            future_collaboration = executor.submit(self.collaboration_analyzer.analyze, range_stats)
+            future_quality = executor.submit(self.quality_analyzer.analyze, range_stats)
+            future_risk = executor.submit(self.risk_analyzer.analyze, range_stats)
+
+            # Collect results as they complete
+            return self._collect_analysis_results([
+                (future_time, "time"),
+                (future_collaboration, "collaboration"),
+                (future_quality, "quality"),
+                (future_risk, "risk"),
+            ])
+
+    def _collect_analysis_results(self, futures: list[tuple[Any, str]]) -> dict[str, Any]:
+        """Collect results from analysis futures.
+
+        Args:
+            futures: List of (future, analyzer_name) tuples
+
+        Returns:
+            Dictionary with results from each analyzer
+        """
+        results = {}
+        for future, analyzer_name in futures:
+            try:
+                result = future.result()
+                results[analyzer_name] = result
+            except Exception as e:
+                self.logger.error("Analyzer %s failed: %s", analyzer_name, e)
+                results[analyzer_name] = {}
+        return results
+
+    def _format_analysis_results(self, results: dict[str, Any]) -> dict[str, Any]:
+        """Format analysis results in consistent order.
+
+        Args:
+            results: Raw results from analyzers
+
+        Returns:
+            Formatted results dictionary
+        """
+        return {
+            "time": results.get("time", {}),
+            "collaboration": results.get("collaboration", {}),
+            "quality": results.get("quality", {}),
+            "risk": results.get("risk", {}),
+        }
+
     def _get_cache_key(self, range_stats: RangeStats) -> tuple[Any, ...]:
-        """Generate a cache key for the given range stats."""
+        """Generate a cache key for the given range stats.
+
+        Optimized: Focus on core metrics rather than full author mapping
+        to reduce cache misses when author details change but core stats remain same.
+        """
         return (
             range_stats.total_commits,
             range_stats.start_date.isoformat(),
             range_stats.end_date.isoformat(),
-            # Include any other relevant attributes for cache key
-            tuple(sorted(range_stats.authors.items())) if range_stats.authors else (),
+            # Use author count instead of full author mapping for better cache hit rate
+            len(range_stats.authors) if range_stats.authors else 0,
+            # Include commit hash range for more precise caching
+            getattr(range_stats, "first_commit_hash", ""),
+            getattr(range_stats, "last_commit_hash", ""),
         )
 
     def _cache_result(self, key: Any, result: dict[str, Any]) -> None:

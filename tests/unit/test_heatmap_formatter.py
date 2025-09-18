@@ -155,9 +155,9 @@ class TestHeatmapFormatter:
         formatter._create_activity_heatmap(range_stats)
 
         # Verify plot calls
-        mock_plt.subplots.assert_called_with(2, 1, figsize=(12, 8))
+        mock_plt.subplots.assert_called_with(2, 1, figsize=(10, 6))
         mock_ax1.plot.assert_called()
-        mock_ax1.set_title.assert_called_with("Daily Commit Activity", fontsize=14)
+        mock_ax1.set_title.assert_called_with("Daily Commit Activity", fontsize=12)
 
     @patch("beaconled.formatters.heatmap.MATPLOTLIB_AVAILABLE", True)
     @patch("beaconled.formatters.heatmap.LinearSegmentedColormap")
