@@ -67,8 +67,8 @@ class CoverageAnalyzer:
             line_rate = float(root.get("line-rate", 0.0))  # type: ignore[union-attr]
             branch_rate = float(root.get("branch-rate", 0.0))  # type: ignore[union-attr]
             timestamp = datetime.fromtimestamp(
-                int(root.get("timestamp", 0)) / 1000,
-                tz=timezone.utc,  # type: ignore[union-attr]
+                int(root.get("timestamp", 0)) / 1000,  # type: ignore[union-attr]
+                tz=timezone.utc,
             )
 
             # Parse file-level coverage
