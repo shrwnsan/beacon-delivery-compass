@@ -381,7 +381,7 @@ class GitAnalyzer:
             commit_date = commit.authored_datetime
             # Handle case where GitPython returns None for authored_datetime
             # This can happen in certain edge cases with malformed commits
-            if commit_date is None:
+            if commit_date is None:  # type: ignore[unreachable]
                 logger.warning(
                     "No authored_datetime for commit %s, using current time",
                     commit_hash[:7],
