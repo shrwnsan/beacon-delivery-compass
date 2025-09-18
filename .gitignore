@@ -89,3 +89,6 @@ secrets/
 
 # Organized test output directory
 scripts/test_outputs/
+
+# Claude Code local settings
+.claude/settings.local.json
