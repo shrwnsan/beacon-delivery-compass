@@ -11,6 +11,91 @@ from typing import Any
 
 
 @dataclass
+class CoverageStats:
+    """Statistics for test coverage data.
+
+    Attributes:
+        timestamp: When the coverage data was generated
+        total_lines: Total number of lines in the codebase
+        covered_lines: Number of lines covered by tests
+        line_rate: Coverage percentage (0.0 to 1.0)
+        total_branches: Total number of branches in the codebase
+        covered_branches: Number of branches covered by tests
+        branch_rate: Branch coverage percentage (0.0 to 1.0)
+        file_coverage: Dictionary mapping file paths to coverage percentages
+    """
+
+    timestamp: datetime
+    total_lines: int = 0
+    covered_lines: int = 0
+    line_rate: float = 0.0
+    total_branches: int = 0
+    covered_branches: int = 0
+    branch_rate: float = 0.0
+    file_coverage: dict[str, float] = field(default_factory=dict)
+
+    @property
+    def line_percentage(self) -> float:
+        """Line coverage as percentage (0-100)."""
+        return self.line_rate * 100
+
+    @property
+    def branch_percentage(self) -> float:
+        """Branch coverage as percentage (0-100)."""
+        return self.branch_rate * 100
+
+    @property
+    def overall_percentage(self) -> float:
+        """Overall coverage percentage (average of line and branch coverage)."""
+        if self.line_rate > 0 and self.branch_rate > 0:
+            return (self.line_rate + self.branch_rate) * 50
+        return self.line_percentage
+
+
+@dataclass
+class CoverageTrend:
+    """Coverage trend analysis over time.
+
+    Attributes:
+        start_coverage: Coverage at the start of the period
+        end_coverage: Coverage at the end of the period
+        change_points: List of significant coverage changes
+        trend_direction: "increasing", "decreasing", or "stable"
+        trend_magnitude: Magnitude of the trend change
+        file_trends: Dictionary mapping files to coverage changes
+    """
+
+    start_coverage: CoverageStats | None = None
+    end_coverage: CoverageStats | None = None
+    change_points: list[dict[str, Any]] = field(default_factory=list)
+    trend_direction: str = "stable"
+    trend_magnitude: float = 0.0
+    file_trends: dict[str, dict[str, float]] = field(default_factory=dict)
+
+    @property
+    def has_improved(self) -> bool:
+        """Whether coverage has improved over the period."""
+        if not self.start_coverage or not self.end_coverage:
+            return False
+        return self.end_coverage.overall_percentage > self.start_coverage.overall_percentage
+
+    @property
+    def improvement_percentage(self) -> float:
+        """Percentage improvement in coverage."""
+        if (
+            not self.start_coverage
+            or not self.end_coverage
+            or self.start_coverage.overall_percentage == 0
+        ):
+            return 0.0
+        return (
+            (self.end_coverage.overall_percentage - self.start_coverage.overall_percentage)
+            / self.start_coverage.overall_percentage
+            * 100
+        )
+
+
+@dataclass
 class FileStats:
     """Statistics for a single file in a git commit.
 
@@ -106,6 +191,8 @@ class RangeStats:
     commits_by_day: dict[str, int] = field(default_factory=dict)
     file_types: dict[str, dict[str, int]] = field(default_factory=dict)
     risk_indicators: dict[str, Any] = field(default_factory=dict)
+    coverage_history: list[CoverageStats] = field(default_factory=list)
+    coverage_trends: CoverageTrend = field(default_factory=CoverageTrend)
 
     def __post_init__(self) -> None:
         """Validate and compute derived fields after initialization."""
