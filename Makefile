@@ -1,16 +1,19 @@
-.PHONY: help setup test lint typecheck format check-deps clean dev-setup prod-setup
+.PHONY: help setup test lint typecheck format check-deps clean dev-setup prod-setup security quick-check precommit-all
 
 # Default target
 help:
 	@echo "Available targets:"
-	@echo "  setup     - Set up development environment"
-	@echo "  test      - Run tests with coverage"
-	@echo "  lint      - Run linters (ruff, black, isort)"
-	@echo "  typecheck - Run static type checking (mypy)"
-	@echo "  format    - Format code (black, isort)"
-	@echo "  check-deps - Check for outdated dependencies"
-	@echo "  clean     - Clean up temporary files"
-	@echo "  dev-setup - Install and configure pre-commit hooks"
+	@echo "  setup          - Set up development environment"
+	@echo "  test           - Run tests with coverage"
+	@echo "  lint           - Run linters (ruff, black, isort)"
+	@echo "  typecheck      - Run static type checking (mypy)"
+	@echo "  format         - Format code (black, isort)"
+	@echo "  check-deps     - Check for outdated dependencies"
+	@echo "  clean          - Clean up temporary files"
+	@echo "  dev-setup      - Install and configure pre-commit hooks"
+	@echo "  security       - Run security checks"
+	@echo "  quick-check    - Fast checks before commit"
+	@echo "  precommit-all  - Run all precommit hooks manually"
 
 # Set up development environment
 setup:
@@ -55,6 +58,18 @@ dev-setup:
 	@echo "- Ruff (with auto-fix)"
 	@echo "- mypy (for src/ files only)"
 	@echo "- Basic file checks (whitespace, YAML, file size)"
+
+# Run security checks
+security:
+	bandit -r src/beaconled -c pyproject.toml
+	pip-audit --desc
+
+# Fast checks for quick validation before commits
+quick-check: lint typecheck
+
+# Run all precommit hooks manually (for CI or verification)
+precommit-all: quick-check security test
+	@echo "All precommit checks completed successfully"
 
 # Alias for backward compatibility
 prod-setup: dev-setup

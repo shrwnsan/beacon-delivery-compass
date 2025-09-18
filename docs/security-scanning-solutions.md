@@ -155,14 +155,17 @@ security:
 
 ### 3. Local Testing Script
 
-Use the provided `scripts/test_security.py` script to test security tools locally:
+Use the provided security tools to test security locally:
 
 ```bash
-# Make the script executable
-chmod +x scripts/test_security.py
+# Run bandit security scanning
+bandit -r src/beaconled -c pyproject.toml
 
-# Run security checks locally
-python scripts/test_security.py
+# Run pip-audit for dependency security
+pip-audit --desc
+
+# Test with precommit hooks
+pre-commit run --all-files
 ```
 
 ### 4. Pre-commit Hook (Optional)
@@ -212,7 +215,8 @@ repos:
 
 3. **Test locally**:
    ```bash
-   python scripts/test_security.py
+   bandit -r src/beaconled -c pyproject.toml
+   pip-audit --desc
    ```
 
 4. **Commit and push**:

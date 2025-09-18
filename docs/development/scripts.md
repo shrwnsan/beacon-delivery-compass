@@ -142,54 +142,40 @@ The enhanced precommit configuration catches 100% of lint, type, security, and t
 
 ### Setup Scripts
 
-#### `setup-enhanced-precommit.sh`
-**Purpose**: Comprehensive precommit setup and configuration
-**Language**: Bash
-**Best for**: Initial setup, team onboarding
+#### `setup.sh` & `setup.bat`
+**Purpose**: Cross-platform development environment setup
+**Language**: Bash (Unix/macOS) & Batch (Windows)
+**Best for**: Initial development environment setup
 
 ```bash
-# Quick setup
-./scripts/setup-enhanced-precommit.sh
+# Unix/macOS setup
+./scripts/setup.sh
 
-# Manual alternative
-make dev-setup
-pre-commit install
+# Windows setup
+scripts/setup.bat
 ```
 
-#### `precommit-validate.sh`
-**Purpose**: Full validation of all precommit hooks
-**Language**: Bash
-**Best for**: CI validation, pre-merge checks
+#### `product_insights_cli.py`
+**Purpose**: Product insights and analytics reporting
+**Language**: Python
+**Best for**: Automated weekly reports and stakeholder updates
 
 ```bash
-# Run all hooks manually
-./scripts/precommit-validate.sh
+# Generate weekly report
+python scripts/product_insights_cli.py weekly --since 1w
 
-# Or use Make target
-make precommit-all
+# Generate executive summary
+python scripts/product_insights_cli.py executive --since 1w
 ```
 
-#### `quick-check.sh`
-**Purpose**: Fast development feedback (lint + typecheck)
-**Language**: Bash
-**Best for**: Rapid development iterations
+#### `notification_system.py`
+**Purpose**: Stakeholder notification system for product insights
+**Language**: Python
+**Best for**: Automated Slack notifications and alerts
 
 ```bash
-# Quick checks during development
-./scripts/quick-check.sh
-
-# Or use Make target
-make quick-check
-```
-
-#### `precommit-performance.sh`
-**Purpose**: Performance-optimized execution based on file types
-**Language**: Bash
-**Best for**: Large repositories, optimized workflows
-
-```bash
-# Smart execution based on file types
-./scripts/precommit-performance.sh
+# Process executive summary and send notifications
+python scripts/notification_system.py process executive_summary.json
 ```
 
 ### Usage Patterns
@@ -206,16 +192,17 @@ git commit -m "your commit message"
 #### Fast Development Feedback
 ```bash
 # Quick checks during development
-./scripts/quick-check.sh
-
-# Or use Make target
 make quick-check
+
+# Or run individual checks
+make lint
+make typecheck
 ```
 
 #### Full Validation
 ```bash
 # Run all checks manually
-./scripts/precommit-validate.sh
+make precommit-all
 ```
 
 ### Performance Characteristics
