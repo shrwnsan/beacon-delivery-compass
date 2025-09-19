@@ -8,21 +8,18 @@ import logging
 from datetime import datetime, timezone
 from pathlib import Path
 
+from beaconled.core.models import CoverageStats, CoverageTrend
+
 try:
-    from defusedxml.ElementTree import fromstring as ET_fromstring  # noqa: N812
-    from defusedxml.ElementTree import parse as ET_parse  # noqa: N812
+    from defusedxml import ElementTree
 
     HAS_DEFUSEDXML = True
 except ImportError:
     import xml.etree.ElementTree as ET  # noqa: S405
 
-    ET_parse = ET.parse  # type: ignore[assignment]  # noqa: S314
-    ET_fromstring = ET.fromstring  # type: ignore[assignment]  # noqa: S314
     HAS_DEFUSEDXML = False
 
-from beaconled.core.models import CoverageStats, CoverageTrend
-
-# Logger
+parse_func = ElementTree.parse if HAS_DEFUSEDXML else ET.parse  # noqa: S314
 logger = logging.getLogger(__name__)
 
 
@@ -56,7 +53,7 @@ class CoverageAnalyzer:
             raise FileNotFoundError(msg)
 
         try:
-            tree = ET_parse(xml_file)
+            tree = parse_func(xml_file)
             root = tree.getroot()
 
             # Extract overall coverage statistics
