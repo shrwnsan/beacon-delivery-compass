@@ -7,6 +7,7 @@ from datetime import datetime
 import git
 from colorama import Fore, Style
 
+from beaconled.analytics.coverage_analyzer import CoverageAnalyzer
 from beaconled.analytics.engine import AnalyticsEngine
 from beaconled.core.models import CommitStats, RangeStats
 from beaconled.formatters.base_formatter import BaseFormatter
@@ -37,6 +38,7 @@ class ExtendedFormatter(BaseFormatter):
         # Disable emojis in environments that don't support them
         self.no_emoji = no_emoji if no_emoji is not None else not self._supports_emoji()
         self.analytics_engine = AnalyticsEngine()
+        self.coverage_analyzer = CoverageAnalyzer(repo_path)
         self.repo_path = repo_path
 
         self.EMOJIS = {
@@ -50,6 +52,8 @@ class ExtendedFormatter(BaseFormatter):
             "deleted": "📉",
             "net": "🔀",
             "range": "📊",
+            "coverage": "🧪",
+            "trend": "📈",
         }
 
     def _get_emoji(self, emoji_name: str) -> str:
@@ -87,7 +91,7 @@ class ExtendedFormatter(BaseFormatter):
             # Log error and return empty stats
             import logging
 
-            logging.error("Error getting file lifecycle stats: %s", str(e))
+            logging.error("Error getting file lifecycle stats: %s", e)
             return {"added": 0, "modified": 0, "deleted": 0, "renamed": 0}
 
     def _parse_git_log_output(self, log_output: str) -> dict[str, int]:
@@ -222,7 +226,7 @@ class ExtendedFormatter(BaseFormatter):
 
         return sorted_files[:top_n]
 
-    def format_range_stats(self, stats: RangeStats) -> str:  # noqa: C901
+    def format_range_stats(self, stats: RangeStats) -> str:
         """Format range statistics with extended information.
 
         Args:
@@ -309,9 +313,12 @@ class ExtendedFormatter(BaseFormatter):
         # Add enhanced analytics if available
         lines.extend(self._format_enhanced_analytics(stats, emoji))
 
+        # Add coverage tracking section
+        lines.extend(self._format_coverage_section(stats))
+
         return "\n".join(lines)
 
-    def _format_enhanced_analytics(  # noqa: C901
+    def _format_enhanced_analytics(
         self, stats: RangeStats, emoji_func: Callable[[str], str]
     ) -> list[str]:
         """Format enhanced analytics section.
@@ -642,4 +649,104 @@ class ExtendedFormatter(BaseFormatter):
         lines = []
         for date, count in sorted(daily_activity.items()):
             lines.append(f"  {date}: {count} commits")
+        return lines
+
+    def _format_coverage_section(self, stats: RangeStats) -> list[str]:
+        """Format coverage tracking section.
+
+        Args:
+            stats: RangeStats object with coverage information
+
+        Returns:
+            List of formatted strings with coverage analysis
+        """
+        emoji = self._get_emoji
+
+        # Get current coverage data
+        latest_coverage = None
+        if hasattr(stats, "coverage_history") and stats.coverage_history:
+            latest_coverage = stats.coverage_history[-1]
+        else:
+            # Try to get latest coverage from files
+            try:
+                latest_coverage = self.coverage_analyzer.get_latest_coverage()
+            except Exception:
+                pass
+
+        if not latest_coverage:
+            return [
+                f"\n{emoji('coverage')} {Fore.CYAN}Test Coverage:{Style.RESET_ALL} "
+                "No coverage data found"
+            ]
+
+        lines = [
+            f"\n{emoji('coverage')} {Fore.CYAN}Test Coverage:{Style.RESET_ALL}",
+            f"  Overall: {latest_coverage.overall_percentage:.1f}%",
+            f"  Lines: {latest_coverage.line_percentage:.1f}% "
+            f"({latest_coverage.covered_lines:,}/{latest_coverage.total_lines:,})",
+        ]
+
+        if latest_coverage.total_branches > 0:
+            lines.append(
+                f"  Branches: {latest_coverage.branch_percentage:.1f}% "
+                f"({latest_coverage.covered_branches:,}/{latest_coverage.total_branches:,})"
+            )
+
+        # Add trend analysis if available
+        if hasattr(stats, "coverage_trends") and stats.coverage_trends:
+            trend = stats.coverage_trends
+            if trend.start_coverage and trend.end_coverage:
+                lines.extend([
+                    f"\n{emoji('trend')} {Fore.CYAN}Coverage Trends:{Style.RESET_ALL}",
+                    f"  Direction: {trend.trend_direction}",
+                    f"  Change: {trend.trend_magnitude:+.1f}%",
+                ])
+
+                if trend.has_improved:
+                    lines.append(
+                        f"  Status: {Fore.GREEN}Improving{Style.RESET_ALL} "
+                        f"(+{trend.improvement_percentage:.1f}%)"
+                    )
+                elif trend.improvement_percentage < 0:
+                    lines.append(
+                        f"  Status: {Fore.RED}Declining{Style.RESET_ALL} "
+                        f"({trend.improvement_percentage:.1f}%)"
+                    )
+                else:
+                    lines.append(f"  Status: {Fore.YELLOW}Stable{Style.RESET_ALL}")
+
+                # Show significant change points
+                if trend.change_points:
+                    lines.append("\n  Significant changes:")
+                    for change in trend.change_points[:3]:  # Show top 3 changes
+                        change_emoji = "📈" if change["change"] > 0 else "📉"
+                        lines.append(
+                            f"    {change_emoji} {change['timestamp'].strftime('%Y-%m-%d')}: "
+                            f"{change['change']:+.1f}%"
+                        )
+
+        # Add top and bottom covered files
+        if latest_coverage.file_coverage:
+            sorted_files = sorted(
+                latest_coverage.file_coverage.items(), key=lambda x: x[1], reverse=True
+            )
+
+            if sorted_files:
+                lines.append(f"\n  {Fore.CYAN}Top covered files:{Style.RESET_ALL}")
+                for file_path, coverage in sorted_files[:3]:
+                    if coverage >= 80:
+                        color = Fore.GREEN
+                    elif coverage >= 60:
+                        color = Fore.YELLOW
+                    else:
+                        color = Fore.RED
+                    lines.append(f"    {file_path}: {color}{coverage:.1f}%{Style.RESET_ALL}")
+
+                # Show files needing attention
+                low_coverage_files = [(f, c) for f, c in sorted_files if c < 60 and c > 0]
+                if low_coverage_files:
+                    lines.append(f"\n  {Fore.RED}Files needing attention (<60%):{Style.RESET_ALL}")
+                    for file_path, coverage in low_coverage_files[:3]:
+                        lines.append(f"    {file_path}: {Fore.RED}{coverage:.1f}%{Style.RESET_ALL}")
+
         return lines

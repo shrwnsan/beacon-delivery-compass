@@ -149,7 +149,7 @@ class GitAnalyzer:
             return DateUtils._parse_git_date(date_str)
         except DateParseError as e:
             # Log the error but continue with current time in UTC
-            logger.warning("Could not parse git date '%s': %s", date_str, str(e))
+            logger.warning("Could not parse git date '%s': %s", date_str, e)
             return datetime.now(timezone.utc)
 
     def get_commit_stats(self, commit_hash: str = "HEAD") -> CommitStats:
@@ -366,7 +366,7 @@ class GitAnalyzer:
                             "Error processing file %d/%d: %s",
                             i,
                             len(diff_index),
-                            str(e),
+                            e,
                             exc_info=True,
                         )
                         continue  # Skip this file but continue with others
@@ -417,7 +417,7 @@ class GitAnalyzer:
             except Exception as e:
                 logger.warning(
                     "Error getting author info: %s",
-                    str(e),
+                    e,
                     exc_info=True,
                 )
                 author_info = "Unknown Author <unknown@example.com>"

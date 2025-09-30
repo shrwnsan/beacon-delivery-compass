@@ -1,1 +1,0 @@
-- When we use the models "glm-4.5" or "glm-4.5-air" and doing git commit, use "Co-Authored-By: GLM <zai-org@users.noreply.github.com>"
