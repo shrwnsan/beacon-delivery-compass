@@ -31,9 +31,11 @@ class TestCoverageAnalyzer(unittest.TestCase):
     def test_find_coverage_files_xml(self) -> None:
         """Test find_coverage_files with XML coverage file."""
         coverage_xml = Path(self.temp_dir) / "coverage.xml"
-        coverage_xml.write_text("""<?xml version="1.0" ?>
+        coverage_xml.write_text(
+            """<?xml version="1.0" ?>
 <coverage version="7.9.2" timestamp="1757606795036" lines-valid="100" lines-covered="85" line-rate="0.85" branches-valid="50" branches-covered="40" branch-rate="0.8">
-</coverage>""")
+</coverage>"""
+        )
 
         files = self.analyzer.find_coverage_files()
         self.assertEqual(len(files), 1)
@@ -53,7 +55,8 @@ class TestCoverageAnalyzer(unittest.TestCase):
     def test_parse_coverage_xml_valid(self) -> None:
         """Test parsing valid coverage XML file."""
         coverage_xml = Path(self.temp_dir) / "coverage.xml"
-        coverage_xml.write_text("""<?xml version="1.0" ?>
+        coverage_xml.write_text(
+            """<?xml version="1.0" ?>
 <coverage version="7.9.2" timestamp="1757606795036" lines-valid="100" lines-covered="85" line-rate="0.85" branches-valid="50" branches-covered="40" branch-rate="0.8">
     <sources>
         <source>/test/path</source>
@@ -70,7 +73,8 @@ class TestCoverageAnalyzer(unittest.TestCase):
             </classes>
         </package>
     </packages>
-</coverage>""")
+</coverage>"""
+        )
 
         coverage = self.analyzer.parse_coverage_xml(coverage_xml)
 
@@ -156,9 +160,11 @@ class TestCoverageAnalyzer(unittest.TestCase):
         """Test get_latest_coverage with coverage files."""
         # Create coverage XML file
         coverage_xml = Path(self.temp_dir) / "coverage.xml"
-        coverage_xml.write_text("""<?xml version="1.0" ?>
+        coverage_xml.write_text(
+            """<?xml version="1.0" ?>
 <coverage version="7.9.2" timestamp="1757606795036" lines-valid="100" lines-covered="85" line-rate="0.85">
-</coverage>""")
+</coverage>"""
+        )
 
         coverage = self.analyzer.get_latest_coverage()
         self.assertIsNotNone(coverage)
@@ -174,15 +180,19 @@ class TestCoverageAnalyzer(unittest.TestCase):
         """Test get_coverage_history with multiple coverage files."""
         # Create multiple coverage files with names that will be found
         coverage_xml1 = Path(self.temp_dir) / "coverage.xml"
-        coverage_xml1.write_text("""<?xml version="1.0" ?>
+        coverage_xml1.write_text(
+            """<?xml version="1.0" ?>
 <coverage version="7.9.2" timestamp="1757606795036" lines-valid="100" lines-covered="80" line-rate="0.8">
-</coverage>""")
+</coverage>"""
+        )
 
         coverage_xml2 = Path(self.temp_dir) / "reports" / "coverage.xml"
         coverage_xml2.parent.mkdir(exist_ok=True)
-        coverage_xml2.write_text("""<?xml version="1.0" ?>
+        coverage_xml2.write_text(
+            """<?xml version="1.0" ?>
 <coverage version="7.9.2" timestamp="1757606795037" lines-valid="100" lines-covered="85" line-rate="0.85">
-</coverage>""")
+</coverage>"""
+        )
 
         history = self.analyzer.get_coverage_history()
         self.assertEqual(len(history), 2)

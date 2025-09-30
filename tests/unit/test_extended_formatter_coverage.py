@@ -64,7 +64,9 @@ class TestExtendedFormatterCoverage(unittest.TestCase):
 
         # Mock the analyzer to return our test coverage
         with patch.object(
-            self.formatter.coverage_analyzer, "get_latest_coverage", return_value=coverage
+            self.formatter.coverage_analyzer,
+            "get_latest_coverage",
+            return_value=coverage,
         ):
             lines = self.formatter._format_coverage_section(stats)
 
@@ -146,7 +148,9 @@ class TestExtendedFormatterCoverage(unittest.TestCase):
 
         # Mock the analyzer to return our test coverage
         with patch.object(
-            self.formatter.coverage_analyzer, "get_latest_coverage", return_value=trend.end_coverage
+            self.formatter.coverage_analyzer,
+            "get_latest_coverage",
+            return_value=trend.end_coverage,
         ):
             lines = self.formatter._format_coverage_section(stats)
 
@@ -176,7 +180,9 @@ class TestExtendedFormatterCoverage(unittest.TestCase):
 
         # Mock the analyzer to return our test coverage
         with patch.object(
-            self.formatter.coverage_analyzer, "get_latest_coverage", return_value=coverage
+            self.formatter.coverage_analyzer,
+            "get_latest_coverage",
+            return_value=coverage,
         ):
             lines = self.formatter._format_coverage_section(stats)
 
@@ -225,7 +231,9 @@ class TestExtendedFormatterCoverage(unittest.TestCase):
 
         # Mock analyzer to return coverage
         with patch.object(
-            self.formatter.coverage_analyzer, "get_latest_coverage", return_value=coverage
+            self.formatter.coverage_analyzer,
+            "get_latest_coverage",
+            return_value=coverage,
         ):
             lines = self.formatter._format_coverage_section(stats)
 

@@ -206,7 +206,7 @@ class AnalyticsEngine:
             return {
                 "coverage_history": coverage_history,
                 "latest_coverage": latest_coverage,
-                "file_count": len(latest_coverage.file_coverage) if latest_coverage else 0,
+                "file_count": (len(latest_coverage.file_coverage) if latest_coverage else 0),
                 "has_coverage_data": bool(coverage_history or latest_coverage),
             }
 
