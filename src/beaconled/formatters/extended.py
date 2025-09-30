@@ -91,7 +91,7 @@ class ExtendedFormatter(BaseFormatter):
             # Log error and return empty stats
             import logging
 
-            logging.error("Error getting file lifecycle stats: %s", str(e))
+            logging.error("Error getting file lifecycle stats: %s", e)
             return {"added": 0, "modified": 0, "deleted": 0, "renamed": 0}
 
     def _parse_git_log_output(self, log_output: str) -> dict[str, int]:
