@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.5.0] - 2025-09-30
+
+### Added
+- **Test Coverage Tracking**: Comprehensive test coverage tracking and analytics for extended format output (PR #43, Issue #34)
+  - Implemented `CoverageAnalyzer` class for parsing `.coverage` and `coverage.xml` files
+  - Added `CoverageStats` and `CoverageTrend` data models for tracking coverage metrics
+  - Integrated coverage tracking into `ExtendedFormatter` with dedicated coverage section
+  - Added coverage analysis to the analytics engine with trend detection
+  - Support for multiple coverage file formats with secure XML parsing using `defusedxml`
+  - Coverage trend analysis showing improvements and degradations over time
+  - File-level coverage insights highlighting uncovered areas
+  - Auto-detection of coverage files in repository
+  - Graceful fallback when coverage data is unavailable
+  - Comprehensive test suite with 33 new tests (23 unit + 10 integration)
+  - Updated documentation in `docs/extended-format-guide.md` with coverage examples
+
+### Changed
+- **Dependencies**: Added `defusedxml>=0.7.0` for secure XML parsing of coverage reports
+- **Analytics Engine**: Enhanced to support coverage analysis alongside existing metrics
+- **Extended Format**: Now includes optional test coverage section when coverage files are detected
+
+### Fixed
+- Applied consistent code formatting with black and ruff
+- Resolved RUF065 linting errors in logging statements
+
 ## [v0.4.0] - 2025-09-16
 
 ### Added
