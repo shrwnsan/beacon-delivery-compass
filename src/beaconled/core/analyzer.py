@@ -54,14 +54,94 @@ class GitAnalyzer:
 
         Raises:
             InvalidRepositoryError: If the path is invalid, not a directory,
-            or not a git repository
+            or not a git repository, or outside allowed boundaries
         """
+        # Normalize the path to prevent directory traversal
         try:
-            path = Path(repo_path).resolve()
+            # First, convert to absolute path without following symlinks
+            path = Path(repo_path).expanduser().absolute()
+            # Then resolve to get the canonical path
+            path = path.resolve()
         except Exception as e:
             # Normalize any unexpected error during path resolution to
             # InvalidRepositoryError so callers/tests can assert on the message
             raise InvalidRepositoryError(str(repo_path), reason=str(e)) from e
+
+        # Get the current working directory for boundary checks
+        try:
+            cwd = Path.cwd().resolve()
+        except Exception:
+            # If we can't get CWD, use the user's home directory as fallback
+            cwd = Path.home().resolve()
+
+        # Security boundary checks:
+        # 1. Path must be within reasonable boundaries
+        # 2. Prevent access to sensitive system directories
+        restricted_paths = [
+            Path("/etc"), Path("/usr/bin"), Path("/bin"), Path("/sbin"),
+            Path("/usr/sbin"), Path("/sys"), Path("/proc"), Path("/dev"),
+            Path("/var/log"), Path("/var/spool"),
+            Path.home() / ".ssh", Path.home() / ".gnupg"
+        ]
+
+        # Check if the path is within restricted directories
+        for restricted in restricted_paths:
+            try:
+                if path.is_relative_to(restricted):
+                    raise InvalidRepositoryError(
+                        str(path),
+                        reason="Access to system directories is not allowed"
+                    )
+            except AttributeError:
+                # Python < 3.9 fallback
+                if str(path).startswith(str(restricted)):
+                    raise InvalidRepositoryError(
+                        str(path),
+                        reason="Access to system directories is not allowed"
+                    )
+
+        # Check for directory traversal attempts
+        # Normalize the original input to detect traversal before resolution
+        normalized_input = Path(repo_path).as_posix()
+        if ".." in normalized_input or normalized_input.startswith("/"):
+            # If it looks like a traversal or absolute path, be more strict
+            pass  # We'll handle this in the boundary check
+
+        # Allow paths that are:
+        # - Within the current working directory or its subdirectories
+        # - Within the user's home directory
+        # - Explicitly allowed temp directories
+        allowed_bases = [cwd, Path.home(), Path("/tmp"), Path("/var/tmp")]
+
+        is_allowed = False
+        for base in allowed_bases:
+            try:
+                if path.is_relative_to(base.resolve()):
+                    is_allowed = True
+                    break
+            except AttributeError:
+                # Python < 3.9 fallback
+                if str(path).startswith(str(base.resolve())):
+                    is_allowed = True
+                    break
+
+        # Special case: if the repo_path is already a valid git repo AND
+        # it doesn't contain directory traversal, allow it
+        # This handles cases where the user explicitly wants to analyze a repo elsewhere
+        if not is_allowed:
+            # Only allow if there's no directory traversal in the original path
+            if ".." not in repo_path and not repo_path.startswith("/"):
+                git_check = path / ".git"
+                if git_check.exists():
+                    # It's a valid git repo that the user explicitly requested
+                    is_allowed = True
+
+        if not is_allowed:
+            raise InvalidRepositoryError(
+                str(path),
+                reason="Path is outside allowed boundaries. Repository must be within "
+                       "current directory, home directory, or /tmp"
+            )
 
         # Ensure path exists and is a directory
         if not path.exists():
@@ -72,7 +152,6 @@ class GitAnalyzer:
                 reason="Path is not a directory",
             )
 
-        # Relax boundary restriction: allow absolute paths (including temp dirs)
         # Validate it's a git repository by presence of .git
         # or by opening with GitPython
         git_dir = path / ".git"
