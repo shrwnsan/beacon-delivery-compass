@@ -15,6 +15,7 @@
 """Git repository analyzer."""
 
 import logging
+import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -44,7 +45,10 @@ class GitAnalyzer:
         self.repo_path = self._validate_repo_path(repo_path)
 
     def _validate_repo_path(self, repo_path: str) -> str:
-        """Validate and sanitize repository path.
+        """Validate and sanitize repository path with comprehensive security checks.
+
+        This method implements multiple layers of security to prevent directory traversal
+        attacks and unauthorized access to sensitive system directories.
 
         Args:
             repo_path: Path to the git repository
@@ -54,30 +58,144 @@ class GitAnalyzer:
 
         Raises:
             InvalidRepositoryError: If the path is invalid, not a directory,
-            or not a git repository
+            or not a git repository, or violates security policies
         """
-        try:
-            path = Path(repo_path).resolve()
-        except Exception as e:
-            # Normalize any unexpected error during path resolution to
-            # InvalidRepositoryError so callers/tests can assert on the message
-            raise InvalidRepositoryError(str(repo_path), reason=str(e)) from e
-
-        # Ensure path exists and is a directory
-        if not path.exists():
-            raise InvalidRepositoryError(str(path), reason="Path does not exist")
-        if not path.is_dir():
+        # Phase 1: Input validation and basic normalization
+        if not repo_path or not isinstance(repo_path, str):
             raise InvalidRepositoryError(
-                str(path),
-                reason="Path is not a directory",
+                str(repo_path) if repo_path else "None",
+                reason="Repository path must be a non-empty string"
             )
 
-        # Relax boundary restriction: allow absolute paths (including temp dirs)
-        # Validate it's a git repository by presence of .git
-        # or by opening with GitPython
+        # Check for obvious traversal attempts in the raw input
+        normalized_input = Path(repo_path).as_posix()
+        if "../" in normalized_input or "..\\" in normalized_input:
+            logger.warning(
+                "Path traversal attempt detected and blocked: %s",
+                repo_path[:100]  # Limit log length to prevent log injection
+            )
+            raise InvalidRepositoryError(
+                str(repo_path),
+                reason="Directory traversal sequences are not allowed"
+            )
+
+        # Phase 2: Path expansion and initial resolution
+        try:
+            # First, convert to absolute path without following symlinks
+            # This preserves the original path structure for validation
+            path = Path(repo_path).expanduser().absolute()
+
+            # Store the original for validation before resolution
+            original_path = path
+
+            # Then resolve to get the canonical path
+            # This follows symlinks to the actual target
+            path = path.resolve()
+        except Exception as e:
+            raise InvalidRepositoryError(str(repo_path), reason=str(e)) from e
+
+        # Phase 3: Symlink chain validation
+        # Validate every component in the path chain before resolution
+        self._validate_symlink_chain(original_path)
+
+        # Phase 4: Restricted directory checks
+        # Define system and user sensitive directories that must be blocked
+        restricted_paths = [
+            # System directories
+            Path("/etc"), Path("/usr/bin"), Path("/bin"), Path("/sbin"),
+            Path("/usr/sbin"), Path("/sys"), Path("/proc"), Path("/dev"),
+            Path("/var/log"), Path("/var/spool"), Path("/boot"), Path("/root"),
+            # User sensitive directories
+            Path.home() / ".ssh", Path.home() / ".gnupg",
+            Path.home() / ".aws", Path.home() / ".config"
+        ]
+
+        # Check if the resolved path is within restricted directories
+        for restricted in restricted_paths:
+            if self._is_path_within_boundary(path, restricted):
+                logger.warning(
+                    "Access to restricted directory blocked: %s",
+                    str(restricted)
+                )
+                raise InvalidRepositoryError(
+                    str(path),
+                    reason="Access to system directories is not allowed"
+                )
+
+        # Phase 5: Boundary enforcement
+        # Get the current working directory for boundary checks
+        try:
+            cwd = Path.cwd().resolve()
+        except Exception:
+            # If we can't get CWD, use the user's home directory as fallback
+            cwd = Path.home().resolve()
+
+        # Define allowed base directories
+        allowed_bases = [
+            cwd,
+            Path.home(),
+            Path("/tmp"),
+            Path("/var/tmp"),
+            Path("/usr/local/tmp")  # Common on some systems
+        ]
+
+        # Check if path is within allowed boundaries
+        is_allowed = False
+        for base in allowed_bases:
+            try:
+                base_resolved = base.resolve()
+                if self._is_path_within_boundary(path, base_resolved):
+                    is_allowed = True
+                    break
+            except Exception:
+                # If we can't resolve a base path, skip it
+                continue
+
+        # Special case: allow explicit git repositories outside boundaries
+        # This handles legitimate use cases while maintaining security
+        if not is_allowed:
+            # Additional check: no suspicious patterns in original input
+            if not self._has_suspicious_patterns(repo_path):
+                git_check = path / ".git"
+                if git_check.exists():
+                    # Verify it's actually a git repository
+                    try:
+                        # Quick validation using GitPython
+                        _ = git.Repo(str(path))
+                        logger.info(
+                            "Allowing explicit git repository outside standard boundaries: %s",
+                            str(path)
+                        )
+                        is_allowed = True
+                    except Exception:
+                        # If it's not a valid git repo, don't allow it
+                        pass
+
+        if not is_allowed:
+            logger.warning(
+                "Path outside allowed boundaries blocked: %s",
+                str(path)[:100]  # Limit log length
+            )
+            raise InvalidRepositoryError(
+                str(path),
+                reason="Path is outside allowed boundaries. Repository must be within "
+                       "current directory, home directory, or /tmp"
+            )
+
+        # Phase 6: TOCTOU mitigation
+        # Re-validate the path immediately before use
+        if not self._secure_path_exists(path):
+            raise InvalidRepositoryError(
+                str(path),
+                reason="Path validation failed - possible race condition"
+            )
+
+        # Phase 7: Git repository validation
+        # Ensure it's actually a git repository
         git_dir = path / ".git"
         if not git_dir.exists():
             try:
+                # Try to open with GitPython for additional validation
                 _ = git.Repo(str(path))
             except Exception as e:
                 raise InvalidRepositoryError(
@@ -85,7 +203,155 @@ class GitAnalyzer:
                     reason=f"Not a git repository: {e}",
                 ) from e
 
+        logger.debug("Successfully validated repository path: %s", str(path))
         return str(path)
+
+    def _validate_symlink_chain(self, path: Path) -> None:
+        """Validate every component in a path to prevent symlink-based attacks.
+
+        This method checks each component of the path to ensure it doesn't
+        point to restricted directories through symlinks.
+
+        Args:
+            path: The path to validate
+
+        Raises:
+            InvalidRepositoryError: If any component in the path chain is invalid
+        """
+        restricted_paths = [
+            Path("/etc"), Path("/sys"), Path("/proc"), Path("/dev"),
+            Path("/var/log"), Path("/var/spool"), Path("/boot"), Path("/root"),
+            Path.home() / ".ssh", Path.home() / ".gnupg"
+        ]
+
+        # Check each component in the path
+        parts = path.parts
+        current_path = Path(parts[0]) if parts else Path("/")
+
+        for part in parts[1:]:
+            current_path = current_path / part
+
+            # Check if this component is a symlink
+            if current_path.is_symlink():
+                try:
+                    # Get the target of the symlink
+                    target = current_path.readlink()
+
+                    # Convert relative symlinks to absolute
+                    if not target.is_absolute():
+                        target = current_path.parent / target
+
+                    target = target.resolve()
+
+                    # Check if the target is in a restricted directory
+                    for restricted in restricted_paths:
+                        if self._is_path_within_boundary(target, restricted):
+                            logger.warning(
+                                "Symlink points to restricted directory: %s -> %s",
+                                str(current_path),
+                                str(target)
+                            )
+                            raise InvalidRepositoryError(
+                                str(path),
+                                reason="Symlink chain points to restricted directory"
+                            )
+                except (OSError, PermissionError) as e:
+                    raise InvalidRepositoryError(
+                        str(path),
+                        reason=f"Cannot validate symlink: {e}"
+                    ) from e
+
+    def _is_path_within_boundary(self, path: Path, boundary: Path) -> bool:
+        """Safely check if a path is within a boundary directory.
+
+        This method handles path comparison safely across Python versions,
+        avoiding the string prefix vulnerability in Python < 3.9.
+
+        Args:
+            path: The path to check
+            boundary: The boundary directory
+
+        Returns:
+            bool: True if path is within boundary, False otherwise
+        """
+        try:
+            # Python 3.9+ has is_relative_to which is safe
+            if hasattr(path, 'is_relative_to'):
+                return path.is_relative_to(boundary)
+            else:
+                # For Python < 3.9, use os.path.commonpath for safe comparison
+                # This is more secure than string prefix matching
+                try:
+                    common = os.path.commonpath([str(path), str(boundary)])
+                    # Check if the common path is exactly the boundary
+                    # This prevents false positives like /home/user vs /home/user2
+                    return Path(common).resolve() == boundary.resolve()
+                except ValueError:
+                    # Paths don't have a common path (different drives on Windows, etc.)
+                    return False
+        except Exception:
+            # If anything fails, assume it's not within the boundary
+            return False
+
+    def _has_suspicious_patterns(self, path_str: str) -> bool:
+        """Check for suspicious patterns in the path input.
+
+        Args:
+            path_str: The path string to check
+
+        Returns:
+            bool: True if suspicious patterns are found
+        """
+        suspicious_patterns = [
+            # Various traversal attempts
+            "..%2f", "..%2F", "..%5c", "..%5C",
+            "%2e%2e", "%2E%2E", "%252e%252e",
+            # Encoded separators
+            "%2f", "%2F", "%5c", "%5C",
+            # Null bytes
+            "\x00",
+            # Control characters
+            "\n", "\r", "\t"
+        ]
+
+        normalized = path_str.lower()
+        return any(pattern.lower() in normalized for pattern in suspicious_patterns)
+
+    def _secure_path_exists(self, path: Path) -> bool:
+        """Securely check if a path exists, protecting against TOCTOU attacks.
+
+        This method performs additional checks to mitigate Time-of-Check-Time-of-Use
+        race conditions.
+
+        Args:
+            path: The path to check
+
+        Returns:
+            bool: True if the path exists and is safe to use
+        """
+        try:
+            # First check: does the path exist?
+            if not path.exists():
+                return False
+
+            # Second check: is it still a directory?
+            if not path.is_dir():
+                return False
+
+            # Third check: ensure it hasn't been replaced by a symlink
+            if path.is_symlink():
+                logger.warning("Path was replaced by symlink during validation: %s", str(path))
+                return False
+
+            # Final check: verify the git directory still exists
+            git_dir = path / ".git"
+            if not git_dir.exists():
+                return False
+
+            return True
+        except (OSError, PermissionError) as e:
+            logger.warning("Path validation error: %s", e)
+            return False
 
     def _parse_date(self, date_str: str) -> datetime:
         """Parse date from relative or absolute format.
