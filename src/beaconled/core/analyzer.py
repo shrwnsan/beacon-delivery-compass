@@ -40,9 +40,16 @@ logger = logging.getLogger(__name__)
 class GitAnalyzer:
     """Analyzes git repository statistics."""
 
-    def __init__(self, repo_path: str = ".") -> None:
-        """Initialize analyzer with repository path."""
+    def __init__(self, repo_path: str = ".", strict_mode: bool = False) -> None:
+        """Initialize analyzer with repository path.
+
+        Args:
+            repo_path: Path to the git repository
+            strict_mode: If True, errors will raise exceptions instead of being
+                        logged and continuing. Useful for security contexts.
+        """
         self.repo_path = self._validate_repo_path(repo_path)
+        self.strict_mode = strict_mode
 
     def _validate_repo_path(self, repo_path: str) -> str:
         """Validate and sanitize repository path with comprehensive security checks.
@@ -651,9 +658,11 @@ class GitAnalyzer:
                         )
                         continue  # Skip this file but continue with others
 
-            except Exception:
+            except Exception as e:
                 error_msg = f"Error generating diff for commit {commit_hash}"
                 logger.exception("%s", error_msg)
+                if self.strict_mode:
+                    raise RuntimeError(f"Failed to process commit {commit_hash}: {e}") from e
                 # We'll continue processing with the files we've collected so far
                 # rather than failing the entire operation for a diff error
 
@@ -895,8 +904,13 @@ class GitAnalyzer:
                         try:
                             day_key = commit_stats.date.strftime("%Y-%m-%d")
                             commits_by_day[day_key] = commits_by_day.get(day_key, 0) + 1
-                        except Exception:
-                            logger.debug("Could not update commits_by_day timeline")
+                        except Exception as e:
+                            logger.warning(
+                                "Could not update commits_by_day timeline for commit %s: %s",
+                                getattr(commit_stats, 'hash', '<unknown>'), e
+                            )
+                            if self.strict_mode:
+                                raise RuntimeError(f"Failed to update timeline for commit: {e}") from e
 
                     # Update file type breakdown
                     if hasattr(commit_stats, "files") and commit_stats.files:
