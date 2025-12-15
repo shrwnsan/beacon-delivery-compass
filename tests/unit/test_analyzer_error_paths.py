@@ -15,7 +15,8 @@ def test_validate_repo_path_nonexistent():
     """Test validation with a non-existent path."""
     with tempfile.TemporaryDirectory() as temp_dir:
         non_existent_path = os.path.join(temp_dir, "nonexistent")
-        analyzer = GitAnalyzer()
+        # Bypass __init__ so we can call _validate_repo_path directly
+        analyzer = GitAnalyzer.__new__(GitAnalyzer)
 
         with pytest.raises(InvalidRepositoryError) as exc_info:
             analyzer._validate_repo_path(non_existent_path)
@@ -26,7 +27,8 @@ def test_validate_repo_path_nonexistent():
 def test_validate_repo_path_not_a_directory():
     """Test validation with a path that is not a directory."""
     with tempfile.NamedTemporaryFile() as temp_file:
-        analyzer = GitAnalyzer()
+        # Bypass __init__ so we can call _validate_repo_path directly
+        analyzer = GitAnalyzer.__new__(GitAnalyzer)
 
         with pytest.raises(InvalidRepositoryError) as exc_info:
             analyzer._validate_repo_path(temp_file.name)
@@ -37,7 +39,8 @@ def test_validate_repo_path_not_a_directory():
 def test_validate_repo_path_not_a_git_repo():
     """Test validation with a directory that is not a git repository."""
     with tempfile.TemporaryDirectory() as temp_dir:
-        analyzer = GitAnalyzer()
+        # Bypass __init__ so we can call _validate_repo_path directly
+        analyzer = GitAnalyzer.__new__(GitAnalyzer)
 
         with patch("git.Repo") as mock_repo:
             mock_repo.side_effect = Exception("Not a git repository")
