@@ -51,7 +51,8 @@ def test_validate_repo_path_not_a_git_repo():
 def test_validate_repo_path_unexpected_error():
     """Test validation with an unexpected error during validation."""
     with tempfile.TemporaryDirectory() as temp_dir:
-        analyzer = GitAnalyzer()
+        # Bypass __init__ so we can call _validate_repo_path directly
+        analyzer = GitAnalyzer.__new__(GitAnalyzer)
 
         with patch("pathlib.Path.resolve") as mock_resolve:
             mock_resolve.side_effect = Exception("Unexpected error")
@@ -68,7 +69,9 @@ def test_validate_repo_path_valid():
         # Create a mock .git directory
         os.makedirs(os.path.join(temp_dir, ".git"))
 
-        analyzer = GitAnalyzer()
+        # Bypass __init__ so we can call _validate_repo_path directly
+        # This avoids validating the current directory
+        analyzer = GitAnalyzer.__new__(GitAnalyzer)
         result = analyzer._validate_repo_path(temp_dir)
 
         # Should return the absolute path to the temp directory
@@ -89,7 +92,8 @@ def test_validate_repo_path_with_git_python(mock_repo, *args):
         # Configure the mock to return a mock repo object
         mock_repo.return_value = MagicMock()
 
-        analyzer = GitAnalyzer()
+        # Bypass __init__ so we can call _validate_repo_path directly
+        analyzer = GitAnalyzer.__new__(GitAnalyzer)
         result = analyzer._validate_repo_path(temp_dir)
 
         assert os.path.isabs(result)
