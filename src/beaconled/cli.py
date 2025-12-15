@@ -145,6 +145,11 @@ def main() -> None:
         default="beacon-charts.png",
         help="Output path for chart files (default: beacon-charts.png)",
     )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Enable strict mode: errors will raise exceptions instead of being logged",
+    )
 
     args = parser.parse_args()
 
@@ -153,7 +158,7 @@ def main() -> None:
         parser.error("--until cannot be used without --since")
 
     try:
-        analyzer = GitAnalyzer(args.repo)
+        analyzer = GitAnalyzer(args.repo, strict_mode=args.strict)
         output: str
 
         # If --since is provided, perform a range analysis
