@@ -64,16 +64,28 @@ class DateParseError(DateError):
         self.date_str = date_str
         self.format_hint = format_hint
 
-        # Format the error message
-        if message is None:
-            message = f"Could not parse date: '{date_str}'"
-            if format_hint:
-                message += f"\nExpected format: {format_hint}"
-
-        # Initialize details dictionary
+        # Store original date string in details for internal logging
         details: dict[str, Any] = {
             "date_string": date_str,
         }
+
+        # Format the error message - sanitize user input for display
+        if message is None:
+            # Only show limited information about the input to prevent information disclosure
+            # For potentially sensitive inputs like "../../../etc/passwd", show even less
+            if any(
+                pattern in date_str.lower()
+                for pattern in ["../", "..\\", "/etc/", "\\windows\\", "passwd", "shadow"]
+            ):
+                # For obviously suspicious inputs, show minimal info
+                safe_date_preview = "<sensitive_input>"
+            elif len(date_str) > 20:
+                safe_date_preview = date_str[:17] + "..."
+            else:
+                safe_date_preview = date_str
+            message = f"Could not parse date: '{safe_date_preview}'"
+            if format_hint:
+                message += f"\nExpected format: {format_hint}"
 
         # Add format hint if provided
         if format_hint is not None:
@@ -84,8 +96,17 @@ class DateParseError(DateError):
             if key != "details":
                 details[key] = value
 
+        # Try to sanitize the message for user display
+        try:
+            from beaconled.utils.security import sanitize_error_message
+
+            safe_message = sanitize_error_message(message)
+        except ImportError:
+            # Fallback to original message if sanitization fails
+            safe_message = message
+
         super().__init__(
-            message=message,
+            message=safe_message,
             error_code=self.DEFAULT_ERROR_CODE,
             details=details,
         )

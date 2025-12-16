@@ -21,6 +21,7 @@ message.
 
 from __future__ import annotations
 
+import logging
 from enum import Enum
 from typing import Any, TypedDict
 
@@ -86,6 +87,33 @@ class BeaconError(Exception):
         self.details = details.copy() if details else {}
         super().__init__(message)
 
+    def get_safe_message(self) -> str:
+        """Return a sanitized error message safe for user-facing display.
+
+        This method ensures that sensitive information like file paths,
+        system details, or internal data is not exposed in user-facing
+        error messages. Full details are still logged for debugging.
+
+        Returns:
+            Sanitized error message string
+        """
+        logger = logging.getLogger(self.__class__.__module__)
+
+        # Log full details at debug level for internal troubleshooting
+        logger.debug(
+            "Full exception details: %s: %s - %s", self.__class__.__name__, str(self), self.details
+        )
+
+        # Import here to avoid circular imports
+        try:
+            from beaconled.utils.security import sanitize_path
+
+            # Return sanitized message for users
+            return sanitize_path(str(self))
+        except ImportError:
+            # Fallback if security module is not available
+            return str(self)
+
 
 class ConfigurationError(BeaconError):
     """Raised when there is a configuration error."""
@@ -147,12 +175,23 @@ class InvalidRepositoryError(RepositoryError):
     ) -> None:
         self.repo_path = repo_path
         self.reason = reason
-        message = f"Invalid repository: {repo_path}"
+
+        # Try to sanitize path, fallback to original if sanitization fails
+        try:
+            from beaconled.utils.security import sanitize_path
+
+            sanitized_path = sanitize_path(repo_path)
+        except ImportError:
+            sanitized_path = repo_path
+
+        message = f"Invalid repository: {sanitized_path}"
         if reason:
             message += f" ({reason})"
 
         details = kwargs.pop("details", {})
+        # Store full path in details for internal logging, but not for user display
         details["repo_path"] = repo_path
+        details["sanitized_path"] = sanitized_path
         if reason:
             details["reason"] = reason
 
@@ -258,7 +297,14 @@ class CommitNotFoundError(CommitError):
         # Add repo path to details if provided
         if repo_path is not None:
             details["repo_path"] = repo_path
-            message += f" in repository {repo_path}"
+            # Try to sanitize path for user message
+            try:
+                from beaconled.utils.security import sanitize_path
+
+                sanitized_path = sanitize_path(repo_path)
+            except ImportError:
+                sanitized_path = repo_path
+            message += f" in repository {sanitized_path}"
 
         # Extract specific parameters for the parent class
         error_code = kwargs.pop("error_code", self.DEFAULT_ERROR_CODE)

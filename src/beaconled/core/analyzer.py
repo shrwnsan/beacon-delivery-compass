@@ -28,6 +28,7 @@ from beaconled.core.date_errors import DateParseError, DateRangeError
 from beaconled.core.models import CommitStats, FileStats, RangeStats
 from beaconled.exceptions import CommitParseError, InvalidRepositoryError
 from beaconled.utils.date_utils import DateUtils
+from beaconled.utils.security import sanitize_path
 
 # Constants
 DATE_STR_MAX_LEN = 50
@@ -71,7 +72,7 @@ class GitAnalyzer:
         if not repo_path or not isinstance(repo_path, str):
             raise InvalidRepositoryError(
                 str(repo_path) if repo_path else "None",
-                reason="Repository path must be a non-empty string"
+                reason="Repository path must be a non-empty string",
             )
 
         # Check for obvious traversal attempts in the raw input
@@ -79,11 +80,10 @@ class GitAnalyzer:
         if "../" in normalized_input or "..\\" in normalized_input:
             logger.warning(
                 "Path traversal attempt detected and blocked: %s",
-                repo_path[:100]  # Limit log length to prevent log injection
+                repo_path[:100],  # Limit log length to prevent log injection
             )
             raise InvalidRepositoryError(
-                str(repo_path),
-                reason="Directory traversal sequences are not allowed"
+                str(repo_path), reason="Directory traversal sequences are not allowed"
             )
 
         # Phase 2: Path expansion and initial resolution
@@ -109,24 +109,31 @@ class GitAnalyzer:
         # Define system and user sensitive directories that must be blocked
         restricted_paths = [
             # System directories
-            Path("/etc"), Path("/usr/bin"), Path("/bin"), Path("/sbin"),
-            Path("/usr/sbin"), Path("/sys"), Path("/proc"), Path("/dev"),
-            Path("/var/log"), Path("/var/spool"), Path("/boot"), Path("/root"),
+            Path("/etc"),
+            Path("/usr/bin"),
+            Path("/bin"),
+            Path("/sbin"),
+            Path("/usr/sbin"),
+            Path("/sys"),
+            Path("/proc"),
+            Path("/dev"),
+            Path("/var/log"),
+            Path("/var/spool"),
+            Path("/boot"),
+            Path("/root"),
             # User sensitive directories
-            Path.home() / ".ssh", Path.home() / ".gnupg",
-            Path.home() / ".aws", Path.home() / ".config"
+            Path.home() / ".ssh",
+            Path.home() / ".gnupg",
+            Path.home() / ".aws",
+            Path.home() / ".config",
         ]
 
         # Check if the resolved path is within restricted directories
         for restricted in restricted_paths:
             if self._is_path_within_boundary(path, restricted):
-                logger.warning(
-                    "Access to restricted directory blocked: %s",
-                    str(restricted)
-                )
+                logger.warning("Access to restricted directory blocked: %s", str(restricted))
                 raise InvalidRepositoryError(
-                    str(path),
-                    reason="Access to system directories is not allowed"
+                    str(path), reason="Access to system directories is not allowed"
                 )
 
         # Phase 5: Boundary enforcement
@@ -143,7 +150,7 @@ class GitAnalyzer:
             Path.home(),
             Path("/tmp"),
             Path("/var/tmp"),
-            Path("/usr/local/tmp")  # Common on some systems
+            Path("/usr/local/tmp"),  # Common on some systems
         ]
 
         # Check if path is within allowed boundaries
@@ -171,7 +178,7 @@ class GitAnalyzer:
                         _ = git.Repo(str(path))
                         logger.info(
                             "Allowing explicit git repository outside standard boundaries: %s",
-                            str(path)
+                            str(path),
                         )
                         is_allowed = True
                     except Exception:
@@ -181,20 +188,19 @@ class GitAnalyzer:
         if not is_allowed:
             logger.warning(
                 "Path outside allowed boundaries blocked: %s",
-                str(path)[:100]  # Limit log length
+                str(path)[:100],  # Limit log length
             )
             raise InvalidRepositoryError(
                 str(path),
                 reason="Path is outside allowed boundaries. Repository must be within "
-                       "current directory, home directory, or /tmp"
+                "current directory, home directory, or /tmp",
             )
 
         # Phase 6: TOCTOU mitigation
         # Re-validate the path immediately before use
         if not self._secure_path_exists(path):
             raise InvalidRepositoryError(
-                str(path),
-                reason="Path validation failed - possible race condition"
+                str(path), reason="Path validation failed - possible race condition"
             )
 
         # Phase 7: Git repository validation
@@ -226,9 +232,16 @@ class GitAnalyzer:
             InvalidRepositoryError: If any component in the path chain is invalid
         """
         restricted_paths = [
-            Path("/etc"), Path("/sys"), Path("/proc"), Path("/dev"),
-            Path("/var/log"), Path("/var/spool"), Path("/boot"), Path("/root"),
-            Path.home() / ".ssh", Path.home() / ".gnupg"
+            Path("/etc"),
+            Path("/sys"),
+            Path("/proc"),
+            Path("/dev"),
+            Path("/var/log"),
+            Path("/var/spool"),
+            Path("/boot"),
+            Path("/root"),
+            Path.home() / ".ssh",
+            Path.home() / ".gnupg",
         ]
 
         # Check each component in the path
@@ -256,16 +269,14 @@ class GitAnalyzer:
                             logger.warning(
                                 "Symlink points to restricted directory: %s -> %s",
                                 str(current_path),
-                                str(target)
+                                str(target),
                             )
                             raise InvalidRepositoryError(
-                                str(path),
-                                reason="Symlink chain points to restricted directory"
+                                str(path), reason="Symlink chain points to restricted directory"
                             )
                 except (OSError, PermissionError) as e:
                     raise InvalidRepositoryError(
-                        str(path),
-                        reason=f"Cannot validate symlink: {e}"
+                        str(path), reason=f"Cannot validate symlink: {e}"
                     ) from e
 
     def _is_path_within_boundary(self, path: Path, boundary: Path) -> bool:
@@ -283,7 +294,7 @@ class GitAnalyzer:
         """
         try:
             # Python 3.9+ has is_relative_to which is safe
-            if hasattr(path, 'is_relative_to'):
+            if hasattr(path, "is_relative_to"):
                 return path.is_relative_to(boundary)
             else:
                 # For Python < 3.9, use os.path.commonpath for safe comparison
@@ -311,14 +322,24 @@ class GitAnalyzer:
         """
         suspicious_patterns = [
             # Various traversal attempts
-            "..%2f", "..%2F", "..%5c", "..%5C",
-            "%2e%2e", "%2E%2E", "%252e%252e",
+            "..%2f",
+            "..%2F",
+            "..%5c",
+            "..%5C",
+            "%2e%2e",
+            "%2E%2E",
+            "%252e%252e",
             # Encoded separators
-            "%2f", "%2F", "%5c", "%5C",
+            "%2f",
+            "%2F",
+            "%5c",
+            "%5C",
             # Null bytes
             "\x00",
             # Control characters
-            "\n", "\r", "\t"
+            "\n",
+            "\r",
+            "\t",
         ]
 
         normalized = path_str.lower()
@@ -539,8 +560,13 @@ class GitAnalyzer:
             except (ValueError, TypeError, git.BadName, git.GitCommandError) as e:
                 # Handle different exception types appropriately
                 if isinstance(e, git.GitCommandError):
-                    # For GitCommandError, convert to RuntimeError as expected by tests
-                    msg = f"Failed to analyze commit {commit_hash}: {e!s}"
+                    # For GitCommandError, sanitize the error message to prevent path disclosure
+                    sanitized_repo = sanitize_path(self.repo_path)
+                    # Sanitize the git error message which may contain paths
+                    git_error_msg = str(e)
+                    if self.repo_path in git_error_msg:
+                        git_error_msg = git_error_msg.replace(self.repo_path, sanitized_repo)
+                    msg = f"Failed to analyze commit {commit_hash}: {git_error_msg}"
                     raise RuntimeError(msg) from e
                 elif isinstance(e, (ValueError, TypeError, git.BadName)):
                     # For backward compatibility with tests, convert BadName to RuntimeError
@@ -736,10 +762,13 @@ class GitAnalyzer:
             return stats
 
         except git.GitCommandError as e:
-            msg = f"Failed to analyze commit {commit_hash}: {e!s}"
-            raise RuntimeError(
-                msg,
-            ) from e
+            # Sanitize git error message to prevent path disclosure
+            sanitized_repo = sanitize_path(self.repo_path)
+            git_error_msg = str(e)
+            if self.repo_path in git_error_msg:
+                git_error_msg = git_error_msg.replace(self.repo_path, sanitized_repo)
+            msg = f"Failed to analyze commit {commit_hash}: {git_error_msg}"
+            raise RuntimeError(msg) from e
         except (ValueError, TypeError, git.BadName) as e:
             # For backward compatibility with tests, convert BadName to RuntimeError
             msg = f"Unexpected error analyzing commit {commit_hash}: {e!s}"
@@ -879,7 +908,8 @@ class GitAnalyzer:
                 except Exception as e:
                     logger.warning(
                         "Could not update commits_by_day timeline for commit %s: %s",
-                        getattr(commit_stats, 'hash', '<unknown>'), e
+                        getattr(commit_stats, "hash", "<unknown>"),
+                        e,
                     )
                     if self.strict_mode:
                         raise RuntimeError(f"Failed to update timeline for commit: {e}") from e
@@ -1050,7 +1080,12 @@ class GitAnalyzer:
             return range_stats
 
         except git.GitCommandError as e:
-            msg = f"Unexpected error analyzing date range: {e!s}"
+            # Sanitize git error message to prevent path disclosure
+            sanitized_repo = sanitize_path(self.repo_path)
+            git_error_msg = str(e)
+            if self.repo_path in git_error_msg:
+                git_error_msg = git_error_msg.replace(self.repo_path, sanitized_repo)
+            msg = f"Unexpected error analyzing date range: {git_error_msg}"
             raise RuntimeError(msg) from e
 
         except DateParseError as e:
