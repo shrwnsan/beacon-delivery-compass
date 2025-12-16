@@ -756,6 +756,181 @@ class GitAnalyzer:
                 details={"original_error": str(e)},
             ) from e
 
+    def _validate_and_normalize_dates(
+        self,
+        start_date: datetime | str | None,
+        end_date: datetime | str | None,
+    ) -> tuple[datetime, datetime]:
+        """Validate and normalize date range inputs.
+
+        Args:
+            start_date: Start date as datetime or string
+            end_date: End date as datetime or string
+
+        Returns:
+            Tuple of normalized (start_date, end_date) as datetime objects
+        """
+        # Pre-parse string inputs using the instance parser so tests can
+        # patch _parse_date and to support ISO8601 strings with timezone
+        if isinstance(start_date, str):
+            start_date = self._parse_date(start_date)
+        if isinstance(end_date, str):
+            if end_date.lower() in ["now", "today", ""]:
+                end_date = datetime.now(timezone.utc)
+            else:
+                end_date = self._parse_date(end_date)
+
+        # Validate and normalize the date range (library may set end to end-of-day)
+        start_date, end_date = DateUtils.validate_date_range(start_date, end_date)
+
+        return start_date, end_date
+
+    def _fetch_commits_in_range(
+        self,
+        start_date: datetime,
+        end_date: datetime,
+    ) -> list[str]:
+        """Fetch commit hashes within the specified date range.
+
+        Args:
+            start_date: Start date for commit filtering
+            end_date: End date for commit filtering
+
+        Returns:
+            List of commit hashes in chronological order
+        """
+        repo = git.Repo(self.repo_path)
+        rev_list = []
+
+        # Format dates for git commands
+        git_since = start_date.isoformat()
+        git_until = end_date.isoformat()
+
+        # First try to get commits using iter_commits
+        try:
+            commits_iter = repo.iter_commits(
+                all=True,
+                since=git_since,
+                until=git_until,
+            )
+
+            # Process commits from iter_commits
+            for commit in commits_iter:
+                ch = getattr(commit, "hexsha", None)
+                key = str(ch) if ch else str(commit)
+                rev_list.append(key)
+
+        except Exception as e:
+            logger.debug("Failed to use iter_commits: %s", e)
+            rev_list = []
+
+        # Fall back to git log if iter_commits failed or returned no results
+        # Optimized: use --no-patch to avoid generating diff content
+        if not rev_list:
+            try:
+                rev_list = repo.git.log(
+                    "--all",
+                    "--reverse",
+                    "--pretty=format:%H",
+                    "--no-patch",  # Optimized: don't generate patch content
+                    f"--since={git_since}",
+                    f"--until={git_until}",
+                ).splitlines()
+            except Exception as e:
+                logger.debug("Failed to get commit list: %s", e)
+                rev_list = []
+
+        return rev_list
+
+    def _calculate_author_analytics(self, commits: list[CommitStats]) -> dict[str, int]:
+        """Calculate author-specific statistics.
+
+        Args:
+            commits: List of commit statistics
+
+        Returns:
+            Dictionary mapping author names to commit counts
+        """
+        authors: dict[str, int] = {}
+
+        for commit_stats in commits:
+            author = getattr(commit_stats, "author", None)
+            if author:
+                authors[author] = authors.get(author, 0) + 1
+
+        return authors
+
+    def _calculate_timeline_analytics(self, commits: list[CommitStats]) -> dict[str, int]:
+        """Calculate daily activity timeline.
+
+        Args:
+            commits: List of commit statistics
+
+        Returns:
+            Dictionary mapping dates to commit counts
+        """
+        commits_by_day: dict[str, int] = {}
+
+        for commit_stats in commits:
+            if hasattr(commit_stats, "date") and commit_stats.date:
+                try:
+                    day_key = commit_stats.date.strftime("%Y-%m-%d")
+                    commits_by_day[day_key] = commits_by_day.get(day_key, 0) + 1
+                except Exception as e:
+                    logger.warning(
+                        "Could not update commits_by_day timeline for commit %s: %s",
+                        getattr(commit_stats, 'hash', '<unknown>'), e
+                    )
+                    if self.strict_mode:
+                        raise RuntimeError(f"Failed to update timeline for commit: {e}") from e
+
+        return commits_by_day
+
+    def _calculate_file_analytics(
+        self,
+        commits: list[CommitStats],
+    ) -> tuple[int, int, int, dict[str, dict[str, int]]]:
+        """Calculate file-related statistics.
+
+        Args:
+            commits: List of commit statistics
+
+        Returns:
+            Tuple of (total_files_changed, total_lines_added, total_lines_deleted, file_types)
+        """
+        total_files_changed = 0
+        total_lines_added = 0
+        total_lines_deleted = 0
+        file_types: dict[str, dict[str, int]] = {}
+
+        for commit_stats in commits:
+            # Update totals
+            total_files_changed += getattr(commit_stats, "files_changed", 0)
+            total_lines_added += getattr(commit_stats, "lines_added", 0)
+            total_lines_deleted += getattr(commit_stats, "lines_deleted", 0)
+
+            # Update file type breakdown
+            if hasattr(commit_stats, "files") and commit_stats.files:
+                for file_stat in commit_stats.files:
+                    if not hasattr(file_stat, "path"):
+                        continue
+                    ext = file_stat.path.split(".")[-1].lower()
+                    if ext not in file_types:
+                        file_types[ext] = {
+                            "files_changed": 0,
+                            "lines_added": 0,
+                            "lines_deleted": 0,
+                        }
+                    file_types[ext]["files_changed"] += 1
+                    file_types[ext]["lines_added"] += getattr(file_stat, "lines_added", 0)
+                    file_types[ext]["lines_deleted"] += getattr(
+                        file_stat,
+                        "lines_deleted",
+                        0,
+                    )
+
+        return total_files_changed, total_lines_added, total_lines_deleted, file_types
+
     def get_range_analytics(
         self,
         start_date: datetime | str | None = None,
@@ -783,28 +958,9 @@ class GitAnalyzer:
             - Uses git's built-in date filtering for better performance with
               large repositories
         """
-        # Initialize variables
-        commits: list[CommitStats] = []
-        authors: dict[str, int] = {}
-        commits_by_day: dict[str, int] = {}
-        file_types = {}
-        total_files_changed = 0
-        total_lines_added = 0
-        total_lines_deleted = 0
-        processed_commits = set()
-        commits_map = {}
-        rev_list = []
-
         try:
-            # Pre-parse string inputs using the instance parser so tests can
-            # patch _parse_date and to support ISO8601 strings with timezone
-            if isinstance(start_date, str):
-                start_date = self._parse_date(start_date)
-            if isinstance(end_date, str):
-                if end_date.lower() in ["now", "today", ""]:
-                    end_date = datetime.now(timezone.utc)
-                else:
-                    end_date = self._parse_date(end_date)
+            # Validate and normalize dates
+            start_date, end_date = self._validate_and_normalize_dates(start_date, end_date)
 
             # Record whether caller provided an explicit end time
             # Use type() to avoid issues when datetime module is mocked in tests
@@ -817,55 +973,16 @@ class GitAnalyzer:
                     or original_end_dt.microsecond != 0
                 )
 
-            # Validate and normalize the date range (library may set end to end-of-day)
-            start_date, end_date = DateUtils.validate_date_range(start_date, end_date)
-
             # Set end limit to end of day
             end_limit = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
 
-            # Format dates for git commands
-            git_since = start_date.isoformat()
-            git_until = end_date.isoformat()
+            # Fetch commits in date range
+            rev_list = self._fetch_commits_in_range(start_date, end_date)
 
-            # Get repository instance
-            repo = git.Repo(self.repo_path)
+            # Process commits
+            commits: list[CommitStats] = []
+            processed_commits = set()
 
-            # First try to get commits using iter_commits
-            try:
-                commits_iter = repo.iter_commits(
-                    all=True,
-                    since=git_since,
-                    until=git_until,
-                )
-
-                # Process commits from iter_commits
-                for commit in commits_iter:
-                    ch = getattr(commit, "hexsha", None)
-                    key = str(ch) if ch else str(commit)
-                    rev_list.append(key)
-                    commits_map[key] = commit
-
-            except Exception as e:
-                logger.debug("Failed to use iter_commits: %s", e)
-                rev_list = []
-
-            # Fall back to git log if iter_commits failed or returned no results
-            # Optimized: use --no-patch to avoid generating diff content
-            if not rev_list:
-                try:
-                    rev_list = repo.git.log(
-                        "--all",
-                        "--reverse",
-                        "--pretty=format:%H",
-                        "--no-patch",  # Optimized: don't generate patch content
-                        f"--since={git_since}",
-                        f"--until={git_until}",
-                    ).splitlines()
-                except Exception as e:
-                    logger.debug("Failed to get commit list: %s", e)
-                    rev_list = []
-
-            # Process each commit in the filtered list
             for commit_hash in rev_list:
                 if (
                     not commit_hash
@@ -889,49 +1006,6 @@ class GitAnalyzer:
                     # Add to commits list
                     commits.append(commit_stats)
 
-                    # Update totals
-                    total_files_changed += getattr(commit_stats, "files_changed", 0)
-                    total_lines_added += getattr(commit_stats, "lines_added", 0)
-                    total_lines_deleted += getattr(commit_stats, "lines_deleted", 0)
-
-                    # Update author stats
-                    author = getattr(commit_stats, "author", None)
-                    if author:
-                        authors[author] = authors.get(author, 0) + 1
-
-                    # Update daily activity
-                    if hasattr(commit_stats, "date") and commit_stats.date:
-                        try:
-                            day_key = commit_stats.date.strftime("%Y-%m-%d")
-                            commits_by_day[day_key] = commits_by_day.get(day_key, 0) + 1
-                        except Exception as e:
-                            logger.warning(
-                                "Could not update commits_by_day timeline for commit %s: %s",
-                                getattr(commit_stats, 'hash', '<unknown>'), e
-                            )
-                            if self.strict_mode:
-                                raise RuntimeError(f"Failed to update timeline for commit: {e}") from e
-
-                    # Update file type breakdown
-                    if hasattr(commit_stats, "files") and commit_stats.files:
-                        for file_stat in commit_stats.files:
-                            if not hasattr(file_stat, "path"):
-                                continue
-                            ext = file_stat.path.split(".")[-1].lower()
-                            if ext not in file_types:
-                                file_types[ext] = {
-                                    "files_changed": 0,
-                                    "lines_added": 0,
-                                    "lines_deleted": 0,
-                                }
-                            file_types[ext]["files_changed"] += 1
-                            file_types[ext]["lines_added"] += getattr(file_stat, "lines_added", 0)
-                            file_types[ext]["lines_deleted"] += getattr(
-                                file_stat,
-                                "lines_deleted",
-                                0,
-                            )
-
                 except Exception as e:
                     # Log but continue processing other commits
                     try:
@@ -940,6 +1014,16 @@ class GitAnalyzer:
                         abbrev = "<mock>"
                     logger.warning("Could not process commit %s: %s", abbrev, e)
                     continue
+
+            # Calculate analytics
+            authors = self._calculate_author_analytics(commits)
+            commits_by_day = self._calculate_timeline_analytics(commits)
+            (
+                total_files_changed,
+                total_lines_added,
+                total_lines_deleted,
+                file_types,
+            ) = self._calculate_file_analytics(commits)
 
             # Create and return the range stats
             range_stats = RangeStats(
