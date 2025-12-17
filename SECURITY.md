@@ -15,8 +15,10 @@ We follow defense-in-depth for inputs and file-system boundaries:
 - Dependencies are kept current; routine vulnerability scanning is enabled.
 
 For implementation specifics, see:
-- docs/development/security/roadmap.md
-- docs/development/security/ (architecture, testing, and practices)
+- docs/development/security/ (detailed security documentation)
+  - implementation.md (sanitization utilities and threat models)
+  - exception-handling-guidelines.md (secure exception handling)
+  - roadmap.md (security roadmap and future work)
 
 ## Reporting Vulnerabilities
 Please report responsibly:

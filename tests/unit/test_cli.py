@@ -183,7 +183,7 @@ class TestCLI(unittest.TestCase):
         with patch("sys.stdout", new_callable=StringIO):
             main()
             # Verify the analyzer was called with the custom repo path
-            mock_analyzer.assert_called_once_with("/custom/repo/path")
+            mock_analyzer.assert_called_once_with("/custom/repo/path", strict_mode=False)
             # Verify the formatter was called with our mock commit
             mock_formatter.return_value.format_commit_stats.assert_called_once_with(
                 mock_commit,
@@ -326,7 +326,7 @@ class TestCLI(unittest.TestCase):
             main()
 
             # Verify the analyzer was called with the default repo path and commit
-            mock_analyzer.assert_called_once_with(".")
+            mock_analyzer.assert_called_once_with(".", strict_mode=False)
             mock_analyzer.return_value.get_commit_stats.assert_called_once_with("HEAD")
 
             # Verify the formatter was called with our mock commit
