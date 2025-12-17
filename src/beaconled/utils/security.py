@@ -51,18 +51,45 @@ def sanitize_path(path: str | Path | None, max_components: int = 2) -> str:
 
     try:
         # Convert to Path object for consistent handling
-        path_obj = Path(path)
+        # Use PureWindowsPath on non-Windows systems to properly handle Windows paths
+        if isinstance(path, str) and ("\\" in path or (len(path) >= 2 and path[1] == ":")):
+            # Looks like a Windows path
+            if os.name != "nt":
+                from pathlib import PureWindowsPath
+
+                path_obj = PureWindowsPath(path)
+            else:
+                path_obj = Path(path)
+        else:
+            path_obj = Path(path)
 
         # Get all parts of the path
         parts = path_obj.parts
 
-        # If path has fewer components than max, return as-is
-        if len(parts) <= max_components:
+        # Check if first part is a Windows drive letter (e.g., 'C:\\')
+        start_idx = 0
+        if len(parts) > 0 and len(parts[0]) >= 2 and parts[0][1] == ":":
+            # Skip the Windows drive letter for component counting
+            start_idx = 1
+
+        # Get effective parts (excluding Windows drive letter)
+        effective_parts = parts[start_idx:]
+
+        # If effective path has fewer components than max, return as-is
+        if len(effective_parts) <= max_components:
             return str(path_obj)
 
-        # Return only the last N components
-        sanitized_parts = parts[-max_components:]
-        return os.path.join(*sanitized_parts)
+        # Return only the last N components from effective parts
+        sanitized_parts = effective_parts[-max_components:]
+
+        # For PureWindowsPath, use forward slashes for consistency
+        if hasattr(path_obj, "flavour") and hasattr(path_obj.flavour, "sep"):
+            # It's a PurePath object
+            separator = path_obj.flavour.sep
+            return separator.join(sanitized_parts)
+        else:
+            # Regular Path object
+            return os.path.join(*sanitized_parts)
 
     except Exception as e:
         # If sanitization fails, log and return safe fallback
@@ -90,11 +117,26 @@ def sanitize_error_message(message: str, max_length: int = 200) -> str:
     if not isinstance(message, str):
         message = str(message)
 
-    # Remove common sensitive patterns
-    sanitized = re.sub(r"/home/[^/\s]+", "/home/****", message)
+    # Remove common sensitive patterns (case-insensitive to prevent bypass)
+    # Unix/Linux home directories
+    sanitized = re.sub(r"/home/[^/\s]+", "/home/****", message, flags=re.IGNORECASE)
+    # macOS user directories
+    sanitized = re.sub(r"/Users/[^/\s]+", "/Users/****", sanitized, flags=re.IGNORECASE)
+    # Root home directory (privileged user)
+    sanitized = re.sub(r"/root/?[^/\s]*", "/root/****", sanitized, flags=re.IGNORECASE)
+    # System service directories
+    sanitized = re.sub(r"/opt/[^/\s]+", "/opt/****", sanitized, flags=re.IGNORECASE)
+    sanitized = re.sub(r"/srv/[^/\s]+", "/srv/****", sanitized, flags=re.IGNORECASE)
+    # Some Linux distributions use /var/home
+    sanitized = re.sub(r"/var/home/[^/\s]+", "/var/home/****", sanitized, flags=re.IGNORECASE)
     # Handle Windows paths more carefully to avoid \U escape sequence issues
-    sanitized = re.sub(r"C:[\\/][Uu]sers[\\/][^\\/]+", "C:/Users/****", sanitized)
-    sanitized = re.sub(r"/Users/[^/\s]+", "/Users/****", sanitized)
+    sanitized = re.sub(
+        r"C:[\\/][Uu]sers[\\/][^\\/]+", "C:/Users/****", sanitized, flags=re.IGNORECASE
+    )
+    # Windows UNC paths (\\server\share\user) - simplified pattern
+    sanitized = re.sub(r"\\\\\\\\[^\\\\]+\\\\\\\\[^\\\\]+", r"\\\\server\\share\\****", sanitized)
+    # Handle tilde expansion (~username)
+    sanitized = re.sub(r"~[^/\s]+", "~****", sanitized, flags=re.IGNORECASE)
 
     # Limit length
     if len(sanitized) > max_length:
