@@ -21,6 +21,7 @@ including co-authorship metrics, knowledge distribution, and review effectivenes
 from collections import defaultdict
 from dataclasses import dataclass
 
+from beaconled.config import display_config
 from beaconled.core.models import RangeStats
 
 from .models import (
@@ -293,9 +294,9 @@ class CollaborationAnalyzer:
             collaboration_balance = 0.0
 
         # Knowledge risk assessment
-        if team_connectivity > 0.7 and collaboration_balance > 0.6:
+        if team_connectivity > (display_config.team_connectivity_threshold + 0.2) and collaboration_balance > (display_config.collaboration_balance_threshold + 0.2):
             knowledge_risk = "low"
-        elif team_connectivity > 0.5 or collaboration_balance > 0.4:
+        elif team_connectivity > display_config.team_connectivity_threshold or collaboration_balance > display_config.collaboration_balance_threshold:
             knowledge_risk = "medium"
         else:
             knowledge_risk = "high"

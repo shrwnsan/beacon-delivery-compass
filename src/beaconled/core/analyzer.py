@@ -24,9 +24,10 @@ from unittest.mock import MagicMock
 
 import git
 
+from beaconled.config import performance_config, readiness_config
 from beaconled.core.date_errors import DateParseError, DateRangeError
 from beaconled.core.models import CommitStats, FileStats, RangeStats
-from beaconled.exceptions import CommitParseError, InvalidRepositoryError
+from beaconled.exceptions import CommitParseError, InternalError, InvalidRepositoryError
 from beaconled.utils.date_utils import DateUtils
 from beaconled.utils.security import sanitize_path
 
@@ -80,7 +81,7 @@ class GitAnalyzer:
         if "../" in normalized_input or "..\\" in normalized_input:
             logger.warning(
                 "Path traversal attempt detected and blocked: %s",
-                repo_path[:100],  # Limit log length to prevent log injection
+                repo_path[:performance_config.max_log_length],  # Limit log length to prevent log injection
             )
             raise InvalidRepositoryError(
                 str(repo_path), reason="Directory traversal sequences are not allowed"
@@ -188,7 +189,7 @@ class GitAnalyzer:
         if not is_allowed:
             logger.warning(
                 "Path outside allowed boundaries blocked: %s",
-                str(path)[:100],  # Limit log length
+                str(path)[:performance_config.max_log_length],  # Limit log length
             )
             raise InvalidRepositoryError(
                 str(path),
@@ -567,11 +568,11 @@ class GitAnalyzer:
                     if self.repo_path in git_error_msg:
                         git_error_msg = git_error_msg.replace(self.repo_path, sanitized_repo)
                     msg = f"Failed to analyze commit {commit_hash}: {git_error_msg}"
-                    raise RuntimeError(msg) from e
+                    raise InternalError(msg, component="analyzer", operation="analyze_commit") from e
                 elif isinstance(e, (ValueError, TypeError, git.BadName)):
                     # For backward compatibility with tests, convert BadName to RuntimeError
                     msg = f"Unexpected error analyzing commit {commit_hash}: {e!s}"
-                    raise RuntimeError(msg) from e
+                    raise InternalError(msg, component="analyzer", operation="analyze_commit") from e
                 else:
                     # This shouldn't happen, but just in case
                     error_msg = f"Commit not found: {commit_hash}"
@@ -688,7 +689,7 @@ class GitAnalyzer:
                 error_msg = f"Error generating diff for commit {commit_hash}"
                 logger.exception("%s", error_msg)
                 if self.strict_mode:
-                    raise RuntimeError(f"Failed to process commit {commit_hash}: {e}") from e
+                    raise InternalError(f"Failed to process commit {commit_hash}: {e}", component="analyzer", operation="process_commit") from e
                 # We'll continue processing with the files we've collected so far
                 # rather than failing the entire operation for a diff error
 
@@ -768,11 +769,11 @@ class GitAnalyzer:
             if self.repo_path in git_error_msg:
                 git_error_msg = git_error_msg.replace(self.repo_path, sanitized_repo)
             msg = f"Failed to analyze commit {commit_hash}: {git_error_msg}"
-            raise RuntimeError(msg) from e
+            raise InternalError(msg, component="analyzer", operation="analyze_commit") from e
         except (ValueError, TypeError, git.BadName) as e:
             # For backward compatibility with tests, convert BadName to RuntimeError
             msg = f"Unexpected error analyzing commit {commit_hash}: {e!s}"
-            raise RuntimeError(msg) from e
+            raise InternalError(msg, component="analyzer", operation="analyze_commit") from e
         except (DateParseError, DateRangeError, RuntimeError):
             # Surface domain-specific date errors and RuntimeErrors directly
             raise
@@ -912,7 +913,7 @@ class GitAnalyzer:
                         e,
                     )
                     if self.strict_mode:
-                        raise RuntimeError(f"Failed to update timeline for commit: {e}") from e
+                        raise InternalError(f"Failed to update timeline for commit: {e}", component="analyzer", operation="update_timeline") from e
 
         return commits_by_day
 
@@ -1086,15 +1087,15 @@ class GitAnalyzer:
             if self.repo_path in git_error_msg:
                 git_error_msg = git_error_msg.replace(self.repo_path, sanitized_repo)
             msg = f"Unexpected error analyzing date range: {git_error_msg}"
-            raise RuntimeError(msg) from e
+            raise InternalError(msg, component="analyzer", operation="analyze_date_range") from e
 
         except DateParseError as e:
             msg = f"Unexpected error analyzing date range: {e!s}"
-            raise RuntimeError(msg) from e
+            raise InternalError(msg, component="analyzer", operation="analyze_date_range") from e
 
         except DateRangeError as e:
             msg = f"Unexpected error analyzing date range: {e!s}"
-            raise RuntimeError(msg) from e
+            raise InternalError(msg, component="analyzer", operation="analyze_date_range") from e
 
         except ValueError:
             # Preserve ValueError for invalid ranges as tests expect
@@ -1102,7 +1103,7 @@ class GitAnalyzer:
 
         except Exception as e:
             msg = f"Unexpected error analyzing date range: {e!s}"
-            raise RuntimeError(msg) from e
+            raise InternalError(msg, component="analyzer", operation="analyze_date_range") from e
 
     def _is_valid_commit_hash(self, commit_hash: str) -> bool:
         """Validate commit hash format to prevent injection.
@@ -1186,9 +1187,9 @@ class GitAnalyzer:
         if date_range_days <= 0:
             date_range_days = 1  # Avoid division by zero
 
-        # Count large commits (>15 files changed)
+        # Count large commits
         large_commits_count = sum(
-            1 for commit in range_stats.commits if getattr(commit, "files_changed", 0) > 15
+            1 for commit in range_stats.commits if getattr(commit, "files_changed", 0) > readiness_config.large_commit_files_threshold
         )
 
         # Count recent bug fixes
@@ -1207,26 +1208,26 @@ class GitAnalyzer:
             if hasattr(commit, "date")
             and commit.date
             and not isinstance(commit.date, MagicMock)
-            and (end_date - commit.date).total_seconds() <= 86400
+            and (end_date - commit.date).total_seconds() <= readiness_config.last_minute_seconds
         ])  # 24 hours in seconds
         # Calculate commit velocity (commits per day)
         commit_velocity = round(range_stats.total_commits / date_range_days, 2)
 
         # Calculate readiness score (0-100, higher is safer to release)
-        readiness_score = 100
+        readiness_score = readiness_config.initial_score
 
         # Deduct points for large commits
-        readiness_score -= min(large_commits_count * 15, 40)
+        readiness_score -= min(large_commits_count * readiness_config.large_commit_penalty, readiness_config.max_large_commit_penalty)
 
         # Deduct points for bug fixes
-        readiness_score -= min(recent_bug_fixes * 10, 30)
+        readiness_score -= min(recent_bug_fixes * readiness_config.recent_bug_fix_penalty, readiness_config.max_bug_fix_penalty)
 
         # Deduct points for high commit volume
-        if range_stats.total_commits > 50:
+        if range_stats.total_commits > readiness_config.high_commit_volume_threshold:
             readiness_score -= 25
 
         # Deduct points for last minute changes
-        readiness_score -= min(last_minute_changes * 20, 30)
+        readiness_score -= min(last_minute_changes * readiness_config.last_minute_change_penalty, readiness_config.max_last_minute_penalty)
 
         # Ensure score stays within bounds
         readiness_score = max(0, min(100, readiness_score))

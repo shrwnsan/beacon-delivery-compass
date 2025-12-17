@@ -22,6 +22,8 @@ import logging
 from datetime import datetime, timezone
 from pathlib import Path
 
+from beaconled.exceptions import InvalidRepositoryError, ValidationError
+
 try:
     from defusedxml.ElementTree import fromstring as ET_fromstring  # noqa: N812
     from defusedxml.ElementTree import parse as ET_parse  # noqa: N812
@@ -67,7 +69,7 @@ class CoverageAnalyzer:
         xml_file = Path(xml_path)
         if not xml_file.exists():
             msg = f"Coverage file not found: {xml_path}"
-            raise FileNotFoundError(msg)
+            raise InvalidRepositoryError(str(xml_path), reason="Coverage file not found")
 
         try:
             tree = ET_parse(xml_file)
@@ -107,10 +109,10 @@ class CoverageAnalyzer:
 
         except Exception as e:
             msg = f"Invalid XML format in coverage file: {e}"
-            raise ValueError(msg) from e
+            raise ValidationError(msg, field="coverage_xml", value=xml_path) from e
         except (ValueError, TypeError) as e:
             msg = f"Invalid coverage data in XML file: {e}"
-            raise ValueError(msg) from e
+            raise ValidationError(msg, field="coverage_data", value=xml_path) from e
 
     def parse_coverage_db(self, db_path: str | Path = ".coverage") -> CoverageStats:
         """Parse coverage data from a .coverage database file.
@@ -134,7 +136,7 @@ class CoverageAnalyzer:
         db_file = Path(db_path)
         if not db_file.exists():
             msg = f"Coverage database file not found: {db_path}"
-            raise FileNotFoundError(msg)
+            raise InvalidRepositoryError(str(db_path), reason="Coverage database file not found")
 
         try:
             cov = coverage.Coverage(data_file=str(db_file))
@@ -166,7 +168,7 @@ class CoverageAnalyzer:
 
         except Exception as e:
             msg = f"Error parsing coverage database: {e}"
-            raise ValueError(msg) from e
+            raise ValidationError(msg, field="coverage_db", value=db_path) from e
 
     def find_coverage_files(self) -> list[Path]:
         """Find coverage files in the repository.

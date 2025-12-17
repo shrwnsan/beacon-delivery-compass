@@ -363,4 +363,123 @@ class CommitParseError(CommitError):
         )
 
 
+class NotFoundError(BeaconError):
+    """Raised when a requested resource is not found."""
+
+    DEFAULT_ERROR_CODE = ErrorCode.NOT_FOUND
+
+    def __init__(
+        self,
+        message: str,
+        resource_type: str | None = None,
+        resource_id: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        details = kwargs.pop("details", {})
+        if resource_type:
+            details["resource_type"] = resource_type
+        if resource_id:
+            details["resource_id"] = resource_id
+
+        super().__init__(
+            message=message,
+            details=details,
+            **kwargs
+        )
+
+
+class InternalError(BeaconError):
+    """Raised when an internal system error occurs."""
+
+    DEFAULT_ERROR_CODE = ErrorCode.INTERNAL
+
+    def __init__(
+        self,
+        message: str,
+        component: str | None = None,
+        operation: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        details = kwargs.pop("details", {})
+        if component:
+            details["component"] = component
+        if operation:
+            details["operation"] = operation
+
+        super().__init__(
+            message=message,
+            details=details,
+            **kwargs
+        )
+
+
+class PermissionDenied(BeaconError):
+    """Raised when access to a resource is denied."""
+
+    DEFAULT_ERROR_CODE = ErrorCode.PERMISSION_DENIED
+
+    def __init__(
+        self,
+        message: str,
+        resource: str | None = None,
+        action: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        details = kwargs.pop("details", {})
+        if resource:
+            details["resource"] = resource
+        if action:
+            details["action"] = action
+
+        super().__init__(
+            message=message,
+            details=details,
+            **kwargs
+        )
+
+
+class AnalyzerError(BeaconError):
+    """Raised when there's an error during analysis."""
+
+    DEFAULT_ERROR_CODE = ErrorCode.ANALYZER_ERROR
+
+    def __init__(
+        self,
+        message: str,
+        analyzer_type: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        details = kwargs.pop("details", {})
+        if analyzer_type:
+            details["analyzer_type"] = analyzer_type
+
+        super().__init__(
+            message=message,
+            details=details,
+            **kwargs
+        )
+
+
+class FormatterError(BeaconError):
+    """Raised when there's an error during formatting."""
+
+    DEFAULT_ERROR_CODE = ErrorCode.FORMATTER_ERROR
+
+    def __init__(
+        self,
+        message: str,
+        formatter_type: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        details = kwargs.pop("details", {})
+        if formatter_type:
+            details["formatter_type"] = formatter_type
+
+        super().__init__(
+            message=message,
+            details=details,
+            **kwargs
+        )
+
+
 # DateRangeError has been moved to core.date_errors module

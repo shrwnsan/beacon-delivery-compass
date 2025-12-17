@@ -20,6 +20,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+from beaconled.config import performance_config
+
 # Logger
 logger = logging.getLogger(__name__)
 
@@ -97,7 +99,7 @@ def sanitize_path(path: str | Path | None, max_components: int = 2) -> str:
         return "<sanitized path>"
 
 
-def sanitize_error_message(message: str, max_length: int = 200) -> str:
+def sanitize_error_message(message: str, max_length: int | None = None) -> str:
     """Sanitize error messages to prevent information disclosure.
 
     This function limits message length and removes potentially sensitive
@@ -139,13 +141,15 @@ def sanitize_error_message(message: str, max_length: int = 200) -> str:
     sanitized = re.sub(r"~[^/\s]+", "~****", sanitized, flags=re.IGNORECASE)
 
     # Limit length
+    if max_length is None:
+        max_length = performance_config.max_error_length
     if len(sanitized) > max_length:
         sanitized = sanitized[: max_length - 3] + "..."
 
     return sanitized
 
 
-def safe_repr(obj: Any, max_length: int = 100) -> str:
+def safe_repr(obj: Any, max_length: int | None = None) -> str:
     """Get a safe representation of an object for error messages.
 
     This function creates a string representation of an object while
@@ -158,6 +162,9 @@ def safe_repr(obj: Any, max_length: int = 100) -> str:
     Returns:
         Safe string representation
     """
+    if max_length is None:
+        max_length = performance_config.max_repr_length
+
     try:
         # Handle None
         if obj is None:

@@ -22,6 +22,8 @@ from datetime import date as date_type
 from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING, Any
 
+from beaconled.config import display_config
+
 from .base_formatter import BaseFormatter
 
 if TYPE_CHECKING:
@@ -221,7 +223,7 @@ class HeatmapFormatter(BaseFormatter):
         month_data: dict[str, dict[int, int]] = {}
         max_commits = max(commits) if commits else 1
 
-        # Limit to last 12 months for memory efficiency
+        # Limit to last {display_config.last_n_months_heatmap} months for memory efficiency
         if dates:
             cutoff_date = dates[-1] - timedelta(days=365)
             filtered_pairs = [

@@ -23,6 +23,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
+from beaconled.exceptions import ValidationError
+
 
 @dataclass
 class CoverageStats:
@@ -161,7 +163,7 @@ class CommitStats:
         # Real repository validation occurs in analyzer/repo layer.
         if not isinstance(self.hash, str) or not self.hash.strip():
             msg = f"Invalid commit hash: {self.hash}"
-            raise ValueError(msg)
+            raise ValidationError(msg, field="hash", value=self.hash)
         self.hash = self.hash.strip()
 
         if not self.files_changed and self.files:
@@ -212,7 +214,7 @@ class RangeStats:
         """Validate and compute derived fields after initialization."""
         if self.start_date > self.end_date:
             msg = "start_date cannot be after end_date"
-            raise ValueError(msg)
+            raise ValidationError(msg, field="date_range", value=f"{self.start_date} > {self.end_date}")
 
         if not self.commits:
             return

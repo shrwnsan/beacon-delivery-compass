@@ -24,6 +24,8 @@ import time
 from collections.abc import Callable
 from typing import Any
 
+from beaconled.exceptions import NotFoundError
+
 # Configure performance logger
 perf_logger = logging.getLogger("beaconled.performance")
 
@@ -175,7 +177,7 @@ class PerformanceMetrics:
         """
         if name not in self.metrics or not self.metrics[name]:
             msg = f"Metric '{name}' not found or has no data"
-            raise KeyError(msg) from None
+            raise NotFoundError(msg, resource_type="metric", resource_id=name) from None
 
         values = self.metrics[name]
         return {

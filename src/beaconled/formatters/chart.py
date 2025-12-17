@@ -19,6 +19,9 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from beaconled.config import display_config
+from beaconled.exceptions import FormatterError
+
 from .base_formatter import BaseFormatter
 
 if TYPE_CHECKING:
@@ -83,7 +86,7 @@ class ChartFormatter(BaseFormatter):
         """Generate comprehensive trend charts for the analysis period."""
         if self.plt is None:
             error_msg = "Matplotlib not available"
-            raise RuntimeError(error_msg)
+            raise FormatterError(error_msg, formatter_type="Chart")
 
         # Memory optimization: Use context manager for figure lifecycle
         with self.plt.style.context("default"):
@@ -146,7 +149,7 @@ class ChartFormatter(BaseFormatter):
         commits = [stats.commits_by_day[date] for date in dates]
 
         # If dataset is too large, sample it to reduce memory usage
-        max_points = 100  # Maximum data points for timeline
+        max_points = display_config.max_chart_points  # Maximum data points for timeline
         if len(dates) > max_points:
             step = len(dates) // max_points
             dates = dates[::step]
@@ -192,7 +195,7 @@ class ChartFormatter(BaseFormatter):
         # Memory optimization: Limit to top 10 authors to prevent overcrowding
         sorted_data = sorted(zip(authors, commits, strict=False), key=lambda x: x[1], reverse=True)
 
-        if len(sorted_data) > 10:
+        if len(sorted_data) > display_config.top_n_authors:
             # Take top 9 and group rest as "Others"
             top_data = sorted_data[:9]
             others_sum = sum(count for _, count in sorted_data[9:])

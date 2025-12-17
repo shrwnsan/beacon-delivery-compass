@@ -22,6 +22,7 @@ calculation.
 from collections import defaultdict
 from dataclasses import dataclass
 
+from beaconled.config import date_config
 from beaconled.core.models import CommitStats, RangeStats
 
 from .models import ActivityHeatmap, BusFactor, TimeAnalytics, VelocityTrends
@@ -113,7 +114,7 @@ class TimeAnalyzer:
 
         # Determine trend direction (simplified: compare first and last week)
         sorted_dates = sorted(daily_commits.keys())
-        if len(sorted_dates) >= 14:  # Need at least 2 weeks
+        if len(sorted_dates) >= date_config.min_dates_for_analysis:  # Need at least 2 weeks
             mid_point = len(sorted_dates) // 2
             first_half_avg = sum(daily_commits[d] for d in sorted_dates[:mid_point]) / mid_point
             second_half_avg = sum(daily_commits[d] for d in sorted_dates[mid_point:]) / (

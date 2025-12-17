@@ -24,12 +24,14 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
+from beaconled.config import performance_config
 from beaconled.core.models import RangeStats
+from beaconled.exceptions import ValidationError
 
 from .collaboration_analyzer import CollaborationAnalyzer, CollaborationConfig
 from .coverage_analyzer import CoverageAnalyzer
-from .quality_analyzer import QualityAnalyzer, QualityConfig
-from .risk_analyzer import RiskAnalyzer, RiskConfig
+from .quality_analyzer import QualityAnalyzer
+from .risk_analyzer import RiskAnalyzer
 from .time_analyzer import TimeAnalyzer, TimeAnalyzerConfig
 
 if TYPE_CHECKING:
@@ -63,17 +65,17 @@ class AnalyticsEngine:
         self.collaboration_analyzer = CollaborationAnalyzer(CollaborationConfig())
 
         # Code quality analytics
-        self.quality_analyzer = QualityAnalyzer(QualityConfig())
+        self.quality_analyzer = QualityAnalyzer()
 
         # Risk assessment analytics
-        self.risk_analyzer = RiskAnalyzer(RiskConfig())
+        self.risk_analyzer = RiskAnalyzer()
 
         # Test coverage analytics
         self.coverage_analyzer = CoverageAnalyzer()
 
         # Caching for performance optimization
         self._cache: dict[Any, Any] = {}
-        self._max_cache_size = 100  # Maximum number of results to cache
+        self._max_cache_size = performance_config.max_cache_size  # Maximum number of results to cache
 
     def analyze(self, range_stats: RangeStats) -> dict[str, Any]:
         """Perform comprehensive analysis on range statistics.
@@ -276,7 +278,7 @@ class ExtendedFormatSystem:
         """
         if not self.formatter:
             error_msg = "No formatter configured for ExtendedFormatSystem"
-            raise ValueError(error_msg)
+            raise ValidationError(error_msg, field="formatter", value=None)
 
         # Perform analysis
         analytics = self.analyze(range_stats)

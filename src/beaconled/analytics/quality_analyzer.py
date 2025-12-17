@@ -18,33 +18,18 @@ This module provides the QualityAnalyzer class that analyzes various code qualit
 metrics including churn rate, complexity trends, and test coverage.
 """
 
-from dataclasses import dataclass
 from typing import Any
 
+from beaconled.config import quality_config
 from beaconled.core.models import RangeStats
-
-
-@dataclass
-class QualityConfig:
-    """Configuration for the QualityAnalyzer.
-
-    Attributes:
-        churn_threshold: Percentage of churn (added + deleted lines / total) that's considered high
-        test_coverage_warning: Test coverage percentage below which to warn
-        complexity_warning: Cyclomatic complexity above which to warn
-    """
-
-    churn_threshold: float = 10.0  # 10% churn is considered high
-    test_coverage_warning: float = 70.0  # Warn if test coverage is below 70%
-    complexity_warning: int = 10  # Warn if cyclomatic complexity is above this value
 
 
 class QualityAnalyzer:
     """Analyzes code quality metrics from commit history."""
 
-    def __init__(self, config: QualityConfig | None = None) -> None:
-        """Initialize the quality analyzer with optional configuration."""
-        self.config = config or QualityConfig()
+    def __init__(self) -> None:
+        """Initialize the quality analyzer with default configuration."""
+        self.config = quality_config
 
     def analyze(self, range_stats: RangeStats) -> dict[str, Any]:
         """Analyze code quality metrics from the given range statistics.
@@ -106,7 +91,7 @@ class QualityAnalyzer:
         # Analyze test coverage (simplified - would use actual coverage data in real implementation)
         coverage = self._calculate_test_coverage(range_stats)
         result["test_coverage"] = coverage
-        if coverage < 0.8:  # 80% coverage threshold
+        if coverage < self.config.coverage_threshold:
             result["quality_issues"].append("Low test coverage")
 
         # Identify hotspots (files with high churn)
@@ -154,7 +139,7 @@ class QualityAnalyzer:
             return 0.0
 
         # More commits might indicate better test coverage (very simplified!)
-        coverage = min(95.0, 50.0 + (len(range_stats.commits) * 2))
+        coverage = min(self.config.max_coverage, self.config.base_coverage + (len(range_stats.commits) * self.config.coverage_per_commit))
         return round(coverage, 1)
 
     def _identify_hotspots(self, range_stats: RangeStats) -> list[str]:

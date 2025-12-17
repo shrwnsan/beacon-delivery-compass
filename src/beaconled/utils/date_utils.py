@@ -18,7 +18,8 @@ import re
 from datetime import datetime, timedelta, timezone
 from typing import TypeVar
 
-from beaconled.core.date_errors import DateParseError
+from beaconled.config import date_config
+from beaconled.core.date_errors import DateParseError, DateRangeError
 from beaconled.exceptions import ValidationError
 
 # Type variable for datetime-like objects
@@ -27,10 +28,6 @@ DateTimeLike = TypeVar("DateTimeLike", datetime, str)
 
 class DateUtils:
     """Utility class for date and time operations."""
-
-    # Constants
-    YEAR_MIN = 1970
-    YEAR_MAX = 2100
 
     # Performance optimization: Pre-compiled regex patterns for date parsing
     RELATIVE_DATE_PATTERN = re.compile(r"^\d+[dwmy]$")
@@ -102,9 +99,9 @@ class DateUtils:
         """Parse a YYYYMMDD date string and ensure it's timezone-aware."""
         try:
             dt = datetime.strptime(date_str, "%Y%m%d").replace(tzinfo=timezone.utc)
-            if not (cls.YEAR_MIN <= dt.year <= cls.YEAR_MAX):
+            if not (date_config.year_min <= dt.year <= date_config.year_max):
                 msg = (
-                    f"Year {dt.year} is outside the supported range ({cls.YEAR_MIN}-{cls.YEAR_MAX})"
+                    f"Year {dt.year} is outside the supported range ({date_config.year_min}-{date_config.year_max})"
                 )
                 raise ValidationError(
                     msg,
@@ -141,7 +138,7 @@ class DateUtils:
                 return datetime.fromtimestamp(int(ts), tz=timezone.utc)
             else:
                 msg = "Unexpected git date format"
-                raise ValueError(msg)
+                raise DateParseError(date_str, msg)
         except Exception as e:
             raise DateParseError(date_str, f"Failed to parse git date: {e!s}") from e
 
@@ -181,9 +178,7 @@ class DateUtils:
         # Validate range
         if end_date < start_date:
             msg = f"Invalid date range: end date ({end_date}) is before start date ({start_date})"
-            raise ValueError(
-                msg,
-            )
+            raise DateRangeError(start_str, end_str, msg)
 
         # Always normalize end_date to end of day after validation
         end_date = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
@@ -196,7 +191,7 @@ class DateUtils:
             num = int(date_str[:-1])
             if num <= 0:
                 msg = "Relative date value must be positive"
-                raise ValueError(msg)
+                raise ValidationError(msg, field="relative_date", value=date_str)
 
             unit = date_str[-1].lower()
             now = datetime.now(timezone.utc)
@@ -212,7 +207,7 @@ class DateUtils:
             if unit not in unit_map:
                 valid_units = ", ".join(f"'{u}'" for u in unit_map.keys())
                 msg = f"Invalid time unit '{unit}'. Valid units are: {valid_units}"
-                raise ValueError(msg)
+                raise ValidationError(msg, field="relative_date_unit", value=unit)
 
             _, _, delta = unit_map[unit]
             return now - (delta * num)
@@ -230,9 +225,9 @@ class DateUtils:
         """Parse an ISO date string (YYYY-MM-DD) and ensure it's timezone-aware."""
         try:
             dt = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-            if not (cls.YEAR_MIN <= dt.year <= cls.YEAR_MAX):
+            if not (date_config.year_min <= dt.year <= date_config.year_max):
                 msg = (
-                    f"Year {dt.year} is outside the supported range ({cls.YEAR_MIN}-{cls.YEAR_MAX})"
+                    f"Year {dt.year} is outside the supported range ({date_config.year_min}-{date_config.year_max})"
                 )
                 raise ValidationError(
                     msg,
@@ -266,7 +261,7 @@ class DateUtils:
                     dt = datetime.fromisoformat(datetime_str)
                 except ValueError as e:
                     error_msg = f"Invalid datetime format: {datetime_str}"
-                    raise ValueError(error_msg) from e
+                    raise DateParseError(datetime_str, error_msg) from e
 
             # Make timezone-aware if not already
             if dt.tzinfo is None:
@@ -275,9 +270,9 @@ class DateUtils:
                 dt = dt.astimezone(timezone.utc)
 
             # Validate year range
-            if dt.year < cls.YEAR_MIN or dt.year > cls.YEAR_MAX:
+            if dt.year < date_config.year_min or dt.year > date_config.year_max:
                 msg = (
-                    f"Year {dt.year} is outside the supported range ({cls.YEAR_MIN}-{cls.YEAR_MAX})"
+                    f"Year {dt.year} is outside the supported range ({date_config.year_min}-{date_config.year_max})"
                 )
                 raise ValidationError(
                     msg,

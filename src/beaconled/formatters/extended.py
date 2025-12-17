@@ -23,6 +23,7 @@ from colorama import Fore, Style
 
 from beaconled.analytics.coverage_analyzer import CoverageAnalyzer
 from beaconled.analytics.engine import AnalyticsEngine
+from beaconled.config import display_config
 from beaconled.core.models import CommitStats, RangeStats
 from beaconled.formatters.base_formatter import BaseFormatter
 
@@ -589,7 +590,7 @@ class ExtendedFormatter(BaseFormatter):
         output = [
             "",
             f"{self._get_emoji('fire')} {Fore.MAGENTA}Most Frequently Changed "
-            f"(last 30 days):{Style.RESET_ALL}",
+            f"(last {display_config.last_n_days_extended} days):{Style.RESET_ALL}",
         ]
 
         # Sort by frequency (descending) and take top 5
