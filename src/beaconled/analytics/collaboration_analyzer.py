@@ -294,9 +294,14 @@ class CollaborationAnalyzer:
             collaboration_balance = 0.0
 
         # Knowledge risk assessment
-        if team_connectivity > (display_config.team_connectivity_threshold + 0.2) and collaboration_balance > (display_config.collaboration_balance_threshold + 0.2):
+        if team_connectivity > (
+            display_config.team_connectivity_threshold + 0.2
+        ) and collaboration_balance > (display_config.collaboration_balance_threshold + 0.2):
             knowledge_risk = "low"
-        elif team_connectivity > display_config.team_connectivity_threshold or collaboration_balance > display_config.collaboration_balance_threshold:
+        elif (
+            team_connectivity > display_config.team_connectivity_threshold
+            or collaboration_balance > display_config.collaboration_balance_threshold
+        ):
             knowledge_risk = "medium"
         else:
             knowledge_risk = "high"

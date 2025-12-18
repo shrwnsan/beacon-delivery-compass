@@ -21,7 +21,6 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from beaconled.config import display_config
 from beaconled.core.models import CommitStats, RangeStats
 
 from .base_formatter import BaseFormatter
@@ -243,7 +242,7 @@ class RichFormatter(BaseFormatter):
             daily_table.add_column("Date", style="cyan")
             daily_table.add_column("Commits", style="white", justify="right")
 
-            # Show last {display_config.last_n_days_rich} days of activity
+            # Show last 7 days of activity
             recent_days = sorted(stats.commits_by_day.items(), reverse=True)[:7]
 
             for date, count in recent_days:

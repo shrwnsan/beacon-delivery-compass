@@ -214,7 +214,9 @@ class RangeStats:
         """Validate and compute derived fields after initialization."""
         if self.start_date > self.end_date:
             msg = "start_date cannot be after end_date"
-            raise ValidationError(msg, field="date_range", value=f"{self.start_date} > {self.end_date}")
+            raise ValidationError(
+                msg, field="date_range", value=f"{self.start_date} > {self.end_date}"
+            )
 
         if not self.commits:
             return

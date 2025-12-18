@@ -139,7 +139,11 @@ class QualityAnalyzer:
             return 0.0
 
         # More commits might indicate better test coverage (very simplified!)
-        coverage = min(self.config.max_coverage, self.config.base_coverage + (len(range_stats.commits) * self.config.coverage_per_commit))
+        coverage = min(
+            self.config.max_coverage,
+            self.config.base_coverage
+            + (len(range_stats.commits) * self.config.coverage_per_commit),
+        )
         return round(coverage, 1)
 
     def _identify_hotspots(self, range_stats: RangeStats) -> list[str]:

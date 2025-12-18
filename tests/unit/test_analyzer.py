@@ -8,6 +8,8 @@ import git
 
 from beaconled.core.analyzer import GitAnalyzer
 from beaconled.core.models import CommitStats, FileStats
+from beaconled.exceptions import InternalError
+from beaconled.core.date_errors import DateRangeError
 
 
 class TestGitAnalyzer(unittest.TestCase):
@@ -78,7 +80,7 @@ index 0000000..e69de29
             "Ref 'nonexistent' did not resolve to an object",
         )
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(InternalError) as context:
             self.analyzer.get_commit_stats("nonexistent")
 
         self.assertIn("Unexpected error analyzing commit", str(context.exception))
@@ -473,16 +475,16 @@ index 1234567..0000000
         mock_repo_instance = MagicMock()
         mock_repo.return_value = mock_repo_instance
 
-        # Test with string dates - should raise ValueError with our validation message
-        with self.assertRaises(ValueError) as cm:
+        # Test with string dates - should raise DateRangeError with our validation message
+        with self.assertRaises(DateRangeError) as cm:
             self.analyzer.get_range_analytics("2025-12-31", "2025-01-01")
         self.assertIn(
             "Invalid date range: end date (2025-01-01 00:00:00+00:00) is before start date (2025-12-31 00:00:00+00:00)",
             str(cm.exception),
         )
 
-        # Test with datetime objects - should raise ValueError with our validation message
-        with self.assertRaises(ValueError) as cm:
+        # Test with datetime objects - should raise DateRangeError with our validation message
+        with self.assertRaises(DateRangeError) as cm:
             start = datetime(2025, 12, 31, tzinfo=timezone.utc)
             end = datetime(2025, 1, 1, tzinfo=timezone.utc)
             self.analyzer.get_range_analytics(start, end)

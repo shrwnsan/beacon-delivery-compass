@@ -381,11 +381,7 @@ class NotFoundError(BeaconError):
         if resource_id:
             details["resource_id"] = resource_id
 
-        super().__init__(
-            message=message,
-            details=details,
-            **kwargs
-        )
+        super().__init__(message=message, details=details, **kwargs)
 
 
 class InternalError(BeaconError):
@@ -406,11 +402,7 @@ class InternalError(BeaconError):
         if operation:
             details["operation"] = operation
 
-        super().__init__(
-            message=message,
-            details=details,
-            **kwargs
-        )
+        super().__init__(message=message, details=details, **kwargs)
 
 
 class PermissionDenied(BeaconError):
@@ -431,11 +423,7 @@ class PermissionDenied(BeaconError):
         if action:
             details["action"] = action
 
-        super().__init__(
-            message=message,
-            details=details,
-            **kwargs
-        )
+        super().__init__(message=message, details=details, **kwargs)
 
 
 class AnalyzerError(BeaconError):
@@ -453,11 +441,7 @@ class AnalyzerError(BeaconError):
         if analyzer_type:
             details["analyzer_type"] = analyzer_type
 
-        super().__init__(
-            message=message,
-            details=details,
-            **kwargs
-        )
+        super().__init__(message=message, details=details, **kwargs)
 
 
 class FormatterError(BeaconError):
@@ -475,11 +459,7 @@ class FormatterError(BeaconError):
         if formatter_type:
             details["formatter_type"] = formatter_type
 
-        super().__init__(
-            message=message,
-            details=details,
-            **kwargs
-        )
+        super().__init__(message=message, details=details, **kwargs)
 
 
 # DateRangeError has been moved to core.date_errors module

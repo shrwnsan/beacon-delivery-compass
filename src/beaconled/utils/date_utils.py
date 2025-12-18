@@ -100,9 +100,7 @@ class DateUtils:
         try:
             dt = datetime.strptime(date_str, "%Y%m%d").replace(tzinfo=timezone.utc)
             if not (date_config.year_min <= dt.year <= date_config.year_max):
-                msg = (
-                    f"Year {dt.year} is outside the supported range ({date_config.year_min}-{date_config.year_max})"
-                )
+                msg = f"Year {dt.year} is outside the supported range ({date_config.year_min}-{date_config.year_max})"
                 raise ValidationError(
                     msg,
                     field="date",
@@ -178,7 +176,7 @@ class DateUtils:
         # Validate range
         if end_date < start_date:
             msg = f"Invalid date range: end date ({end_date}) is before start date ({start_date})"
-            raise DateRangeError(start_str, end_str, msg)
+            raise DateRangeError(start_date, end_date, msg)
 
         # Always normalize end_date to end of day after validation
         end_date = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
@@ -226,9 +224,7 @@ class DateUtils:
         try:
             dt = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
             if not (date_config.year_min <= dt.year <= date_config.year_max):
-                msg = (
-                    f"Year {dt.year} is outside the supported range ({date_config.year_min}-{date_config.year_max})"
-                )
+                msg = f"Year {dt.year} is outside the supported range ({date_config.year_min}-{date_config.year_max})"
                 raise ValidationError(
                     msg,
                     field="date",
@@ -271,9 +267,7 @@ class DateUtils:
 
             # Validate year range
             if dt.year < date_config.year_min or dt.year > date_config.year_max:
-                msg = (
-                    f"Year {dt.year} is outside the supported range ({date_config.year_min}-{date_config.year_max})"
-                )
+                msg = f"Year {dt.year} is outside the supported range ({date_config.year_min}-{date_config.year_max})"
                 raise ValidationError(
                     msg,
                     field="datetime",

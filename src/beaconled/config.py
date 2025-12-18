@@ -19,12 +19,12 @@ centralized for better maintainability and easier tuning.
 """
 
 from dataclasses import dataclass
-from typing import Tuple
 
 
 @dataclass
 class RiskConfig:
     """Configuration for risk analysis thresholds and weights."""
+
     # Risk thresholds
     hotspot_threshold: int = 5
     stale_threshold_days: int = 90
@@ -40,7 +40,7 @@ class RiskConfig:
     security_multiplier: float = 2.0
 
     # Security risk keywords
-    security_keywords: Tuple[str, ...] = (
+    security_keywords: tuple[str, ...] = (
         "password",
         "secret",
         "key",
@@ -56,6 +56,7 @@ class RiskConfig:
 @dataclass
 class QualityConfig:
     """Configuration for code quality analysis."""
+
     # Quality thresholds
     churn_threshold: float = 10.0
     test_coverage_warning: float = 70.0
@@ -71,6 +72,7 @@ class QualityConfig:
 @dataclass
 class ReadinessConfig:
     """Configuration for release readiness scoring."""
+
     # Initial score
     initial_score: int = 100
 
@@ -96,6 +98,7 @@ class ReadinessConfig:
 @dataclass
 class PerformanceConfig:
     """Configuration for performance and caching."""
+
     # Cache settings
     max_cache_size: int = 100
 
@@ -108,6 +111,7 @@ class PerformanceConfig:
 @dataclass
 class DisplayConfig:
     """Configuration for display and formatting."""
+
     # Number of items to show
     top_n_authors: int = 10
     top_n_pairs: int = 10
@@ -127,6 +131,7 @@ class DisplayConfig:
 @dataclass
 class DateConfig:
     """Configuration for date handling."""
+
     year_min: int = 1970
     year_max: int = 2100
     min_dates_for_analysis: int = 14  # Need at least 2 weeks

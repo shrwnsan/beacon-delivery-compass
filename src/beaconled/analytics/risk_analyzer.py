@@ -109,7 +109,9 @@ class RiskAnalyzer:
 
         # Calculate hotspot risk (0-10 scale)
         max_changes = max(file_changes.values()) if file_changes else 0
-        hotspot_risk = min(10.0, (max_changes / self.config.hotspot_threshold) * self.config.hotspot_multiplier)
+        hotspot_risk = min(
+            10.0, (max_changes / self.config.hotspot_threshold) * self.config.hotspot_multiplier
+        )
 
         return hotspot_risk, sorted(hotspots)
 
@@ -143,7 +145,9 @@ class RiskAnalyzer:
             return 0.0, 0
 
         stale_ratio = stale_count / total_files
-        stale_risk = min(10.0, stale_ratio * self.config.stale_multiplier)  # 50% stale = 10 risk score
+        stale_risk = min(
+            10.0, stale_ratio * self.config.stale_multiplier
+        )  # 50% stale = 10 risk score
 
         return stale_risk, stale_count
 
@@ -175,6 +179,8 @@ class RiskAnalyzer:
                     )
 
         # Calculate security risk (0-10 scale)
-        security_risk = min(10.0, len(security_concerns) * self.config.security_multiplier)  # 5+ concerns = max risk
+        security_risk = min(
+            10.0, len(security_concerns) * self.config.security_multiplier
+        )  # 5+ concerns = max risk
 
         return security_risk, sorted(security_concerns)

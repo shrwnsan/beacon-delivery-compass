@@ -29,6 +29,8 @@ except ImportError:
     GIT_AVAILABLE = False
 
 from beaconled.core.analyzer import GitAnalyzer, InvalidRepositoryError
+from beaconled.exceptions import InternalError
+from beaconled.core.date_errors import DateRangeError
 
 
 class TestGitAnalyzerCoverage(unittest.TestCase):
@@ -134,8 +136,8 @@ class TestGitAnalyzerCoverage(unittest.TestCase):
             mock_path_class.return_value = mock_path
 
             analyzer = GitAnalyzer("/fake/repo")
-            # git.GitCommandError should bubble to the outer handler and be mapped to RuntimeError
-            with self.assertRaises(RuntimeError) as cm:
+            # git.GitCommandError should bubble to the outer handler and be mapped to InternalError
+            with self.assertRaises(InternalError) as cm:
                 analyzer.get_commit_stats("invalid-hash")
             self.assertIn("bad object", str(cm.exception))
 
@@ -172,8 +174,8 @@ class TestGitAnalyzerCoverage(unittest.TestCase):
             mock_path_class.return_value = mock_path
 
             analyzer = GitAnalyzer("/fake/repo")
-            # In current implementation, this ends as a RuntimeError
-            with self.assertRaises(RuntimeError) as cm:
+            # In current implementation, this ends as an InternalError
+            with self.assertRaises(InternalError) as cm:
                 analyzer.get_commit_stats("invalid-hash")
             self.assertIn("bad object", str(cm.exception))
 
@@ -325,7 +327,7 @@ class TestGitAnalyzerCoverage(unittest.TestCase):
             analyzer = GitAnalyzer("/fake/repo")
 
             # Test with start date after end date
-            with self.assertRaises(ValueError) as cm:
+            with self.assertRaises(DateRangeError) as cm:
                 analyzer.get_range_analytics("2025-01-31", "2025-01-01")
             msg = str(cm.exception)
             self.assertIn("Invalid date range", msg)

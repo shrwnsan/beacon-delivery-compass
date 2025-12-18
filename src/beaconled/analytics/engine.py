@@ -75,7 +75,9 @@ class AnalyticsEngine:
 
         # Caching for performance optimization
         self._cache: dict[Any, Any] = {}
-        self._max_cache_size = performance_config.max_cache_size  # Maximum number of results to cache
+        self._max_cache_size = (
+            performance_config.max_cache_size
+        )  # Maximum number of results to cache
 
     def analyze(self, range_stats: RangeStats) -> dict[str, Any]:
         """Perform comprehensive analysis on range statistics.
