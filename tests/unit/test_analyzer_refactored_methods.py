@@ -220,22 +220,20 @@ class TestRefactoredMethods:
 
     def test_calculate_timeline_analytics_strict_mode_error(self):
         """Test timeline analytics with strict mode error."""
+        from beaconled.exceptions import InternalError
+
         # Setup
         self.analyzer.strict_mode = True
         # Create a mock that raises exception when accessing date
         commit = Mock()
         commit.hash = "abc123"
         commit.author = "John Doe"
-
-        # Make date property raise an exception
-        def raise_exception():
-            raise Exception("Date processing failed")
-
-        commit.date = property(lambda self: raise_exception())  # type: ignore
+        commit.date = Mock()
+        commit.date.strftime.side_effect = Exception("Date processing failed")
         commits = [commit]
 
         # Execute & Assert
-        with pytest.raises(RuntimeError, match="Failed to update timeline"):
+        with pytest.raises(InternalError, match="Failed to update timeline"):
             self.analyzer._calculate_timeline_analytics(commits)
 
     def test_calculate_file_analytics(self):

@@ -50,17 +50,13 @@ class TestGitAnalyzerCoverage(unittest.TestCase):
 
     def test_validate_repo_path_nonexistent(self):
         """Test _validate_repo_path with nonexistent path."""
-        with tempfile.TemporaryDirectory() as temp_dir:
+        with tempfile.TemporaryDirectory(dir="/tmp") as temp_dir:
             nonexistent_path = os.path.join(temp_dir, "nonexistent")
-            with (
-                patch("pathlib.Path.exists", return_value=False),
-                patch("pathlib.Path.resolve", return_value=Path(nonexistent_path)),
-            ):
-                # Bypass __init__ so we can call _validate_repo_path directly
-                analyzer = GitAnalyzer.__new__(GitAnalyzer)
-                with self.assertRaises(InvalidRepositoryError) as cm:
-                    analyzer._validate_repo_path(nonexistent_path)
-                self.assertIn("does not exist", str(cm.exception))
+            # Bypass __init__ so we can call _validate_repo_path directly
+            analyzer = GitAnalyzer.__new__(GitAnalyzer)
+            with self.assertRaises(InvalidRepositoryError) as cm:
+                analyzer._validate_repo_path(nonexistent_path)
+            self.assertIn("does not exist", str(cm.exception))
 
     def test_validate_repo_path_not_directory(self):
         """Test _validate_repo_path with path that is not a directory."""
@@ -83,7 +79,7 @@ class TestGitAnalyzerCoverage(unittest.TestCase):
         """Test validation with a directory that is not a git repository."""
         from git.exc import InvalidGitRepositoryError
 
-        with tempfile.TemporaryDirectory() as temp_dir:
+        with tempfile.TemporaryDirectory(dir="/tmp") as temp_dir:
             # Configure git.Repo to raise an error when trying to open the directory
             mock_repo.side_effect = InvalidGitRepositoryError("Not a git repository")
 
@@ -98,225 +94,127 @@ class TestGitAnalyzerCoverage(unittest.TestCase):
         """Test get_commit_stats with invalid commit hash."""
         from git.exc import BadName
 
-        # Create a mock repository
-        mock_repo = MagicMock()
-        mock_repo.commit.side_effect = BadName("bad object")
+        with tempfile.TemporaryDirectory(dir="/tmp") as temp_dir:
+            # Create a real git-like directory structure
+            git_dir = os.path.join(temp_dir, ".git")
+            os.makedirs(git_dir)
 
-        # Patch Path so constructor validation passes, and patch Repo
-        with (
-            patch("beaconled.core.analyzer.Path") as mock_path_class,
-            patch("beaconled.core.analyzer.git.Repo", return_value=mock_repo),
-        ):
-            mock_path = MagicMock()
-            mock_path.exists.return_value = True
-            mock_path.is_dir.return_value = True
-            mock_path.resolve.return_value = mock_path
-            mock_git_dir = MagicMock()
-            mock_git_dir.exists.return_value = True
+            # Create a mock repository
+            mock_repo = MagicMock()
+            mock_repo.commit.side_effect = BadName("bad object")
 
-            def _truediv(other):
-                return mock_git_dir if other == ".git" else mock_path
-
-            mock_path.__truediv__.side_effect = _truediv
-            mock_path_class.return_value = mock_path
-
-            analyzer = GitAnalyzer("/fake/repo")
-            # git.GitCommandError should bubble to the outer handler and be mapped to InternalError
-            with self.assertRaises(InternalError) as cm:
-                analyzer.get_commit_stats("invalid-hash")
-            self.assertIn("bad object", str(cm.exception))
+            # Patch git.Repo to return our mock
+            with patch("beaconled.core.analyzer.git.Repo", return_value=mock_repo):
+                analyzer = GitAnalyzer(temp_dir)
+                # git.BadName should be caught and converted to InternalError
+                with self.assertRaises(InternalError) as cm:
+                    analyzer.get_commit_stats("invalid-hash")
+                self.assertIn("bad object", str(cm.exception))
 
     def test_get_commit_stats_git_command_error(self):
         """Test get_commit_stats with GitCommandError."""
         from git.exc import GitCommandError
 
-        # Create a mock repository
-        mock_repo = MagicMock()
-        # GitCommandError(command, status, stderr=None, stdout=None)
-        mock_repo.commit.side_effect = GitCommandError(
-            ["log"],
-            128,
-            stderr="fatal: bad object HEAD",
-        )
+        with tempfile.TemporaryDirectory(dir="/tmp") as temp_dir:
+            # Create a real git-like directory structure
+            git_dir = os.path.join(temp_dir, ".git")
+            os.makedirs(git_dir)
 
-        # Patch Path so constructor validation passes, and patch Repo
-        with (
-            patch("beaconled.core.analyzer.Path") as mock_path_class,
-            patch("beaconled.core.analyzer.git.Repo", return_value=mock_repo),
-        ):
-            mock_path = MagicMock()
-            mock_path.exists.return_value = True
-            mock_path.is_dir.return_value = True
-            mock_path.resolve.return_value = mock_path
-            # Simulate .git exists to skip opening Repo during validation
-            mock_git_dir = MagicMock()
-            mock_git_dir.exists.return_value = True
+            # Create a mock repository
+            mock_repo = MagicMock()
+            # GitCommandError(command, status, stderr=None, stdout=None)
+            mock_repo.commit.side_effect = GitCommandError(
+                ["log"],
+                128,
+                stderr="fatal: bad object HEAD",
+            )
 
-            def _truediv(other):
-                return mock_git_dir if other == ".git" else mock_path
-
-            mock_path.__truediv__.side_effect = _truediv
-            mock_path_class.return_value = mock_path
-
-            analyzer = GitAnalyzer("/fake/repo")
-            # In current implementation, this ends as an InternalError
-            with self.assertRaises(InternalError) as cm:
-                analyzer.get_commit_stats("invalid-hash")
-            self.assertIn("bad object", str(cm.exception))
+            # Patch git.Repo to return our mock
+            with patch("beaconled.core.analyzer.git.Repo", return_value=mock_repo):
+                analyzer = GitAnalyzer(temp_dir)
+                # In current implementation, this ends as an InternalError
+                with self.assertRaises(InternalError) as cm:
+                    analyzer.get_commit_stats("invalid-hash")
+                self.assertIn("bad object", str(cm.exception))
 
     def test_get_range_analytics_empty_repo(self):
         """Test get_range_analytics with an empty repository."""
         from unittest.mock import MagicMock, patch
 
-        # Create a mock repository with no commits
-        mock_repo = MagicMock()
-        mock_repo.iter_commits.return_value = []
+        with tempfile.TemporaryDirectory(dir="/tmp") as temp_dir:
+            # Create a real git-like directory structure
+            git_dir = os.path.join(temp_dir, ".git")
+            os.makedirs(git_dir)
 
-        # Patch the GitAnalyzer to use our mock repository and mock datetime
-        with (
-            patch("beaconled.core.analyzer.Path") as mock_path_class,
-            patch("beaconled.core.analyzer.git.Repo", return_value=mock_repo),
-            patch("beaconled.core.analyzer.datetime") as mock_datetime,
-        ):
-            # Set up the mock datetime
-            mock_datetime.now.return_value = datetime(2023, 1, 1, tzinfo=timezone.utc)
-            mock_datetime.side_effect = lambda *args, **kw: (
-                datetime(*args, **kw, tzinfo=timezone.utc)
-                if "tzinfo" in kw or (len(args) > 6 and args[6] is not None)
-                else datetime(
-                    *args,
-                    tzinfo=timezone.utc,
-                    **{k: v for k, v in kw.items() if k != "tzinfo"},
-                )
-            )
+            # Create a mock repository with no commits
+            mock_repo = MagicMock()
+            mock_repo.iter_commits.return_value = []
 
-            # Create an analyzer with our mocked repository
-            mock_path = MagicMock()
-            mock_path.exists.return_value = True
-            mock_path.is_dir.return_value = True
-            mock_path.resolve.return_value = mock_path
-            mock_git_dir = MagicMock()
-            mock_git_dir.exists.return_value = True
+            # Patch git.Repo to return our mock
+            with patch("beaconled.core.analyzer.git.Repo", return_value=mock_repo):
+                analyzer = GitAnalyzer(temp_dir)
 
-            def _truediv(other):
-                return mock_git_dir if other == ".git" else mock_path
+                # Call the method with a date range
+                result = analyzer.get_range_analytics("2023-01-01", "2023-12-31")
 
-            mock_path.__truediv__.side_effect = _truediv
-            mock_path_class.return_value = mock_path
-
-            analyzer = GitAnalyzer("/fake/repo")
-
-            # Call the method with a date range
-            result = analyzer.get_range_analytics("2023-01-01", "2023-12-31")
-
-            # Verify the result
-            self.assertEqual(result.total_commits, 0)
-            self.assertEqual(result.total_files_changed, 0)
-            self.assertEqual(result.total_lines_added, 0)
-            self.assertEqual(result.total_lines_deleted, 0)
+                # Verify the result
+                self.assertEqual(result.total_commits, 0)
+                self.assertEqual(result.total_files_changed, 0)
+                self.assertEqual(result.total_lines_added, 0)
+                self.assertEqual(result.total_lines_deleted, 0)
 
     def test_get_range_analytics_git_command_error(self):
         """Test get_range_analytics with GitCommandError."""
         from git.exc import GitCommandError
 
-        # Create a mock repository
-        mock_repo = MagicMock()
-        # Simulate git failing to iterate commits due to bad revision
-        mock_repo.iter_commits.side_effect = GitCommandError(
-            ["log"],
-            128,
-            stderr="fatal: bad revision",
-        )
+        with tempfile.TemporaryDirectory(dir="/tmp") as temp_dir:
+            # Create a real git-like directory structure
+            git_dir = os.path.join(temp_dir, ".git")
+            os.makedirs(git_dir)
 
-        # Patch the GitAnalyzer to use our mock repository and mock datetime
-        with (
-            patch("beaconled.core.analyzer.Path") as mock_path_class,
-            patch("beaconled.core.analyzer.git.Repo", return_value=mock_repo),
-            patch("beaconled.core.analyzer.datetime") as mock_datetime,
-        ):
-            # Set up the mock datetime
-            mock_datetime.now.return_value = datetime(2023, 1, 1, tzinfo=timezone.utc)
-            mock_datetime.side_effect = lambda *args, **kw: (
-                datetime(*args, **kw, tzinfo=timezone.utc)
-                if "tzinfo" in kw or (len(args) > 6 and args[6] is not None)
-                else datetime(
-                    *args,
-                    tzinfo=timezone.utc,
-                    **{k: v for k, v in kw.items() if k != "tzinfo"},
-                )
+            # Create a mock repository
+            mock_repo = MagicMock()
+            # Simulate git failing to iterate commits due to bad revision
+            mock_repo.iter_commits.side_effect = GitCommandError(
+                ["log"],
+                128,
+                stderr="fatal: bad revision",
             )
 
-            # Create an analyzer with our mocked repository
-            mock_path = MagicMock()
-            mock_path.exists.return_value = True
-            mock_path.is_dir.return_value = True
-            mock_path.resolve.return_value = mock_path
-            mock_git_dir = MagicMock()
-            mock_git_dir.exists.return_value = True
+            # Patch git.Repo to return our mock
+            with patch("beaconled.core.analyzer.git.Repo", return_value=mock_repo):
+                analyzer = GitAnalyzer(temp_dir)
 
-            def _truediv(other):
-                return mock_git_dir if other == ".git" else mock_path
+                # Call the method with a date range
+                rs = analyzer.get_range_analytics("2023-01-01", "2023-12-31")
 
-            mock_path.__truediv__.side_effect = _truediv
-            mock_path_class.return_value = mock_path
-
-            analyzer = GitAnalyzer("/fake/repo")
-
-            # Call the method with a date range
-            rs = analyzer.get_range_analytics("2023-01-01", "2023-12-31")
-
-            # Verify the result
-            self.assertEqual(rs.total_commits, 0)
-            self.assertEqual(rs.total_files_changed, 0)
-            self.assertEqual(rs.total_lines_added, 0)
-            self.assertEqual(rs.total_lines_deleted, 0)
+                # Verify the result
+                self.assertEqual(rs.total_commits, 0)
+                self.assertEqual(rs.total_files_changed, 0)
+                self.assertEqual(rs.total_lines_added, 0)
+                self.assertEqual(rs.total_lines_deleted, 0)
 
     def test_get_range_analytics_invalid_date_range(self):
         """Test get_range_analytics with invalid date range."""
 
-        # Create a mock repository
-        mock_repo = MagicMock()
+        with tempfile.TemporaryDirectory(dir="/tmp") as temp_dir:
+            # Create a real git-like directory structure
+            git_dir = os.path.join(temp_dir, ".git")
+            os.makedirs(git_dir)
 
-        # Patch the GitAnalyzer to use our mock repository and mock datetime
-        with (
-            patch("beaconled.core.analyzer.Path") as mock_path_class,
-            patch("beaconled.core.analyzer.git.Repo", return_value=mock_repo),
-            patch("beaconled.core.analyzer.datetime") as mock_datetime,
-        ):
-            # Set up the mock datetime to return fixed times
-            mock_datetime.now.return_value = datetime(2023, 1, 1, tzinfo=timezone.utc)
-            mock_datetime.side_effect = lambda *args, **kw: (
-                datetime(*args, **kw, tzinfo=timezone.utc)
-                if "tzinfo" in kw or (len(args) > 6 and args[6] is not None)
-                else datetime(
-                    *args,
-                    tzinfo=timezone.utc,
-                    **{k: v for k, v in kw.items() if k != "tzinfo"},
-                )
-            )
+            # Create a mock repository
+            mock_repo = MagicMock()
 
-            # Create an analyzer with our mocked repository
-            mock_path = MagicMock()
-            mock_path.exists.return_value = True
-            mock_path.is_dir.return_value = True
-            mock_path.resolve.return_value = mock_path
-            mock_git_dir = MagicMock()
-            mock_git_dir.exists.return_value = True
+            # Patch git.Repo to return our mock
+            with patch("beaconled.core.analyzer.git.Repo", return_value=mock_repo):
+                analyzer = GitAnalyzer(temp_dir)
 
-            def _truediv(other):
-                return mock_git_dir if other == ".git" else mock_path
-
-            mock_path.__truediv__.side_effect = _truediv
-            mock_path_class.return_value = mock_path
-
-            analyzer = GitAnalyzer("/fake/repo")
-
-            # Test with start date after end date
-            with self.assertRaises(DateRangeError) as cm:
-                analyzer.get_range_analytics("2025-01-31", "2025-01-01")
-            msg = str(cm.exception)
-            self.assertIn("Invalid date range", msg)
-            self.assertIn("before start date", msg)
+                # Test with start date after end date
+                with self.assertRaises(DateRangeError) as cm:
+                    analyzer.get_range_analytics("2025-01-31", "2025-01-01")
+                msg = str(cm.exception)
+                self.assertIn("Invalid date range", msg)
+                self.assertIn("before start date", msg)
 
     def test_is_valid_date_string_edge_cases(self):
         """Test _is_valid_date_string with edge cases."""

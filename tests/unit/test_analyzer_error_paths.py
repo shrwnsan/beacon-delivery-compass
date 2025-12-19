@@ -64,37 +64,48 @@ def test_validate_repo_path_unexpected_error(tmp_path):
 
 def test_validate_repo_path_valid(tmp_path):
     """Test validation with a valid git repository path."""
-    # Create a mock .git directory
-    (tmp_path / ".git").mkdir()
+    import tempfile
+    from pathlib import Path
 
-    # Bypass __init__ so we can call _validate_repo_path directly
-    # This avoids validating the current directory
-    analyzer = GitAnalyzer.__new__(GitAnalyzer)
-    result = analyzer._validate_repo_path(str(tmp_path))
+    # Use /tmp instead of pytest's tmp_path to ensure path is in allowed boundaries
+    with tempfile.TemporaryDirectory(dir="/tmp") as temp_dir:
+        # Create a mock .git directory
+        git_dir = Path(temp_dir) / ".git"
+        git_dir.mkdir()
 
-    # Should return the absolute path to the temp directory
-    assert os.path.isabs(result)
-    assert os.path.samefile(result, str(tmp_path))
+        # Bypass __init__ so we can call _validate_repo_path directly
+        # This avoids validating the current directory
+        analyzer = GitAnalyzer.__new__(GitAnalyzer)
+        result = analyzer._validate_repo_path(temp_dir)
+
+        # Should return the absolute path to the temp directory
+        assert os.path.isabs(result)
+        assert os.path.samefile(result, temp_dir)
 
 
 @patch("git.Repo")
 def test_validate_repo_path_with_git_python(mock_repo, tmp_path):
     """Test validation when .git doesn't exist but git.Repo can open it."""
-    # Get the resolved path to handle symlinks and /private/ prefix on macOS
-    resolved_temp_dir = str(tmp_path.resolve())
+    import tempfile
+    from pathlib import Path
 
-    # Configure the mock to return a mock repo object
-    mock_repo.return_value = MagicMock()
+    # Use /tmp instead of pytest's tmp_path to ensure path is in allowed boundaries
+    with tempfile.TemporaryDirectory(dir="/tmp") as temp_dir:
+        # Get the resolved path to handle symlinks and /private/ prefix on macOS
+        resolved_temp_dir = str(Path(temp_dir).resolve())
 
-    # Bypass __init__ so we can call _validate_repo_path directly
-    analyzer = GitAnalyzer.__new__(GitAnalyzer)
-    result = analyzer._validate_repo_path(str(tmp_path))
+        # Configure the mock to return a mock repo object
+        mock_repo.return_value = MagicMock()
 
-    assert os.path.isabs(result)
-    assert os.path.samefile(result, resolved_temp_dir)
+        # Bypass __init__ so we can call _validate_repo_path directly
+        analyzer = GitAnalyzer.__new__(GitAnalyzer)
+        result = analyzer._validate_repo_path(temp_dir)
 
-    # Verify the mock was called with the resolved path
-    mock_repo.assert_called_once()
-    assert len(mock_repo.call_args[0]) > 0  # Make sure there's at least one positional arg
-    called_path = mock_repo.call_args[0][0]
-    assert os.path.samefile(called_path, resolved_temp_dir)
+        assert os.path.isabs(result)
+        assert os.path.samefile(result, resolved_temp_dir)
+
+        # Verify the mock was called with the resolved path
+        mock_repo.assert_called_once()
+        assert len(mock_repo.call_args[0]) > 0  # Make sure there's at least one positional arg
+        called_path = mock_repo.call_args[0][0]
+        assert os.path.samefile(called_path, resolved_temp_dir)
