@@ -3,8 +3,6 @@
 import os
 import tempfile
 import unittest
-from datetime import datetime, timezone
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 # Import the actual git module for exception classes
@@ -50,7 +48,7 @@ class TestGitAnalyzerCoverage(unittest.TestCase):
 
     def test_validate_repo_path_nonexistent(self):
         """Test _validate_repo_path with nonexistent path."""
-        with tempfile.TemporaryDirectory(dir="/tmp") as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
             nonexistent_path = os.path.join(temp_dir, "nonexistent")
             # Bypass __init__ so we can call _validate_repo_path directly
             analyzer = GitAnalyzer.__new__(GitAnalyzer)
@@ -79,7 +77,7 @@ class TestGitAnalyzerCoverage(unittest.TestCase):
         """Test validation with a directory that is not a git repository."""
         from git.exc import InvalidGitRepositoryError
 
-        with tempfile.TemporaryDirectory(dir="/tmp") as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
             # Configure git.Repo to raise an error when trying to open the directory
             mock_repo.side_effect = InvalidGitRepositoryError("Not a git repository")
 
@@ -94,7 +92,7 @@ class TestGitAnalyzerCoverage(unittest.TestCase):
         """Test get_commit_stats with invalid commit hash."""
         from git.exc import BadName
 
-        with tempfile.TemporaryDirectory(dir="/tmp") as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
             # Create a real git-like directory structure
             git_dir = os.path.join(temp_dir, ".git")
             os.makedirs(git_dir)
@@ -115,7 +113,7 @@ class TestGitAnalyzerCoverage(unittest.TestCase):
         """Test get_commit_stats with GitCommandError."""
         from git.exc import GitCommandError
 
-        with tempfile.TemporaryDirectory(dir="/tmp") as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
             # Create a real git-like directory structure
             git_dir = os.path.join(temp_dir, ".git")
             os.makedirs(git_dir)
@@ -141,7 +139,7 @@ class TestGitAnalyzerCoverage(unittest.TestCase):
         """Test get_range_analytics with an empty repository."""
         from unittest.mock import MagicMock, patch
 
-        with tempfile.TemporaryDirectory(dir="/tmp") as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
             # Create a real git-like directory structure
             git_dir = os.path.join(temp_dir, ".git")
             os.makedirs(git_dir)
@@ -167,7 +165,7 @@ class TestGitAnalyzerCoverage(unittest.TestCase):
         """Test get_range_analytics with GitCommandError."""
         from git.exc import GitCommandError
 
-        with tempfile.TemporaryDirectory(dir="/tmp") as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
             # Create a real git-like directory structure
             git_dir = os.path.join(temp_dir, ".git")
             os.makedirs(git_dir)
@@ -197,7 +195,7 @@ class TestGitAnalyzerCoverage(unittest.TestCase):
     def test_get_range_analytics_invalid_date_range(self):
         """Test get_range_analytics with invalid date range."""
 
-        with tempfile.TemporaryDirectory(dir="/tmp") as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
             # Create a real git-like directory structure
             git_dir = os.path.join(temp_dir, ".git")
             os.makedirs(git_dir)

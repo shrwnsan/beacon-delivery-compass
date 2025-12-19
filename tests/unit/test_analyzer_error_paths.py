@@ -68,7 +68,7 @@ def test_validate_repo_path_valid(tmp_path):
     from pathlib import Path
 
     # Use /tmp instead of pytest's tmp_path to ensure path is in allowed boundaries
-    with tempfile.TemporaryDirectory(dir="/tmp") as temp_dir:
+    with tempfile.TemporaryDirectory() as temp_dir:
         # Create a mock .git directory
         git_dir = Path(temp_dir) / ".git"
         git_dir.mkdir()
@@ -90,7 +90,7 @@ def test_validate_repo_path_with_git_python(mock_repo, tmp_path):
     from pathlib import Path
 
     # Use /tmp instead of pytest's tmp_path to ensure path is in allowed boundaries
-    with tempfile.TemporaryDirectory(dir="/tmp") as temp_dir:
+    with tempfile.TemporaryDirectory() as temp_dir:
         # Get the resolved path to handle symlinks and /private/ prefix on macOS
         resolved_temp_dir = str(Path(temp_dir).resolve())
 

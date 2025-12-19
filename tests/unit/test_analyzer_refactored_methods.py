@@ -10,7 +10,7 @@ Tests for the extracted methods from get_range_analytics:
 
 import pytest
 from datetime import datetime, timezone
-from unittest.mock import Mock, MagicMock, patch, MagicMock as MockMagic
+from unittest.mock import Mock, patch
 
 from beaconled.core.analyzer import GitAnalyzer
 
@@ -27,17 +27,17 @@ class TestRefactoredMethods:
         # Mock _parse_date method
         self.analyzer._parse_date = Mock()
 
-    @patch('beaconled.core.analyzer.DateUtils.validate_date_range')
+    @patch("beaconled.core.analyzer.DateUtils.validate_date_range")
     def test_validate_and_normalize_dates_with_strings(self, mock_validate):
         """Test date validation with string inputs."""
         # Setup
         mock_validate.return_value = (
             datetime(2023, 1, 1, tzinfo=timezone.utc),
-            datetime(2023, 1, 7, tzinfo=timezone.utc)
+            datetime(2023, 1, 7, tzinfo=timezone.utc),
         )
         self.analyzer._parse_date.side_effect = [
             datetime(2023, 1, 1, tzinfo=timezone.utc),
-            datetime(2023, 1, 7, tzinfo=timezone.utc)
+            datetime(2023, 1, 7, tzinfo=timezone.utc),
         ]
 
         # Execute
@@ -47,7 +47,7 @@ class TestRefactoredMethods:
         assert start == datetime(2023, 1, 1, tzinfo=timezone.utc)
         assert end == datetime(2023, 1, 7, tzinfo=timezone.utc)
 
-    @patch('beaconled.core.analyzer.DateUtils.validate_date_range')
+    @patch("beaconled.core.analyzer.DateUtils.validate_date_range")
     def test_validate_and_normalize_dates_with_now(self, mock_validate):
         """Test date validation with 'now' as end date."""
         # Setup
@@ -63,7 +63,7 @@ class TestRefactoredMethods:
         assert start == expected_start
         assert end == expected_end
 
-    @patch('beaconled.core.analyzer.DateUtils.validate_date_range')
+    @patch("beaconled.core.analyzer.DateUtils.validate_date_range")
     def test_validate_and_normalize_dates_with_datetime_objects(self, mock_validate):
         """Test date validation with datetime objects."""
         # Setup
@@ -80,17 +80,14 @@ class TestRefactoredMethods:
         # Since we're passing datetime objects, _parse_date should not be called
         assert self.analyzer._parse_date.call_count == 0
 
-    @patch('beaconled.core.analyzer.git.Repo')
+    @patch("beaconled.core.analyzer.git.Repo")
     def test_fetch_commits_in_range_with_iter_commits(self, mock_repo_class):
         """Test fetching commits using iter_commits."""
         # Setup
         mock_repo = Mock()
         mock_repo_class.return_value = mock_repo
 
-        mock_commits = [
-            Mock(hexsha="abc123"),
-            Mock(hexsha="def456")
-        ]
+        mock_commits = [Mock(hexsha="abc123"), Mock(hexsha="def456")]
         mock_repo.iter_commits.return_value = iter(mock_commits)
 
         start = datetime(2023, 1, 1, tzinfo=timezone.utc)
@@ -102,12 +99,10 @@ class TestRefactoredMethods:
         # Assert
         assert commits == ["abc123", "def456"]
         mock_repo.iter_commits.assert_called_once_with(
-            all=True,
-            since=start.isoformat(),
-            until=end.isoformat()
+            all=True, since=start.isoformat(), until=end.isoformat()
         )
 
-    @patch('beaconled.core.analyzer.git.Repo')
+    @patch("beaconled.core.analyzer.git.Repo")
     def test_fetch_commits_fallback_to_git_log(self, mock_repo_class):
         """Test fallback to git log when iter_commits fails."""
         # Setup
@@ -134,10 +129,10 @@ class TestRefactoredMethods:
             "--pretty=format:%H",
             "--no-patch",
             f"--since={start.isoformat()}",
-            f"--until={end.isoformat()}"
+            f"--until={end.isoformat()}",
         )
 
-    @patch('beaconled.core.analyzer.git.Repo')
+    @patch("beaconled.core.analyzer.git.Repo")
     def test_fetch_commits_both_methods_fail(self, mock_repo_class):
         """Test when both iter_commits and git log fail."""
         # Setup
@@ -160,25 +155,16 @@ class TestRefactoredMethods:
         """Test author statistics calculation."""
         # Setup
         commits = [
-            Mock(
-                author="John Doe <john@example.com>"
-            ),
-            Mock(
-                author="Jane Smith <jane@example.com>"
-            ),
-            Mock(
-                author="John Doe <john@example.com>"
-            )
+            Mock(author="John Doe <john@example.com>"),
+            Mock(author="Jane Smith <jane@example.com>"),
+            Mock(author="John Doe <john@example.com>"),
         ]
 
         # Execute
         authors = self.analyzer._calculate_author_analytics(commits)
 
         # Assert
-        assert authors == {
-            "John Doe <john@example.com>": 2,
-            "Jane Smith <jane@example.com>": 1
-        }
+        assert authors == {"John Doe <john@example.com>": 2, "Jane Smith <jane@example.com>": 1}
 
     def test_calculate_author_analytics_empty_commits(self):
         """Test author statistics with empty commit list."""
@@ -195,28 +181,25 @@ class TestRefactoredMethods:
             Mock(
                 hash="abc123",
                 author="John Doe",
-                date=datetime(2023, 1, 1, 10, 0, tzinfo=timezone.utc)
+                date=datetime(2023, 1, 1, 10, 0, tzinfo=timezone.utc),
             ),
             Mock(
                 hash="def456",
                 author="Jane Smith",
-                date=datetime(2023, 1, 1, 15, 0, tzinfo=timezone.utc)
+                date=datetime(2023, 1, 1, 15, 0, tzinfo=timezone.utc),
             ),
             Mock(
                 hash="ghi789",
                 author="John Doe",
-                date=datetime(2023, 1, 2, 9, 0, tzinfo=timezone.utc)
-            )
+                date=datetime(2023, 1, 2, 9, 0, tzinfo=timezone.utc),
+            ),
         ]
 
         # Execute
         timeline = self.analyzer._calculate_timeline_analytics(commits)
 
         # Assert
-        assert timeline == {
-            "2023-01-01": 2,
-            "2023-01-02": 1
-        }
+        assert timeline == {"2023-01-01": 2, "2023-01-02": 1}
 
     def test_calculate_timeline_analytics_strict_mode_error(self):
         """Test timeline analytics with strict mode error."""
@@ -251,7 +234,7 @@ class TestRefactoredMethods:
                 files_changed=2,
                 lines_added=10,
                 lines_deleted=5,
-                files=[file1, file2]
+                files=[file1, file2],
             ),
             Mock(
                 hash="def456",
@@ -260,12 +243,14 @@ class TestRefactoredMethods:
                 files_changed=1,
                 lines_added=20,
                 lines_deleted=10,
-                files=[file3]
-            )
+                files=[file3],
+            ),
         ]
 
         # Execute
-        total_files, total_added, total_deleted, file_types = self.analyzer._calculate_file_analytics(commits)
+        total_files, total_added, total_deleted, file_types = (
+            self.analyzer._calculate_file_analytics(commits)
+        )
 
         # Assert
         assert total_files == 3  # 2 + 1
@@ -273,16 +258,8 @@ class TestRefactoredMethods:
         assert total_deleted == 15  # 5 + 10
 
         assert file_types == {
-            "py": {
-                "files_changed": 2,
-                "lines_added": 30,
-                "lines_deleted": 15
-            },
-            "md": {
-                "files_changed": 1,
-                "lines_added": 0,
-                "lines_deleted": 0
-            }
+            "py": {"files_changed": 2, "lines_added": 30, "lines_deleted": 15},
+            "md": {"files_changed": 1, "lines_added": 0, "lines_deleted": 0},
         }
 
     def test_calculate_file_analytics_no_files(self):
@@ -296,7 +273,7 @@ class TestRefactoredMethods:
                 files_changed=0,
                 lines_added=0,
                 lines_deleted=0,
-                files=[]
+                files=[],
             ),
             Mock(
                 hash="def456",
@@ -305,12 +282,14 @@ class TestRefactoredMethods:
                 files_changed=0,
                 lines_added=0,
                 lines_deleted=0,
-                files=None  # None instead of missing attribute
-            )
+                files=None,  # None instead of missing attribute
+            ),
         ]
 
         # Execute
-        total_files, total_added, total_deleted, file_types = self.analyzer._calculate_file_analytics(commits)
+        total_files, total_added, total_deleted, file_types = (
+            self.analyzer._calculate_file_analytics(commits)
+        )
 
         # Assert
         assert total_files == 0
@@ -323,7 +302,7 @@ class TestRefactoredMethods:
         # Setup - create simple mock objects manually
         file_without_path = Mock()
         # Remove the path attribute entirely
-        delattr(file_without_path, 'path') if hasattr(file_without_path, 'path') else None
+        delattr(file_without_path, "path") if hasattr(file_without_path, "path") else None
 
         # Create file with path that returns a list when split is called
         file_with_path = Mock()
@@ -339,21 +318,17 @@ class TestRefactoredMethods:
                 files_changed=2,
                 lines_added=10,
                 lines_deleted=5,
-                files=[file_without_path, file_with_path]
+                files=[file_without_path, file_with_path],
             )
         ]
 
         # Execute
-        total_files, total_added, total_deleted, file_types = self.analyzer._calculate_file_analytics(commits)
+        total_files, total_added, total_deleted, file_types = (
+            self.analyzer._calculate_file_analytics(commits)
+        )
 
         # Assert
         assert total_files == 2
         assert total_added == 10
         assert total_deleted == 5
-        assert file_types == {
-            "py": {
-                "files_changed": 1,
-                "lines_added": 10,
-                "lines_deleted": 5
-            }
-        }
+        assert file_types == {"py": {"files_changed": 1, "lines_added": 10, "lines_deleted": 5}}
