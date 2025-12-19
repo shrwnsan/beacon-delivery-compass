@@ -1,5 +1,6 @@
 """Additional test cases to improve coverage for analyzer.py."""
 
+import tempfile
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
@@ -74,40 +75,21 @@ class TestGitAnalyzerCoverage(unittest.TestCase):
             # Check for path component (cross-platform compatible)
             self.assertIn("file.txt", error_msg)
 
-    @patch("beaconled.core.analyzer.Path")
-    @patch("beaconled.core.analyzer.git.Repo")
-    def test_validate_repo_path_not_git_repo(self, mock_repo, mock_path_class):
-        """Test _validate_repo_path with directory that is not a git repo."""
+    @patch("git.Repo")
+    def test_validate_repo_path_not_git_repo(self, mock_repo):
+        """Test validation with a directory that is not a git repository."""
         from git.exc import InvalidGitRepositoryError
 
-        # Configure the mock Path instance
-        mock_path = MagicMock()
-        mock_path.exists.return_value = True
-        mock_path.is_dir.return_value = True
-        mock_path.resolve.return_value = mock_path
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Configure git.Repo to raise an error when trying to open the directory
+            mock_repo.side_effect = InvalidGitRepositoryError("Not a git repository")
 
-        # Configure the .git path mock
-        mock_git_path = MagicMock()
-        mock_git_path.exists.return_value = False
+            # Expect InvalidRepositoryError during initialization
+            with self.assertRaises(InvalidRepositoryError) as cm:
+                GitAnalyzer(temp_dir)
 
-        # Make __truediv__ return the mock_git_path for '.git' and mock_path for others
-        def truediv_side_effect(other):
-            if other == ".git":
-                return mock_git_path
-            return mock_path
-
-        mock_path.__truediv__.side_effect = truediv_side_effect
-        mock_path_class.return_value = mock_path
-
-        # Configure the mock Repo to raise InvalidGitRepositoryError
-        mock_repo.side_effect = InvalidGitRepositoryError("Not a git repository")
-
-        # The error should be raised during initialization
-        with self.assertRaises(InvalidRepositoryError) as cm:
-            GitAnalyzer("/fake/repo")
-
-        # Verify the error message
-        self.assertIn("Not a git repository", str(cm.exception))
+            # Verify the error message contains information about not being a git repo
+            self.assertIn("Not a git repository", str(cm.exception))
 
     def test_get_commit_stats_invalid_hash(self):
         """Test get_commit_stats with invalid commit hash."""
