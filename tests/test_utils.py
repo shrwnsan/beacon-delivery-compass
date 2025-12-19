@@ -1,6 +1,5 @@
 """Test utilities for the Beacon Delivery Compass test suite."""
 
-import os
 import subprocess
 import sys
 

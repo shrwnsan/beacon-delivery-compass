@@ -142,9 +142,9 @@ class GitAnalyzer:
 
             # Check if pathlib.Path methods are globally patched
             path_methods_patched = (
-                hasattr(Path.exists, "_mock_name") or
-                hasattr(Path.is_dir, "_mock_name") or
-                hasattr(Path.resolve, "_mock_name")
+                hasattr(Path.exists, "_mock_name")
+                or hasattr(Path.is_dir, "_mock_name")
+                or hasattr(Path.resolve, "_mock_name")
             )
 
             if isinstance(path, MagicMock) or path_methods_patched:
@@ -153,7 +153,9 @@ class GitAnalyzer:
             else:
                 for restricted in restricted_paths:
                     if self._is_path_within_boundary(path, restricted):
-                        logger.warning("Access to restricted directory blocked: %s", str(restricted))
+                        logger.warning(
+                            "Access to restricted directory blocked: %s", str(restricted)
+                        )
                         raise InvalidRepositoryError(
                             str(path), reason="Access to system directories is not allowed"
                         )
@@ -186,9 +188,9 @@ class GitAnalyzer:
 
         # Check if Path methods are globally patched
         path_methods_patched = (
-            hasattr(Path.exists, "_mock_name") or
-            hasattr(Path.is_dir, "_mock_name") or
-            hasattr(Path.resolve, "_mock_name")
+            hasattr(Path.exists, "_mock_name")
+            or hasattr(Path.is_dir, "_mock_name")
+            or hasattr(Path.resolve, "_mock_name")
         )
 
         # Skip boundary check if Path is globally patched
@@ -242,6 +244,7 @@ class GitAnalyzer:
         # Check if the path object itself is a MagicMock
         try:
             from unittest.mock import MagicMock
+
             is_path_mock = isinstance(path, MagicMock)
         except ImportError:
             is_path_mock = False
