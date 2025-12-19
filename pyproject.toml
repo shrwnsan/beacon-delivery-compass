@@ -134,6 +134,8 @@ extend-exclude = [
 ignore = [
     "ANN401",  # Allow dynamically typed expressions (Any)
     "COM812",  # Trailing comma prohibited (conflicts with ruff format)
+    "S108",    # Allow hardcoded tmp directories (used for security boundary checks)
+    "B112",    # Allow try-except-continue pattern (used for graceful error handling)
 ]
 
 # Enable all available rules

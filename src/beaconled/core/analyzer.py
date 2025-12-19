@@ -19,7 +19,15 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock
+
+# Only import MagicMock for defensive type checks in data processing
+try:
+    from unittest.mock import MagicMock
+except ImportError:
+    # Mock MagicMock for environments without unittest
+    class MagicMock:  # type: ignore
+        pass
+
 
 import git
 
@@ -136,39 +144,29 @@ class GitAnalyzer:
         ]
 
         # Check if the resolved path is within restricted directories
-        # Skip this check for mock objects in tests (temporary workaround)
-        try:
-            from unittest.mock import MagicMock
+        for restricted in restricted_paths:
+            if self._is_path_within_boundary(path, restricted):
+                logger.warning("Access to restricted directory blocked: %s", str(restricted))
+                raise InvalidRepositoryError(
+                    str(path), reason="Access to system directories is not allowed"
+                )
 
-            # Check if pathlib.Path methods are globally patched
-            path_methods_patched = (
-                hasattr(Path.exists, "_mock_name")
-                or hasattr(Path.is_dir, "_mock_name")
-                or hasattr(Path.resolve, "_mock_name")
+        # Phase 5: Basic path validation (moved up to run before boundary checks)
+        # Check if path exists
+        if not path.exists():
+            raise InvalidRepositoryError(str(path), reason="Path does not exist")
+
+        # Check if path is a directory
+        if not path.is_dir():
+            raise InvalidRepositoryError(str(path), reason="Path is not a directory")
+
+        # Check if path has been replaced by symlink
+        if path.is_symlink():
+            raise InvalidRepositoryError(
+                str(path), reason="Path was replaced by symlink during validation"
             )
 
-            if isinstance(path, MagicMock) or path_methods_patched:
-                # Skip restricted directory check for mock paths or when Path is globally patched
-                pass
-            else:
-                for restricted in restricted_paths:
-                    if self._is_path_within_boundary(path, restricted):
-                        logger.warning(
-                            "Access to restricted directory blocked: %s", str(restricted)
-                        )
-                        raise InvalidRepositoryError(
-                            str(path), reason="Access to system directories is not allowed"
-                        )
-        except ImportError:
-            # unittest.mock not available
-            for restricted in restricted_paths:
-                if self._is_path_within_boundary(path, restricted):
-                    logger.warning("Access to restricted directory blocked: %s", str(restricted))
-                    raise InvalidRepositoryError(
-                        str(path), reason="Access to system directories is not allowed"
-                    )
-
-        # Phase 5: Boundary enforcement
+        # Phase 6: Boundary enforcement
         # Get the current working directory for boundary checks
         try:
             cwd = Path.cwd().resolve()
@@ -177,37 +175,29 @@ class GitAnalyzer:
             cwd = Path.home().resolve()
 
         # Define allowed base directories
+        # These are intentionally hardcoded as they are standard temporary directories
+        # and part of the security boundary configuration
         allowed_bases = [
             cwd,
             Path.home(),
-            Path("/tmp"),
+            Path("/tmp"),  # Intentional tmp directory for boundary checks
             Path("/private/tmp"),  # macOS resolves /tmp to /private/tmp
-            Path("/var/tmp"),
+            Path("/var/tmp"),  # Intentional tmp directory for boundary checks
             Path("/usr/local/tmp"),  # Common on some systems
         ]
 
-        # Check if Path methods are globally patched
-        path_methods_patched = (
-            hasattr(Path.exists, "_mock_name")
-            or hasattr(Path.is_dir, "_mock_name")
-            or hasattr(Path.resolve, "_mock_name")
-        )
-
-        # Skip boundary check if Path is globally patched
-        if path_methods_patched:
-            is_allowed = True
-        else:
-            # Check if path is within allowed boundaries
-            is_allowed = False
-            for base in allowed_bases:
-                try:
-                    base_resolved = base.resolve()
-                    if self._is_path_within_boundary(path, base_resolved):
-                        is_allowed = True
-                        break
-                except Exception:
-                    # If we can't resolve a base path, skip it
-                    continue
+        # Check if path is within allowed boundaries
+        is_allowed = False
+        for base in allowed_bases:
+            try:
+                base_resolved = base.resolve()
+                if self._is_path_within_boundary(path, base_resolved):
+                    is_allowed = True
+                    break
+            except Exception as e:
+                # If we can't resolve a base path, skip it
+                logger.debug("Could not resolve base path %s: %s", base, e)
+                continue
 
         # Special case: allow explicit git repositories outside boundaries
         # This handles legitimate use cases while maintaining security
@@ -239,30 +229,6 @@ class GitAnalyzer:
                 reason="Path is outside allowed boundaries. Repository must be within "
                 "current directory, home directory, or /tmp",
             )
-
-        # Phase 6: TOCTOU mitigation - specific checks with clear error messages
-        # Check if the path object itself is a MagicMock
-        try:
-            from unittest.mock import MagicMock
-
-            is_path_mock = isinstance(path, MagicMock)
-        except ImportError:
-            is_path_mock = False
-
-        if not is_path_mock:
-            # Check if path exists
-            if not path.exists():
-                raise InvalidRepositoryError(str(path), reason="Path does not exist")
-
-            # Check if path is a directory
-            if not path.is_dir():
-                raise InvalidRepositoryError(str(path), reason="Path is not a directory")
-
-            # Check if path has been replaced by symlink
-            if path.is_symlink():
-                raise InvalidRepositoryError(
-                    str(path), reason="Path was replaced by symlink during validation"
-                )
 
         # Phase 7: Git repository validation
         # Ensure it's actually a git repository
@@ -370,7 +336,7 @@ class GitAnalyzer:
                 except ValueError:
                     # ValueError means path is not within boundary
                     return False
-        except (ValueError, FileNotFoundError, OSError):
+        except (ValueError, FileNotFoundError, OSError, AttributeError):
             # If anything fails, assume it's not within the boundary
             return False
 
@@ -758,8 +724,9 @@ class GitAnalyzer:
                 error_msg = f"Error generating diff for commit {commit_hash}"
                 logger.exception("%s", error_msg)
                 if self.strict_mode:
+                    msg = f"Failed to process commit {commit_hash}: {e}"
                     raise InternalError(
-                        f"Failed to process commit {commit_hash}: {e}",
+                        msg,
                         component="analyzer",
                         operation="process_commit",
                     ) from e
@@ -989,8 +956,9 @@ class GitAnalyzer:
                         e,
                     )
                     if self.strict_mode:
+                        msg = f"Failed to update timeline for commit: {e}"
                         raise InternalError(
-                            f"Failed to update timeline for commit: {e}",
+                            msg,
                             component="analyzer",
                             operation="update_timeline",
                         ) from e
@@ -1128,7 +1096,7 @@ class GitAnalyzer:
 
             # Calculate analytics
             authors = self._calculate_author_analytics(commits)
-            commits_by_day = self._calculate_timeline_analytics(commits)
+            self._calculate_timeline_analytics(commits)  # Updates timeline in commits
             (
                 total_files_changed,
                 total_lines_added,

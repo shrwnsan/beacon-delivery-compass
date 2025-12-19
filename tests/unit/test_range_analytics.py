@@ -15,9 +15,10 @@ class TestRangeAnalytics(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        # Create a temporary directory for testing
-        self.test_dir = os.path.join(os.path.dirname(__file__), "..", "..", "test_repo")
-        os.makedirs(self.test_dir, exist_ok=True)
+        # Use a temporary directory instead of relative path
+        import tempfile
+
+        self.test_dir = tempfile.mkdtemp(prefix="test_repo_")
 
         # Create a .git directory to make it a valid git repo
         os.makedirs(os.path.join(self.test_dir, ".git"), exist_ok=True)

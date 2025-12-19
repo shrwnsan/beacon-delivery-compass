@@ -1,5 +1,6 @@
 """Additional test cases to improve coverage for analyzer.py."""
 
+import os
 import tempfile
 import unittest
 from datetime import datetime, timezone
@@ -49,15 +50,17 @@ class TestGitAnalyzerCoverage(unittest.TestCase):
 
     def test_validate_repo_path_nonexistent(self):
         """Test _validate_repo_path with nonexistent path."""
-        with (
-            patch("pathlib.Path.exists", return_value=False),
-            patch("pathlib.Path.resolve", return_value=Path("/nonexistent/path")),
-        ):
-            # Bypass __init__ so we can call _validate_repo_path directly
-            analyzer = GitAnalyzer.__new__(GitAnalyzer)
-            with self.assertRaises(InvalidRepositoryError) as cm:
-                analyzer._validate_repo_path("/nonexistent/path")
-            self.assertIn("does not exist", str(cm.exception))
+        with tempfile.TemporaryDirectory() as temp_dir:
+            nonexistent_path = os.path.join(temp_dir, "nonexistent")
+            with (
+                patch("pathlib.Path.exists", return_value=False),
+                patch("pathlib.Path.resolve", return_value=Path(nonexistent_path)),
+            ):
+                # Bypass __init__ so we can call _validate_repo_path directly
+                analyzer = GitAnalyzer.__new__(GitAnalyzer)
+                with self.assertRaises(InvalidRepositoryError) as cm:
+                    analyzer._validate_repo_path(nonexistent_path)
+                self.assertIn("does not exist", str(cm.exception))
 
     def test_validate_repo_path_not_directory(self):
         """Test _validate_repo_path with path that is not a directory."""
