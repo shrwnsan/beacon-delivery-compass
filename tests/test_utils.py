@@ -12,20 +12,9 @@ def get_beaconled_cmd() -> list[str]:
     Returns:
         List of command parts to execute beaconled.
     """
-    # Try to find the system-installed beaconled first
-    if sys.platform == "win32":
-        # On Windows, try the Scripts directory
-        venv_path = os.path.join(os.getcwd(), ".venv", "Scripts", "beaconled.exe")
-    else:
-        # On Unix-like systems, try the bin directory
-        venv_path = os.path.join(os.getcwd(), ".venv", "bin", "beaconled")
-
-    # Check if the virtual environment binary exists
-    if os.path.exists(venv_path):
-        return [venv_path]
-
-    # Fall back to system-installed beaconled
-    return ["beaconled"]
+    # Use the Python module approach to ensure it works in development
+    # This avoids dependency on beaconled being installed as a command
+    return [sys.executable, "-m", "beaconled.cli"]
 
 
 def run_beaconled(args: list[str], **kwargs) -> subprocess.CompletedProcess:
