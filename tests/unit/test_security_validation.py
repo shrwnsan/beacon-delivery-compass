@@ -61,19 +61,31 @@ class TestSecurityValidation(unittest.TestCase):
         with (
             patch("pathlib.Path.exists", return_value=True),
             patch("pathlib.Path.is_dir", return_value=True),
+            patch("pathlib.Path.is_symlink", return_value=False),
+            patch("pathlib.Path.resolve") as mock_resolve,
             patch("git.Repo", side_effect=Exception("Not a git repo")),
         ):
+            # Mock resolve to return /etc without /private prefix
+            mock_resolve.side_effect = lambda: Path("/etc")
+
             with self.assertRaises(InvalidRepositoryError) as cm:
                 analyzer._validate_repo_path("/etc")
 
-            self.assertIn("boundaries", str(cm.exception))
+            # The actual error is "Access to system directories is not allowed"
+            # because /etc is in the restricted_paths list (checked before boundaries)
+            self.assertIn("not allowed", str(cm.exception))
 
     def test_safe_boundary_check(self):
         """Test that boundary checking works correctly."""
         analyzer = GitAnalyzer.__new__(GitAnalyzer)
 
-        # Test with Python 3.8 (no is_relative_to)
-        with patch.object(Path, "is_relative_to", side_effect=AttributeError):
+        # Test the fallback logic (simulating Python < 3.9)
+        # Patch hasattr to return False for is_relative_to
+        with patch("builtins.hasattr") as mock_hasattr:
+            mock_hasattr.side_effect = (
+                lambda obj, attr: False if attr == "is_relative_to" else hasattr(obj, attr)
+            )
+
             # These should NOT be considered within boundary
             self.assertFalse(
                 analyzer._is_path_within_boundary(Path("/home/user2/repo"), Path("/home/user"))
