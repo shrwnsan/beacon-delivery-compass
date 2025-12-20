@@ -20,6 +20,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from beaconled.utils.security import sanitize_path, secure_path_exists
+
 # Only import MagicMock for defensive type checks in data processing
 try:
     from unittest.mock import MagicMock
@@ -41,7 +43,6 @@ from beaconled.exceptions import (
     ValidationError,
 )
 from beaconled.utils.date_utils import DateUtils
-from beaconled.utils.security import sanitize_path
 
 # Constants
 DATE_STR_MAX_LEN = 50
@@ -377,8 +378,8 @@ class GitAnalyzer:
     def _secure_path_exists(self, path: Path) -> bool:
         """Securely check if a path exists, protecting against TOCTOU attacks.
 
-        This method performs additional checks to mitigate Time-of-Check-Time-of-Use
-        race conditions.
+        This method uses the enhanced security module for comprehensive protection
+        against race conditions, hard links, and symlink attacks.
 
         Args:
             path: The path to check
@@ -386,28 +387,20 @@ class GitAnalyzer:
         Returns:
             bool: True if the path exists and is safe to use
         """
+        # Use the enhanced security module for comprehensive validation
+        if not secure_path_exists(path):
+            return False
+
+        # Additional git-specific validation
         try:
-            # First check: does the path exist?
-            if not path.exists():
-                return False
-
-            # Second check: is it still a directory?
-            if not path.is_dir():
-                return False
-
-            # Third check: ensure it hasn't been replaced by a symlink
-            if path.is_symlink():
-                logger.warning("Path was replaced by symlink during validation: %s", str(path))
-                return False
-
-            # Final check: verify the git directory still exists
+            # Final check: verify the git directory still exists and is secure
             git_dir = path / ".git"
-            if not git_dir.exists():
+            if not secure_path_exists(git_dir):
                 return False
 
             return True
         except (OSError, PermissionError) as e:
-            logger.warning("Path validation error: %s", e)
+            logger.warning("Git path validation error for %s: %s", sanitize_path(path), e)
             return False
 
     def _parse_date(self, date_str: str) -> datetime:
