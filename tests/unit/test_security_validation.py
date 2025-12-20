@@ -14,7 +14,6 @@
 
 """Security validation tests for GitAnalyzer."""
 
-import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -34,6 +33,7 @@ class TestSecurityValidation(unittest.TestCase):
     def tearDown(self):
         """Clean up test environment."""
         import shutil
+
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     def test_directory_traversal_blocked(self):
@@ -44,18 +44,17 @@ class TestSecurityValidation(unittest.TestCase):
             analyzer._validate_repo_path("../../../etc")
 
         error_msg = str(cm.exception)
-        self.assertTrue(
-            "Directory traversal" in error_msg or "not allowed" in error_msg
-        )
+        self.assertTrue("Directory traversal" in error_msg or "not allowed" in error_msg)
 
     def test_system_directory_blocked(self):
         """Test that access to system directories is blocked."""
         analyzer = GitAnalyzer.__new__(GitAnalyzer)
 
-        with patch('pathlib.Path.exists', return_value=True), \
-             patch('pathlib.Path.is_dir', return_value=True), \
-             patch('git.Repo', side_effect=Exception("Not a git repo")):
-
+        with (
+            patch("pathlib.Path.exists", return_value=True),
+            patch("pathlib.Path.is_dir", return_value=True),
+            patch("git.Repo", side_effect=Exception("Not a git repo")),
+        ):
             with self.assertRaises(InvalidRepositoryError) as cm:
                 analyzer._validate_repo_path("/etc")
 
@@ -66,18 +65,16 @@ class TestSecurityValidation(unittest.TestCase):
         analyzer = GitAnalyzer.__new__(GitAnalyzer)
 
         # Test with Python 3.8 (no is_relative_to)
-        with patch.object(Path, 'is_relative_to', side_effect=AttributeError):
+        with patch.object(Path, "is_relative_to", side_effect=AttributeError):
             # These should NOT be considered within boundary
-            self.assertFalse(analyzer._is_path_within_boundary(
-                Path("/home/user2/repo"),
-                Path("/home/user")
-            ))
+            self.assertFalse(
+                analyzer._is_path_within_boundary(Path("/home/user2/repo"), Path("/home/user"))
+            )
 
             # These SHOULD be considered within boundary
-            self.assertTrue(analyzer._is_path_within_boundary(
-                Path("/home/user/repo"),
-                Path("/home/user")
-            ))
+            self.assertTrue(
+                analyzer._is_path_within_boundary(Path("/home/user/repo"), Path("/home/user"))
+            )
 
     def test_suspicious_patterns_detected(self):
         """Test that suspicious patterns are detected."""
@@ -97,9 +94,10 @@ class TestSecurityValidation(unittest.TestCase):
         """Test symlink validation."""
         analyzer = GitAnalyzer.__new__(GitAnalyzer)
 
-        with patch('pathlib.Path.is_symlink', return_value=True), \
-             patch('pathlib.Path.readlink') as mock_readlink:
-
+        with (
+            patch("pathlib.Path.is_symlink", return_value=True),
+            patch("pathlib.Path.readlink") as mock_readlink,
+        ):
             # Mock symlink pointing to restricted directory
             mock_readlink.return_value = Path("/etc")
 
@@ -115,20 +113,22 @@ class TestSecurityValidation(unittest.TestCase):
         test_path = Path("/some/path")
 
         # Test with non-existent path
-        with patch('pathlib.Path.exists', return_value=False):
+        with patch("pathlib.Path.exists", return_value=False):
             self.assertFalse(analyzer._secure_path_exists(test_path))
 
         # Test with symlink replacement
-        with patch('pathlib.Path.exists', return_value=True), \
-             patch('pathlib.Path.is_dir', return_value=True), \
-             patch('pathlib.Path.is_symlink', return_value=True):
+        with (
+            patch("pathlib.Path.exists", return_value=True),
+            patch("pathlib.Path.is_dir", return_value=True),
+            patch("pathlib.Path.is_symlink", return_value=True),
+        ):
             self.assertFalse(analyzer._secure_path_exists(test_path))
 
     def test_security_logging(self):
         """Test that security violations are logged."""
         analyzer = GitAnalyzer.__new__(GitAnalyzer)
 
-        with patch('beaconled.core.analyzer.logger') as mock_logger:
+        with patch("beaconled.core.analyzer.logger") as mock_logger:
             # Test traversal logging
             try:
                 analyzer._validate_repo_path("../../../etc")
@@ -139,5 +139,5 @@ class TestSecurityValidation(unittest.TestCase):
             mock_logger.warning.assert_called()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -36,6 +36,7 @@ Response targets:
 ## Current Controls (High-Level)
 - Input Security: regex-based validation for commit hashes and dates; conservative length limits.
 - Filesystem Safety: repo root boundary checks; .git verification; sanitized paths.
+- XML Security: defusedxml library used for parsing coverage reports to protect against XXE (XML External Entity) attacks and XML bomb vulnerabilities. Falls back to standard library with appropriate warnings if unavailable.
 - Process/Network Safety: parameterized subprocess usage; 30s timeouts; HTTPS and TLS verification for outbound calls where applicable.
 - Configuration: sensitive files ignored from VCS; secure examples and env-var-based credentials.
 
