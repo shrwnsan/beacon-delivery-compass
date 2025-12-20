@@ -7,7 +7,7 @@ name = "beaconled"
 version = "0.5.0"  # Test coverage tracking and analytics enhancements
 description = "Your delivery compass for empowered product builders. A comprehensive toolkit for analyzing git repository statistics and development metrics."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 license = {text = "Apache-2.0"}
 authors = [
     {name = "shrwnsan"},
@@ -22,8 +22,6 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Software Development :: Version Control :: Git",

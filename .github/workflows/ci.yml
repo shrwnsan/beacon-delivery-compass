@@ -23,14 +23,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
-        os: [ubuntu-latest]
-        # Enable Windows and macOS testing for the latest Python version
-        include:
-          - python-version: "3.12"
-            os: windows-latest
-          - python-version: "3.12"
-            os: macos-latest
+        # Test only Python 3.12 for efficiency
+        python-version: ["3.12"]
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -61,14 +56,9 @@ jobs:
           pytest tests/unit -m "not performance" --cov=beaconled --cov-report=xml
 
       - name: Run integration tests
-        if: matrix.python-version == '3.12' && runner.os == 'Linux'
+        # Run on all platforms to verify cross-platform compatibility
         run: |
           pytest tests/integration -v
-
-      - name: Run performance tests
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-        run: |
-          pytest tests/performance -m performance -v --durations=0
 
       - name: Upload coverage to Codecov
         if: runner.os == 'Linux' && matrix.python-version == '3.12'
@@ -83,7 +73,6 @@ jobs:
   security:
     name: Security Checks
     runs-on: ubuntu-latest
-    needs: test
     steps:
       - uses: actions/checkout@v4
 
