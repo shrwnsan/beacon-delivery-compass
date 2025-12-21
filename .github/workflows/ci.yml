@@ -91,3 +91,6 @@ jobs:
 
       - name: Run security linter
         run: bandit -r src/beaconled -c pyproject.toml
+
+      - name: Security hardening validation
+        run: python scripts/security_validation.py

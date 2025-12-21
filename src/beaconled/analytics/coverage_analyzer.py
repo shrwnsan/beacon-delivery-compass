@@ -23,6 +23,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from beaconled.exceptions import InvalidRepositoryError, ValidationError
+from beaconled.utils.security import secure_file_operation
 
 try:
     from defusedxml.ElementTree import fromstring as ET_fromstring  # noqa: N812
@@ -316,10 +317,12 @@ class CoverageAnalyzer:
         if not coverage_files:
             return []
 
-        # Limit to recent files to avoid performance issues
-        recent_files = sorted(coverage_files, key=lambda x: x.stat().st_mtime, reverse=True)[
-            :max_files
-        ]
+        # Limit to recent files to avoid performance issues (secure version)
+        def get_file_mtime(path: Path) -> float:
+            """Securely get file modification time."""
+            return secure_file_operation(lambda p: p.stat().st_mtime, path)
+
+        recent_files = sorted(coverage_files, key=get_file_mtime, reverse=True)[:max_files]
 
         coverage_history = []
         for file_path in recent_files:
