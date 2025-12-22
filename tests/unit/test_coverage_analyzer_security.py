@@ -20,6 +20,7 @@ including XXE protection, XML bomb mitigation, and fallback behavior.
 
 import tempfile
 from pathlib import Path
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
@@ -43,7 +44,7 @@ class TestCoverageAnalyzerSecurity:
     """Test XML security features in CoverageAnalyzer."""
 
     @pytest.fixture
-    def temp_xml_file(self) -> Path:
+    def temp_xml_file(self) -> Generator[Path, None, None]:
         """Create a temporary XML file for testing."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".xml", delete=False) as f:
             temp_file = Path(f.name)

@@ -508,6 +508,11 @@ ignore_missing_imports = true
 module = "beaconled.core.analyzer"
 warn_unreachable = false
 
+# Ignore missing imports for internal modules (they don't have py.typed markers yet)
+[[tool.mypy.overrides]]
+module = ["beaconled.*", "beaconled"]
+ignore_missing_imports = true
+
 # Bandit security scanner configuration
 [tool.bandit]
 skips = ["B110", "B405"]  # Allow try/except/pass and XML fallback in specific contexts
